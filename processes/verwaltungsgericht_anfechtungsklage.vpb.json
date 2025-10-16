@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "name": "Anfechtungsklage – §§ 42 ff. VwGO",
+    "description": "Verfahrensschritte vom Klageeingang bis zum Urteil vor dem Verwaltungsgericht."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Klageeingang beim VG", "x": 60, "y": 190, "description": "Schriftliche Klage mit Bescheid + Widerspruchsbescheid", "responsible_authority": "Kläger/in", "legal_basis": "§ 81 VwGO", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Zulässigkeit prüfen", "x": 220, "y": 190, "description": "Fristen, Beteiligtenfähigkeit, Vorverfahren", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§§ 42, 68, 74 VwGO", "deadline_days": 21, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Akte anfordern & Zustellung", "x": 380, "y": 190, "description": "Behörde beteiligt, Klage zugestellt", "responsible_authority": "Kammer/Senat", "legal_basis": "§ 82 VwGO", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Erwiderung & Schriftsatzfrist", "x": 540, "y": 190, "description": "Behörde äußert sich, Kläger repliziert", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§ 82 VwGO", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Erörterungstermin / Güte", "x": 700, "y": 190, "description": "Gütliche Einigung, Vergleich prüfen", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§ 87 VwGO", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Mündliche Verhandlung", "x": 860, "y": 190, "description": "Beweisaufnahme, Erörterung Rechtslage", "responsible_authority": "Kammer/Senat", "legal_basis": "§§ 101, 104 VwGO", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Urteil beraten & verkünden", "x": 1020, "y": 190, "description": "Urteilsberatung, Verkündung, Zustellung", "responsible_authority": "Kammer/Senat", "legal_basis": "§§ 116, 117 VwGO", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Verfahren abgeschlossen", "x": 1180, "y": 190, "description": "Rechtskraft / Rechtsmittelbelehrung", "responsible_authority": "", "legal_basis": "§ 124 VwGO", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "F3", "target_element": "F4", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C5", "source_element": "F4", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C6", "source_element": "F5", "target_element": "F6", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C7", "source_element": "F6", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

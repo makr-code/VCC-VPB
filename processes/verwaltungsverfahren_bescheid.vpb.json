@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "name": "Allgemeines Verwaltungsverfahren – Bescheidserlass",
+    "description": "Standardablauf nach VwVfG: Von Antragseingang bis zur Bekanntgabe eines Verwaltungsakts mit Rechtsbehelfsbelehrung."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Verfahren beginnt", "x": 40, "y": 180, "description": "Antrag, Anregung oder Amtsverfahren", "responsible_authority": "Auslösendes Fachamt", "legal_basis": "§§ 22 ff. VwVfG", "deadline_days": 0, "geo_reference": "Bund"},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Eingang registrieren", "x": 180, "y": 180, "description": "Vollständigkeit prüfen, Fristen notieren", "responsible_authority": "Serviceeinheit", "legal_basis": "§ 24 Abs. 1 VwVfG", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Zuständigkeit & Sachverhalt klären", "x": 340, "y": 180, "description": "Sachverhaltsaufklärung, Beteiligte identifizieren", "responsible_authority": "Fachreferat", "legal_basis": "§§ 3, 24 VwVfG", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Beteiligte anhören", "x": 500, "y": 180, "description": "Beteiligte beteiligen und Stellungnahmen einholen", "responsible_authority": "Fachreferat", "legal_basis": "§ 28 VwVfG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Entscheidung vorbereiten", "x": 660, "y": 180, "description": "Rechtsprüfung, Ermessensausübung, Entwurf Bescheid", "responsible_authority": "Rechtsstelle / Fachreferat", "legal_basis": "§§ 39, 40 VwVfG", "deadline_days": 5, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Bescheid erlassen", "x": 820, "y": 180, "description": "Unterschrift, Bekanntgabe, Zustellnachweis", "responsible_authority": "Behördenleitung", "legal_basis": "§§ 35, 41 VwVfG", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Rechtsbehelfsbelehrung beifügen", "x": 980, "y": 180, "description": "Hinweise auf Widerspruch/Klage und Fristen", "responsible_authority": "Fachreferat", "legal_basis": "§ 37 Abs. 6 VwVfG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Bekanntgabe abgeschlossen", "x": 1140, "y": 180, "description": "Bescheid zugestellt, Frist läuft", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": "Start → Registrierung"},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "F3", "target_element": "F4", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C5", "source_element": "F4", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C6", "source_element": "F5", "target_element": "F6", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C7", "source_element": "F6", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

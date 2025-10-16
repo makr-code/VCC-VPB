@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "VPB Showcase – Subprozess Fachämter",
+    "version": "1.0",
+    "author": "Demo",
+    "created": "2025-09-23"
+  },
+  "elements": [
+    {"element_id": "SP_START", "element_type": "START_EVENT", "name": "Start Beteiligung", "x": 200, "y": 100},
+    {"element_id": "FA1", "element_type": "FUNCTION", "name": "Fachamt 1 prüft", "x": 420, "y": 60, "responsible_authority": "FA1"},
+    {"element_id": "FA2", "element_type": "FUNCTION", "name": "Fachamt 2 prüft", "x": 420, "y": 140, "responsible_authority": "FA2"},
+    {"element_id": "SP_AND", "element_type": "AND_CONNECTOR", "name": "UND", "x": 320, "y": 100},
+    {"element_id": "SP_JOIN", "element_type": "AND_CONNECTOR", "name": "JOIN", "x": 680, "y": 100},
+    {"element_id": "SP_DOC", "element_type": "INFORMATION_OBJECT", "name": "Stellungnahmen", "x": 880, "y": 100},
+    {"element_id": "SP_END", "element_type": "END_EVENT", "name": "Ende Beteiligung", "x": 1080, "y": 100},
+    {"element_id": "SP_GROUP", "element_type": "GROUP", "name": "Prüfende Ämter", "x": 420, "y": 100, "members": ["FA1", "FA2", "SP_AND", "SP_JOIN"], "collapsed": false}
+  ],
+  "connections": [
+    {"connection_id": "SP_C001", "source_element": "SP_START", "target_element": "SP_AND", "connection_type": "SEQUENCE"},
+    {"connection_id": "SP_C002", "source_element": "SP_AND", "target_element": "FA1", "connection_type": "SEQUENCE"},
+    {"connection_id": "SP_C003", "source_element": "SP_AND", "target_element": "FA2", "connection_type": "SEQUENCE"},
+    {"connection_id": "SP_C004", "source_element": "FA1", "target_element": "SP_JOIN", "connection_type": "SEQUENCE"},
+    {"connection_id": "SP_C005", "source_element": "FA2", "target_element": "SP_JOIN", "connection_type": "SEQUENCE"},
+    {"connection_id": "SP_C006", "source_element": "SP_JOIN", "target_element": "SP_DOC", "connection_type": "DOCUMENT"},
+    {"connection_id": "SP_C007", "source_element": "SP_DOC", "target_element": "SP_END", "connection_type": "SEQUENCE"}
+  ]
+}

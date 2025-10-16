@@ -1,0 +1,271 @@
+{
+  "metadata": {
+    "name": "Antrag – Extended (Medium)",
+    "description": "Antrag entgegennehmen, Vollständigkeit prüfen, Nachfordern, Sachprüfung, Entscheidung, Bescheid"
+  },
+  "elements": [
+    {
+      "element_id": "S1",
+      "element_type": "START_EVENT",
+      "name": "Start",
+      "description": "",
+      "x": -306,
+      "y": 71,
+      "responsible_authority": "Bürgerbüro",
+      "legal_basis": "§ 35 VwVfG",
+      "deadline_days": 0,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "F1",
+      "element_type": "FUNCTION",
+      "name": "Antrag entgegennehmen",
+      "description": "Formalia",
+      "x": -63,
+      "y": 71,
+      "responsible_authority": "Servicestelle",
+      "legal_basis": "",
+      "deadline_days": 0,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "F2",
+      "element_type": "FUNCTION",
+      "name": "Vollständigkeit prüfen",
+      "description": "Unterlagen prüfen",
+      "x": 249,
+      "y": 71,
+      "responsible_authority": "Sachbearbeitung",
+      "legal_basis": "",
+      "deadline_days": 7,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "G1",
+      "element_type": "GATEWAY",
+      "name": "Vollständig?",
+      "description": "",
+      "x": 529,
+      "y": 71,
+      "responsible_authority": "",
+      "legal_basis": "",
+      "deadline_days": 0,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "F3",
+      "element_type": "FUNCTION",
+      "name": "Nachforderung Unterlagen",
+      "description": "Frist setzen",
+      "x": 529,
+      "y": -80,
+      "responsible_authority": "Sachbearbeitung",
+      "legal_basis": "§ 26 VwVfG",
+      "deadline_days": 14,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "F4",
+      "element_type": "FUNCTION",
+      "name": "Sachprüfung",
+      "description": "Inhaltliche Prüfung",
+      "x": 741,
+      "y": 71,
+      "responsible_authority": "Fachamt",
+      "legal_basis": "",
+      "deadline_days": 14,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "G2",
+      "element_type": "GATEWAY",
+      "name": "Entscheidung",
+      "description": "",
+      "x": 959,
+      "y": 71,
+      "responsible_authority": "",
+      "legal_basis": "",
+      "deadline_days": 0,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "F5",
+      "element_type": "FUNCTION",
+      "name": "Bescheid (Bewilligung)",
+      "description": "Positiver Bescheid",
+      "x": 1167,
+      "y": 71,
+      "responsible_authority": "Verwaltungsleitung",
+      "legal_basis": "§ 35 VwVfG",
+      "deadline_days": 7,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "F6",
+      "element_type": "FUNCTION",
+      "name": "Bescheid (Ablehnung)",
+      "description": "Begründung, Rechtsbehelf",
+      "x": 959,
+      "y": 227,
+      "responsible_authority": "Verwaltungsleitung",
+      "legal_basis": "VwGO",
+      "deadline_days": 7,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "E1",
+      "element_type": "END_EVENT",
+      "name": "Ende (bewilligt)",
+      "description": "",
+      "x": 1397,
+      "y": 71,
+      "responsible_authority": "",
+      "legal_basis": "",
+      "deadline_days": 0,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "E2",
+      "element_type": "END_EVENT",
+      "name": "Ende (abgelehnt)",
+      "description": "",
+      "x": 1397,
+      "y": 227,
+      "responsible_authority": "",
+      "legal_basis": "",
+      "deadline_days": 0,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "G001",
+      "element_type": "GATEWAY",
+      "name": "Nachforderungen eingegangen?",
+      "description": "Der Sachbearbeiter prüft ob die Nachförderungen erfüllt wurden.",
+      "x": 249,
+      "y": -182,
+      "responsible_authority": "",
+      "legal_basis": "",
+      "deadline_days": 0,
+      "geo_reference": ""
+    },
+    {
+      "element_id": "E001",
+      "element_type": "END_EVENT",
+      "name": "Ende (eingestellt)",
+      "description": "",
+      "x": 1397,
+      "y": -182,
+      "responsible_authority": "",
+      "legal_basis": "",
+      "deadline_days": 0,
+      "geo_reference": ""
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "C1",
+      "source_element": "S1",
+      "target_element": "F1",
+      "connection_type": "SEQUENCE",
+      "description": "",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C2",
+      "source_element": "F1",
+      "target_element": "F2",
+      "connection_type": "SEQUENCE",
+      "description": "",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C3",
+      "source_element": "F2",
+      "target_element": "G1",
+      "connection_type": "SEQUENCE",
+      "description": "",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C4",
+      "source_element": "G1",
+      "target_element": "F3",
+      "connection_type": "SEQUENCE",
+      "description": "Nein",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C6",
+      "source_element": "G1",
+      "target_element": "F4",
+      "connection_type": "SEQUENCE",
+      "description": "Ja",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C7",
+      "source_element": "F4",
+      "target_element": "G2",
+      "connection_type": "SEQUENCE",
+      "description": "",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C8",
+      "source_element": "G2",
+      "target_element": "F5",
+      "connection_type": "SEQUENCE",
+      "description": "Bewilligen",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C9",
+      "source_element": "G2",
+      "target_element": "F6",
+      "connection_type": "SEQUENCE",
+      "description": "Ablehnen",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C10",
+      "source_element": "F5",
+      "target_element": "E1",
+      "connection_type": "SEQUENCE",
+      "description": "",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C11",
+      "source_element": "F6",
+      "target_element": "E2",
+      "connection_type": "SEQUENCE",
+      "description": "",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C001",
+      "source_element": "F3",
+      "target_element": "G001",
+      "connection_type": "SEQUENCE",
+      "description": "",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C002",
+      "source_element": "G001",
+      "target_element": "F2",
+      "connection_type": "SEQUENCE",
+      "description": "",
+      "arrow_style": "single"
+    },
+    {
+      "connection_id": "C003",
+      "source_element": "G001",
+      "target_element": "E001",
+      "connection_type": "SEQUENCE",
+      "description": "",
+      "arrow_style": "single"
+    }
+  ],
+  "hierarchy_categories": []
+}

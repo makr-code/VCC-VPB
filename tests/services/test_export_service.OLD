@@ -1,0 +1,882 @@
+"""
+Tests for VPB Export Service
+=============================
+
+Comprehensive test coverage for all export formats:
+- PDF export with ReportLab
+- SVG export with XML generation
+- PNG export with PIL
+- BPMN 2.0 XML export
+
+Author: VPB Development Team
+Date: 2025-10-14
+"""
+
+import pytest
+from pathlib import Path
+import tempfile
+import shutil
+from xml.etree import ElementTree as ET
+
+from vpb.services.export_service import (
+    ExportService,
+    ExportConfig,
+    ExportServiceError,
+    PDFExportError,
+    SVGExportError,
+    PNGExportError,
+    BPMNExportError,
+)
+from vpb.models.document import DocumentModel
+from vpb.models.element import VPBElement, ElementType
+from vpb.models.connection import VPBConnection, ConnectionType
+
+
+# ============================================================================
+# Fixtures
+# ============================================================================
+
+@pytest.fixture
+def temp_dir():
+    """Create temporary directory for export tests."""
+    temp = tempfile.mkdtemp()
+    yield Path(temp)
+    shutil.rmtree(temp)
+
+
+@pytest.fixture
+def export_service():
+    """Create export service with default configuration."""
+    return ExportService()
+
+
+@pytest.fixture
+def custom_config():
+    """Create custom export configuration."""
+    return ExportConfig(
+        pdf_page_size='LETTER',
+        pdf_orientation='landscape',
+        svg_width=1600,
+        svg_height=1200,
+        png_width=2560,
+        png_height=1440,
+        png_dpi=150,
+        bpmn_include_di=False,
+        include_metadata=False,
+        include_timestamp=False
+    )
+
+
+@pytest.fixture
+def simple_document():
+    """Create a simple document with a few elements."""
+    doc = DocumentModel(
+        title="Simple Process",
+        description="Test process",
+        author="Test User"
+    )
+    
+    # Add elements
+    start = VPBElement(
+        element_id="start_1",
+        element_type=ElementType.START_EVENT,
+        name="Start",
+        x=100, y=100, width=60, height=60
+    )
+    
+    task = VPBElement(
+        element_id="task_1",
+        element_type=ElementType.TASK,
+        name="Process Task",
+        x=200, y=100, width=120, height=80
+    )
+    
+    end = VPBElement(
+        element_id="end_1",
+        element_type=ElementType.END_EVENT,
+        name="End",
+        x=400, y=100, width=60, height=60
+    )
+    
+    doc.add_element(start)
+    doc.add_element(task)
+    doc.add_element(end)
+    
+    # Add connections
+    conn1 = VPBConnection(
+        connection_id="conn_1",
+        connection_type=ConnectionType.SEQUENCE,
+        source_element="start_1",
+        target_element="task_1"
+    )
+    
+    conn2 = VPBConnection(
+        connection_id="conn_2",
+        connection_type=ConnectionType.SEQUENCE,
+        source_element="task_1",
+        target_element="end_1"
+    )
+    
+    doc.add_connection(conn1)
+    doc.add_connection(conn2)
+    
+    return doc
+
+
+@pytest.fixture
+def complex_document():
+    """Create a complex document with multiple element types."""
+    doc = DocumentModel(
+        title="Complex Process",
+        description="Process with branches and gateways",
+        author="Test User"
+    )
+    
+    # Add various element types
+    start = VPBElement(
+        element_id="start_1",
+        element_type=ElementType.START_EVENT,
+        name="Start",
+        x=50, y=200, width=60, height=60
+    )
+    
+    task1 = VPBElement(
+        element_id="task_1",
+        element_type=ElementType.TASK,
+        name="Task 1",
+        x=150, y=200, width=120, height=80
+    )
+    
+    decision = VPBElement(
+        element_id="decision_1",
+        element_type=ElementType.DECISION,
+        name="Decision?",
+        x=320, y=200, width=80, height=80
+    )
+    
+    task2 = VPBElement(
+        element_id="task_2",
+        element_type=ElementType.TASK,
+        name="Task 2A",
+        x=450, y=100, width=120, height=80
+    )
+    
+    task3 = VPBElement(
+        element_id="task_3",
+        element_type=ElementType.TASK,
+        name="Task 2B",
+        x=450, y=300, width=120, height=80
+    )
+    
+    gateway = VPBElement(
+        element_id="gateway_1",
+        element_type=ElementType.GATEWAY,
+        name="Gateway",
+        x=620, y=200, width=80, height=80
+    )
+    
+    end = VPBElement(
+        element_id="end_1",
+        element_type=ElementType.END_EVENT,
+        name="End",
+        x=750, y=200, width=60, height=60
+    )
+    
+    for elem in [start, task1, decision, task2, task3, gateway, end]:
+        doc.add_element(elem)
+    
+    # Add connections
+    connections = [
+        VPBConnection("conn_1", ConnectionType.SEQUENCE, "start_1", "task_1"),
+        VPBConnection("conn_2", ConnectionType.SEQUENCE, "task_1", "decision_1"),
+        VPBConnection("conn_3", ConnectionType.SEQUENCE, "decision_1", "task_2", label="Yes"),
+        VPBConnection("conn_4", ConnectionType.SEQUENCE, "decision_1", "task_3", label="No"),
+        VPBConnection("conn_5", ConnectionType.SEQUENCE, "task_2", "gateway_1"),
+        VPBConnection("conn_6", ConnectionType.SEQUENCE, "task_3", "gateway_1"),
+        VPBConnection("conn_7", ConnectionType.SEQUENCE, "gateway_1", "end_1"),
+    ]
+    
+    for conn in connections:
+        doc.add_connection(conn)
+    
+    return doc
+
+
+@pytest.fixture
+def empty_document():
+    """Create an empty document."""
+    return DocumentModel(title="Empty Process")
+
+
+# ============================================================================
+# Test ExportService Initialization
+# ============================================================================
+
+class TestExportServiceInit:
+    """Test ExportService initialization."""
+    
+    def test_initialization_defaults(self):
+        """Test service initialization with default configuration."""
+        service = ExportService()
+        
+        assert isinstance(service.config, ExportConfig)
+        assert service.config.pdf_page_size == 'A4'
+        assert service.config.svg_width == 1200
+        assert service.config.png_dpi == 300
+        assert service.config.bpmn_include_di is True
+    
+    def test_initialization_custom_config(self, custom_config):
+        """Test service initialization with custom configuration."""
+        service = ExportService(config=custom_config)
+        
+        assert service.config.pdf_page_size == 'LETTER'
+        assert service.config.pdf_orientation == 'landscape'
+        assert service.config.svg_width == 1600
+        assert service.config.png_dpi == 150
+        assert service.config.bpmn_include_di is False
+    
+    def test_repr(self, export_service):
+        """Test string representation."""
+        repr_str = repr(export_service)
+        assert 'ExportService' in repr_str
+        assert 'config=' in repr_str
+
+
+# ============================================================================
+# Test ExportConfig
+# ============================================================================
+
+class TestExportConfig:
+    """Test ExportConfig dataclass."""
+    
+    def test_default_values(self):
+        """Test default configuration values."""
+        config = ExportConfig()
+        
+        assert config.pdf_page_size == 'A4'
+        assert config.pdf_orientation == 'portrait'
+        assert config.pdf_margin == 50
+        assert config.svg_width == 1200
+        assert config.svg_height == 800
+        assert config.png_width == 1920
+        assert config.png_height == 1080
+        assert config.png_dpi == 300
+        assert config.bpmn_include_di is True
+    
+    def test_custom_values(self):
+        """Test custom configuration values."""
+        config = ExportConfig(
+            pdf_page_size='A3',
+            svg_background='#F0F0F0',
+            png_dpi=600
+        )
+        
+        assert config.pdf_page_size == 'A3'
+        assert config.svg_background == '#F0F0F0'
+        assert config.png_dpi == 600
+
+
+# ============================================================================
+# Test PDF Export
+# ============================================================================
+
+class TestPDFExport:
+    """Test PDF export functionality."""
+    
+    def test_export_simple_document_to_pdf(self, export_service, simple_document, temp_dir):
+        """Test exporting a simple document to PDF."""
+        output_path = temp_dir / "simple.pdf"
+        
+        # Export
+        result = export_service.export_to_pdf(simple_document, str(output_path))
+        
+        # Verify
+        assert result.exists()
+        assert result.suffix == '.pdf'
+        assert result.stat().st_size > 0
+    
+    def test_export_complex_document_to_pdf(self, export_service, complex_document, temp_dir):
+        """Test exporting a complex document to PDF."""
+        output_path = temp_dir / "complex.pdf"
+        
+        result = export_service.export_to_pdf(complex_document, str(output_path))
+        
+        assert result.exists()
+        assert result.stat().st_size > 0
+    
+    def test_export_empty_document_to_pdf(self, export_service, empty_document, temp_dir):
+        """Test exporting an empty document to PDF."""
+        output_path = temp_dir / "empty.pdf"
+        
+        result = export_service.export_to_pdf(empty_document, str(output_path))
+        
+        assert result.exists()
+    
+    def test_pdf_page_size_a4(self, export_service, simple_document, temp_dir):
+        """Test PDF export with A4 page size."""
+        output_path = temp_dir / "a4.pdf"
+        
+        result = export_service.export_to_pdf(
+            simple_document,
+            str(output_path),
+            page_size='A4'
+        )
+        
+        assert result.exists()
+    
+    def test_pdf_page_size_letter(self, export_service, simple_document, temp_dir):
+        """Test PDF export with Letter page size."""
+        output_path = temp_dir / "letter.pdf"
+        
+        result = export_service.export_to_pdf(
+            simple_document,
+            str(output_path),
+            page_size='LETTER'
+        )
+        
+        assert result.exists()
+    
+    def test_pdf_orientation_landscape(self, export_service, simple_document, temp_dir):
+        """Test PDF export with landscape orientation."""
+        output_path = temp_dir / "landscape.pdf"
+        
+        result = export_service.export_to_pdf(
+            simple_document,
+            str(output_path),
+            orientation='landscape'
+        )
+        
+        assert result.exists()
+    
+    def test_pdf_creates_directory(self, export_service, simple_document, temp_dir):
+        """Test that PDF export creates output directory if missing."""
+        output_path = temp_dir / "subdir" / "nested" / "output.pdf"
+        
+        result = export_service.export_to_pdf(simple_document, str(output_path))
+        
+        assert result.exists()
+        assert result.parent.exists()
+    
+    def test_pdf_missing_reportlab_library(self, export_service, simple_document, temp_dir, monkeypatch):
+        """Test error handling when ReportLab is not installed."""
+        output_path = temp_dir / "test.pdf"
+        
+        # Mock ImportError for reportlab
+        def mock_import(name, *args, **kwargs):
+            if 'reportlab' in name:
+                raise ImportError("No module named 'reportlab'")
+            return __import__(name, *args, **kwargs)
+        
+        monkeypatch.setattr('builtins.__import__', mock_import)
+        
+        with pytest.raises(PDFExportError) as exc_info:
+            export_service.export_to_pdf(simple_document, str(output_path))
+        
+        assert 'ReportLab library not installed' in str(exc_info.value)
+
+
+# ============================================================================
+# Test SVG Export
+# ============================================================================
+
+class TestSVGExport:
+    """Test SVG export functionality."""
+    
+    def test_export_simple_document_to_svg(self, export_service, simple_document, temp_dir):
+        """Test exporting a simple document to SVG."""
+        output_path = temp_dir / "simple.svg"
+        
+        result = export_service.export_to_svg(simple_document, str(output_path))
+        
+        assert result.exists()
+        assert result.suffix == '.svg'
+        assert result.stat().st_size > 0
+        
+        # Verify SVG content
+        tree = ET.parse(result)
+        root = tree.getroot()
+        assert 'svg' in root.tag
+    
+    def test_export_complex_document_to_svg(self, export_service, complex_document, temp_dir):
+        """Test exporting a complex document to SVG."""
+        output_path = temp_dir / "complex.svg"
+        
+        result = export_service.export_to_svg(complex_document, str(output_path))
+        
+        assert result.exists()
+        
+        # Verify content
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        # Should have groups for elements and connections
+        groups = root.findall('.//{http://www.w3.org/2000/svg}g')
+        assert len(groups) >= 2  # At least elements and connections groups
+    
+    def test_svg_custom_dimensions(self, export_service, simple_document, temp_dir):
+        """Test SVG export with custom dimensions."""
+        output_path = temp_dir / "custom.svg"
+        
+        result = export_service.export_to_svg(
+            simple_document,
+            str(output_path),
+            width=1600,
+            height=1200
+        )
+        
+        assert result.exists()
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        assert root.get('width') == '1600'
+        assert root.get('height') == '1200'
+    
+    def test_svg_viewbox(self, export_service, simple_document, temp_dir):
+        """Test that SVG has proper viewBox attribute."""
+        output_path = temp_dir / "viewbox.svg"
+        
+        result = export_service.export_to_svg(simple_document, str(output_path))
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        viewbox = root.get('viewBox')
+        assert viewbox is not None
+        assert len(viewbox.split()) == 4  # x y width height
+    
+    def test_svg_metadata(self, export_service, simple_document, temp_dir):
+        """Test that SVG includes metadata."""
+        output_path = temp_dir / "metadata.svg"
+        
+        result = export_service.export_to_svg(simple_document, str(output_path))
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        metadata = root.find('.//{http://www.w3.org/2000/svg}metadata')
+        assert metadata is not None
+        
+        title = metadata.find('.//{http://www.w3.org/2000/svg}title')
+        assert title is not None
+        assert title.text == "Simple Process"
+    
+    def test_svg_elements_rendered(self, export_service, simple_document, temp_dir):
+        """Test that all elements are rendered in SVG."""
+        output_path = temp_dir / "elements.svg"
+        
+        result = export_service.export_to_svg(simple_document, str(output_path))
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        # Count element groups
+        elem_groups = root.findall('.//{http://www.w3.org/2000/svg}g[@id]')
+        element_groups = [g for g in elem_groups if g.get('id', '').startswith('element-')]
+        
+        assert len(element_groups) == len(simple_document.elements)
+    
+    def test_svg_connections_rendered(self, export_service, simple_document, temp_dir):
+        """Test that all connections are rendered in SVG."""
+        output_path = temp_dir / "connections.svg"
+        
+        result = export_service.export_to_svg(simple_document, str(output_path))
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        # Count connection lines
+        conn_group = root.find('.//{http://www.w3.org/2000/svg}g[@id="connections"]')
+        assert conn_group is not None
+        
+        lines = conn_group.findall('.//{http://www.w3.org/2000/svg}line')
+        assert len(lines) == len(simple_document.connections)
+
+
+# ============================================================================
+# Test PNG Export
+# ============================================================================
+
+class TestPNGExport:
+    """Test PNG export functionality."""
+    
+    def test_export_simple_document_to_png(self, export_service, simple_document, temp_dir):
+        """Test exporting a simple document to PNG."""
+        output_path = temp_dir / "simple.png"
+        
+        result = export_service.export_to_png(simple_document, str(output_path))
+        
+        assert result.exists()
+        assert result.suffix == '.png'
+        assert result.stat().st_size > 0
+    
+    def test_export_complex_document_to_png(self, export_service, complex_document, temp_dir):
+        """Test exporting a complex document to PNG."""
+        output_path = temp_dir / "complex.png"
+        
+        result = export_service.export_to_png(complex_document, str(output_path))
+        
+        assert result.exists()
+        assert result.stat().st_size > 0
+    
+    def test_png_custom_dimensions(self, export_service, simple_document, temp_dir):
+        """Test PNG export with custom dimensions."""
+        output_path = temp_dir / "custom.png"
+        
+        result = export_service.export_to_png(
+            simple_document,
+            str(output_path),
+            width=2560,
+            height=1440
+        )
+        
+        assert result.exists()
+        
+        # Verify dimensions using PIL
+        try:
+            from PIL import Image
+            img = Image.open(result)
+            assert img.size == (2560, 1440)
+        except ImportError:
+            pytest.skip("PIL not available")
+    
+    def test_png_custom_dpi(self, export_service, simple_document, temp_dir):
+        """Test PNG export with custom DPI."""
+        output_path = temp_dir / "high_dpi.png"
+        
+        result = export_service.export_to_png(
+            simple_document,
+            str(output_path),
+            dpi=600
+        )
+        
+        assert result.exists()
+    
+    def test_png_missing_pil_library(self, export_service, simple_document, temp_dir, monkeypatch):
+        """Test error handling when PIL is not installed."""
+        output_path = temp_dir / "test.png"
+        
+        # Mock ImportError for PIL
+        def mock_import(name, *args, **kwargs):
+            if 'PIL' in name:
+                raise ImportError("No module named 'PIL'")
+            return __import__(name, *args, **kwargs)
+        
+        monkeypatch.setattr('builtins.__import__', mock_import)
+        
+        with pytest.raises(PNGExportError) as exc_info:
+            export_service.export_to_png(simple_document, str(output_path))
+        
+        assert 'PIL/Pillow library not installed' in str(exc_info.value)
+
+
+# ============================================================================
+# Test BPMN Export
+# ============================================================================
+
+class TestBPMNExport:
+    """Test BPMN 2.0 XML export functionality."""
+    
+    def test_export_simple_document_to_bpmn(self, export_service, simple_document, temp_dir):
+        """Test exporting a simple document to BPMN."""
+        output_path = temp_dir / "simple.bpmn"
+        
+        result = export_service.export_to_bpmn(simple_document, str(output_path))
+        
+        assert result.exists()
+        assert result.suffix == '.bpmn'
+        assert result.stat().st_size > 0
+        
+        # Verify BPMN structure
+        tree = ET.parse(result)
+        root = tree.getroot()
+        assert 'definitions' in root.tag
+    
+    def test_export_complex_document_to_bpmn(self, export_service, complex_document, temp_dir):
+        """Test exporting a complex document to BPMN."""
+        output_path = temp_dir / "complex.bpmn"
+        
+        result = export_service.export_to_bpmn(complex_document, str(output_path))
+        
+        assert result.exists()
+        
+        # Verify structure
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        # Should have process element
+        ns = {'bpmn': 'http://www.omg.org/spec/BPMN/20100524/MODEL'}
+        process = root.find('.//bpmn:process', ns)
+        assert process is not None
+    
+    def test_bpmn_namespaces(self, export_service, simple_document, temp_dir):
+        """Test that BPMN has correct namespaces."""
+        output_path = temp_dir / "namespaces.bpmn"
+        
+        result = export_service.export_to_bpmn(simple_document, str(output_path))
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        # Check namespaces
+        assert 'http://www.omg.org/spec/BPMN/20100524/MODEL' in root.attrib.values()
+    
+    def test_bpmn_process_element(self, export_service, simple_document, temp_dir):
+        """Test that BPMN contains process element."""
+        output_path = temp_dir / "process.bpmn"
+        
+        result = export_service.export_to_bpmn(simple_document, str(output_path))
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        ns = {'bpmn': 'http://www.omg.org/spec/BPMN/20100524/MODEL'}
+        process = root.find('.//bpmn:process', ns)
+        
+        assert process is not None
+        assert process.get('name') == "Simple Process"
+    
+    def test_bpmn_elements_mapping(self, export_service, simple_document, temp_dir):
+        """Test that VPB elements are mapped to BPMN elements."""
+        output_path = temp_dir / "elements.bpmn"
+        
+        result = export_service.export_to_bpmn(simple_document, str(output_path))
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        ns = {'bpmn': 'http://www.omg.org/spec/BPMN/20100524/MODEL'}
+        
+        # Check for start event
+        start = root.find('.//bpmn:startEvent', ns)
+        assert start is not None
+        
+        # Check for task
+        task = root.find('.//bpmn:task', ns)
+        assert task is not None
+        
+        # Check for end event
+        end = root.find('.//bpmn:endEvent', ns)
+        assert end is not None
+    
+    def test_bpmn_sequence_flows(self, export_service, simple_document, temp_dir):
+        """Test that VPB connections are mapped to BPMN sequence flows."""
+        output_path = temp_dir / "flows.bpmn"
+        
+        result = export_service.export_to_bpmn(simple_document, str(output_path))
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        ns = {'bpmn': 'http://www.omg.org/spec/BPMN/20100524/MODEL'}
+        flows = root.findall('.//bpmn:sequenceFlow', ns)
+        
+        assert len(flows) == len(simple_document.connections)
+        
+        # Check that flows have source and target
+        for flow in flows:
+            assert flow.get('sourceRef') is not None
+            assert flow.get('targetRef') is not None
+    
+    def test_bpmn_diagram_interchange(self, export_service, simple_document, temp_dir):
+        """Test that BPMN includes diagram interchange."""
+        output_path = temp_dir / "di.bpmn"
+        
+        result = export_service.export_to_bpmn(simple_document, str(output_path), include_di=True)
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        ns = {'bpmndi': 'http://www.omg.org/spec/BPMN/20100524/DI'}
+        diagram = root.find('.//bpmndi:BPMNDiagram', ns)
+        
+        assert diagram is not None
+    
+    def test_bpmn_without_diagram_interchange(self, export_service, simple_document, temp_dir):
+        """Test BPMN export without diagram interchange."""
+        output_path = temp_dir / "no_di.bpmn"
+        
+        result = export_service.export_to_bpmn(simple_document, str(output_path), include_di=False)
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        ns = {'bpmndi': 'http://www.omg.org/spec/BPMN/20100524/DI'}
+        diagram = root.find('.//bpmndi:BPMNDiagram', ns)
+        
+        assert diagram is None
+    
+    def test_bpmn_decision_gateway_mapping(self, export_service, complex_document, temp_dir):
+        """Test that Decision elements map to exclusiveGateway."""
+        output_path = temp_dir / "decision.bpmn"
+        
+        result = export_service.export_to_bpmn(complex_document, str(output_path))
+        
+        tree = ET.parse(result)
+        root = tree.getroot()
+        
+        ns = {'bpmn': 'http://www.omg.org/spec/BPMN/20100524/MODEL'}
+        gateway = root.find('.//bpmn:exclusiveGateway', ns)
+        
+        assert gateway is not None
+        assert gateway.get('name') == "Decision?"
+
+
+# ============================================================================
+# Test Helper Methods
+# ============================================================================
+
+class TestHelperMethods:
+    """Test helper methods."""
+    
+    def test_calculate_document_bounds_with_elements(self, export_service, simple_document):
+        """Test calculating document bounds."""
+        bounds = export_service._calculate_document_bounds(simple_document)
+        
+        assert bounds is not None
+        min_x, min_y, max_x, max_y = bounds
+        
+        assert min_x <= max_x
+        assert min_y <= max_y
+    
+    def test_calculate_document_bounds_empty(self, export_service, empty_document):
+        """Test calculating bounds for empty document."""
+        bounds = export_service._calculate_document_bounds(empty_document)
+        
+        assert bounds is None
+    
+    def test_get_element_color_hex(self, export_service):
+        """Test getting element color in hex format."""
+        color = export_service._get_element_color_hex(ElementType.START_EVENT)
+        assert color.startswith('#')
+        assert len(color) == 7
+        
+        color = export_service._get_element_color_hex(ElementType.TASK)
+        assert color.startswith('#')
+
+
+# ============================================================================
+# Test Error Handling
+# ============================================================================
+
+class TestErrorHandling:
+    """Test error handling in export operations."""
+    
+    def test_pdf_export_invalid_path(self, export_service, simple_document):
+        """Test PDF export with invalid path."""
+        with pytest.raises(PDFExportError):
+            # Try to write to a file in a non-existent drive
+            export_service.export_to_pdf(simple_document, "Z:\\nonexistent\\test.pdf")
+    
+    def test_svg_export_invalid_path(self, export_service, simple_document):
+        """Test SVG export with invalid path."""
+        with pytest.raises(SVGExportError):
+            export_service.export_to_svg(simple_document, "Z:\\nonexistent\\test.svg")
+    
+    def test_png_export_invalid_path(self, export_service, simple_document):
+        """Test PNG export with invalid path."""
+        with pytest.raises(PNGExportError):
+            export_service.export_to_png(simple_document, "Z:\\nonexistent\\test.png")
+    
+    def test_bpmn_export_invalid_path(self, export_service, simple_document):
+        """Test BPMN export with invalid path."""
+        with pytest.raises(BPMNExportError):
+            export_service.export_to_bpmn(simple_document, "Z:\\nonexistent\\test.bpmn")
+
+
+# ============================================================================
+# Test Event Publishing
+# ============================================================================
+
+class TestEventPublishing:
+    """Test that export operations publish events."""
+    
+    def test_pdf_export_publishes_events(self, export_service, simple_document, temp_dir):
+        """Test that PDF export publishes start and complete events."""
+        events = []
+        
+        def listener(topic, data):
+            events.append((topic, data))
+        
+        export_service.message_bus.subscribe('export:pdf:started', listener)
+        export_service.message_bus.subscribe('export:pdf:completed', listener)
+        
+        output_path = temp_dir / "events.pdf"
+        export_service.export_to_pdf(simple_document, str(output_path))
+        
+        # Should have start and complete events
+        topics = [e[0] for e in events]
+        assert 'export:pdf:started' in topics
+        assert 'export:pdf:completed' in topics
+    
+    def test_svg_export_publishes_events(self, export_service, simple_document, temp_dir):
+        """Test that SVG export publishes events."""
+        events = []
+        
+        def listener(topic, data):
+            events.append((topic, data))
+        
+        export_service.message_bus.subscribe('export:svg:started', listener)
+        export_service.message_bus.subscribe('export:svg:completed', listener)
+        
+        output_path = temp_dir / "events.svg"
+        export_service.export_to_svg(simple_document, str(output_path))
+        
+        topics = [e[0] for e in events]
+        assert 'export:svg:started' in topics
+        assert 'export:svg:completed' in topics
+
+
+# ============================================================================
+# Test Complex Scenarios
+# ============================================================================
+
+class TestComplexScenarios:
+    """Test complex export scenarios."""
+    
+    def test_export_all_formats(self, export_service, complex_document, temp_dir):
+        """Test exporting to all formats."""
+        # Export to all formats
+        pdf_path = export_service.export_to_pdf(complex_document, str(temp_dir / "test.pdf"))
+        svg_path = export_service.export_to_svg(complex_document, str(temp_dir / "test.svg"))
+        png_path = export_service.export_to_png(complex_document, str(temp_dir / "test.png"))
+        bpmn_path = export_service.export_to_bpmn(complex_document, str(temp_dir / "test.bpmn"))
+        
+        # Verify all files exist
+        assert pdf_path.exists()
+        assert svg_path.exists()
+        assert png_path.exists()
+        assert bpmn_path.exists()
+    
+    def test_export_large_document(self, export_service, temp_dir):
+        """Test exporting a document with many elements."""
+        doc = DocumentModel(title="Large Process")
+        
+        # Add 50 elements
+        for i in range(50):
+            elem = VPBElement(
+                element_id=f"elem_{i}",
+                element_type=ElementType.TASK,
+                name=f"Task {i}",
+                x=100 + (i % 10) * 150,
+                y=100 + (i // 10) * 100,
+                width=120,
+                height=80
+            )
+            doc.add_element(elem)
+        
+        # Add connections
+        for i in range(49):
+            conn = VPBConnection(
+                connection_id=f"conn_{i}",
+                connection_type=ConnectionType.SEQUENCE,
+                source_element=f"elem_{i}",
+                target_element=f"elem_{i+1}"
+            )
+            doc.add_connection(conn)
+        
+        # Export to all formats
+        pdf_path = export_service.export_to_pdf(doc, str(temp_dir / "large.pdf"))
+        svg_path = export_service.export_to_svg(doc, str(temp_dir / "large.svg"))
+        
+        assert pdf_path.exists()
+        assert svg_path.exists()

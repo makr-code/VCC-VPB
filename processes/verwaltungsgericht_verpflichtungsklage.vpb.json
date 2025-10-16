@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "Verpflichtungs- / Untätigkeitsklage – §§ 42, 75 VwGO",
+    "description": "Ablauf einer Verpflichtungsklage (Leistungsklage) bzw. Untätigkeitsklage gegen ausbleibende Behördenentscheidung."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Klageeingang", "x": 60, "y": 200, "description": "Klage schriftlich beim Verwaltungsgericht", "responsible_authority": "Kläger/in", "legal_basis": "§§ 81, 82 VwGO", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Vorverfahren prüfen", "x": 220, "y": 200, "description": "Widerspruch erforderlich? Ausnahme nach § 75 VwGO", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§ 68 VwGO", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Behörde zur Stellungnahme auffordern", "x": 380, "y": 200, "description": "Akte anfordern, Frist setzen", "responsible_authority": "Kammer/Senat", "legal_basis": "§ 82 VwGO", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Erörterung / Vergleich versuchen", "x": 540, "y": 120, "description": "Gütliche Einigung, Verpflichtungsangebot", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§ 87 VwGO", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Sach- und Rechtsprüfung", "x": 540, "y": 280, "description": "Anspruchsvoraussetzungen, Spruchreife prüfen", "responsible_authority": "Kammer/Senat", "legal_basis": "§ 113 Abs. 5 VwGO", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Spruchreife?", "x": 700, "y": 280, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Urteil (Verpflichtung) vorbereiten", "x": 860, "y": 200, "description": "Urteilsentwurf, Tenor, Fristsetzung", "responsible_authority": "Kammer/Senat", "legal_basis": "§ 113 Abs. 5 VwGO", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Urteil verkünden & zustellen", "x": 1020, "y": 200, "description": "Zustellung, Rechtsmittelbelehrung", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§§ 117, 122 VwGO", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Spruchreife herstellen", "x": 860, "y": 360, "description": "Sachaufklärung, Beweisaufnahme, Bescheidsurrogat", "responsible_authority": "Kammer/Senat", "legal_basis": "§ 86 Abs. 1 VwGO", "deadline_days": 21, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Verfahren abgeschlossen", "x": 1180, "y": 200, "description": "Rechtskraft / Rechtsmittel", "responsible_authority": "", "legal_basis": "§ 124 VwGO", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": "Vergleich"},
+    {"connection_id": "C4", "source_element": "F2", "target_element": "F4", "connection_type": "SEQUENCE", "description": "Sachprüfung"},
+    {"connection_id": "C5", "source_element": "F3", "target_element": "F4", "connection_type": "SEQUENCE", "description": "Keine Einigung"},
+    {"connection_id": "C6", "source_element": "F4", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C7", "source_element": "X1", "target_element": "F5", "connection_type": "SEQUENCE", "description": "Spruchreif"},
+    {"connection_id": "C8", "source_element": "F5", "target_element": "F6", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C9", "source_element": "F6", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C10", "source_element": "X1", "target_element": "F7", "connection_type": "SEQUENCE", "description": "Nicht spruchreif"},
+    {"connection_id": "C11", "source_element": "F7", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

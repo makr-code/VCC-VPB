@@ -1,0 +1,18 @@
+{
+  "metadata": {"name": "Ummeldung (Medium)", "description": "Antrag entgegennehmen, Identität/Termin prüfen, Daten aktualisieren, Bescheinigung"},
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Start", "x": 50, "y": 750, "description": "", "responsible_authority": "Einwohnermeldeamt", "legal_basis": "BMG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Antrag entgegennehmen", "x": 200, "y": 750, "description": "Frist prüfen", "responsible_authority": "Servicestelle", "legal_basis": "BMG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Identität/Termin prüfen", "x": 350, "y": 750, "description": "Termin ggf. vereinbaren", "responsible_authority": "Sachbearbeitung", "legal_basis": "BMG", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Daten aktualisieren", "x": 500, "y": 750, "description": "Wohnsitzdaten", "responsible_authority": "Einwohnermeldeamt", "legal_basis": "BMG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Meldebescheinigung ausstellen", "x": 650, "y": 750, "description": "Übermittlung ggf. digital", "responsible_authority": "Einwohnermeldeamt", "legal_basis": "BMG", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Ende", "x": 800, "y": 750, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "F3", "target_element": "F4", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C5", "source_element": "F4", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

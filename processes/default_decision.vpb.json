@@ -1,0 +1,16 @@
+{
+  "metadata": {"name": "Entscheidungspfad", "description": "Start → Prüfung → (Ja/Nein) → Ende"},
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Start", "x": 50, "y": 250, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Prüfung", "x": 200, "y": 250, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "G1", "element_type": "GATEWAY", "name": "Entscheidung?", "x": 350, "y": 250, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Ende (Ja)", "x": 550, "y": 200, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "E2", "element_type": "END_EVENT", "name": "Ende (Nein)", "x": 550, "y": 300, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "G1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "G1", "target_element": "E1", "connection_type": "SEQUENCE", "description": "Ja"},
+    {"connection_id": "C4", "source_element": "G1", "target_element": "E2", "connection_type": "SEQUENCE", "description": "Nein"}
+  ]
+}

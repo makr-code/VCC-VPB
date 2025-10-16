@@ -1,0 +1,34 @@
+{
+  "metadata": {
+    "name": "Meldebescheinigung – mit Hierarchien",
+    "description": "Vollständiger Ablauf vom Antrag bis zur Ausgabe inkl. fachlicher Zuständigkeiten"
+  },
+  "elements": [
+    {"element_id": "S_EINSTIEG", "element_type": "START_EVENT", "name": "Antrag gestellt", "x": 60, "y": 60, "description": "Bürger beantragt Meldebescheinigung", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Bürger"},
+    {"element_id": "F_ANTRAG", "element_type": "FUNCTION", "name": "Antrag aufnehmen", "x": 220, "y": 60, "description": "Identität prüfen und Antrag erfassen", "responsible_authority": "Bürgerbüro", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Frontoffice"},
+    {"element_id": "OU_SERVICE", "element_type": "ORGANIZATION_UNIT", "name": "Bürgerservice", "x": 220, "y": -40, "description": "Zuständige Stelle für Kundenkontakt", "responsible_authority": "Bürgerbüro", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Frontoffice"},
+    {"element_id": "GW_VOLL", "element_type": "XOR_CONNECTOR", "name": "Unterlagen vollständig?", "x": 400, "y": 60, "hierarchy": "Frontoffice"},
+    {"element_id": "F_NACHFORDERUNG", "element_type": "FUNCTION", "name": "Unterlagen nachfordern", "x": 400, "y": 180, "description": "Bürger erhält Nachricht mit fehlenden Angaben", "responsible_authority": "Bürgerbüro", "legal_basis": "", "deadline_days": 7, "geo_reference": "", "hierarchy": "Frontoffice"},
+    {"element_id": "F_PRUEFEN", "element_type": "FUNCTION", "name": "Daten abgleichen", "x": 580, "y": 60, "description": "Abgleich mit Melderegister", "responsible_authority": "Sachbearbeitung Melderegister", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Backoffice"},
+    {"element_id": "LC_RECHT", "element_type": "LEGAL_CHECKPOINT", "name": "Rechtsgrundlage prüfen", "x": 760, "y": 0, "description": "§ 18 BMG prüfen", "responsible_authority": "Rechtsdienst", "legal_basis": "BMG", "deadline_days": 0, "geo_reference": "", "hierarchy": "Recht"},
+    {"element_id": "F_ERSTELLEN", "element_type": "FUNCTION", "name": "Bescheinigung erstellen", "x": 760, "y": 120, "description": "Ausdruck oder PDF generieren", "responsible_authority": "Sachbearbeitung Melderegister", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Backoffice"},
+    {"element_id": "IO_BESCHEID", "element_type": "INFORMATION_OBJECT", "name": "Meldebescheinigung", "x": 940, "y": 120, "description": "Dokument mit aktueller Meldeadresse", "responsible_authority": "Sachbearbeitung", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Dokumente"},
+    {"element_id": "F_SIGNIEREN", "element_type": "FUNCTION", "name": "Digital signieren", "x": 1100, "y": 120, "description": "Elektronische Signatur hinzufügen", "responsible_authority": "IT", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "IT"},
+    {"element_id": "F_AUSGABE", "element_type": "FUNCTION", "name": "Bescheinigung bereitstellen", "x": 1260, "y": 120, "description": "Versand per Post oder digitales Postfach", "responsible_authority": "Bürgerbüro", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Frontoffice"},
+    {"element_id": "E_ERLEDIGT", "element_type": "END_EVENT", "name": "Bescheinigung übermittelt", "x": 1440, "y": 120, "description": "Prozess abgeschlossen", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Bürger"},
+    {"element_id": "G_BACKOFFICE", "element_type": "GROUP", "name": "Sachbearbeitung Backoffice", "x": 760, "y": 80, "description": "Fachliche Bearbeitungsschritte", "members": ["F_PRUEFEN", "LC_RECHT", "F_ERSTELLEN", "IO_BESCHEID"], "collapsed": false, "hierarchy": "Backoffice"}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S_EINSTIEG", "target_element": "F_ANTRAG", "connection_type": "SEQUENCE", "description": "Antrag wird entgegengenommen"},
+    {"connection_id": "C2", "source_element": "F_ANTRAG", "target_element": "GW_VOLL", "connection_type": "SEQUENCE", "description": "Antragsdaten liegen vor"},
+    {"connection_id": "C3", "source_element": "GW_VOLL", "target_element": "F_PRUEFEN", "connection_type": "SEQUENCE", "description": "Unterlagen vollständig"},
+    {"connection_id": "C4", "source_element": "GW_VOLL", "target_element": "F_NACHFORDERUNG", "connection_type": "SEQUENCE", "description": "Unterlagen fehlen"},
+    {"connection_id": "C5", "source_element": "F_NACHFORDERUNG", "target_element": "F_ANTRAG", "connection_type": "SEQUENCE", "description": "Nachreichung prüfen"},
+    {"connection_id": "C6", "source_element": "F_PRUEFEN", "target_element": "LC_RECHT", "connection_type": "SEQUENCE", "description": "Fachliche Prüfung abgeschlossen"},
+    {"connection_id": "C7", "source_element": "LC_RECHT", "target_element": "F_ERSTELLEN", "connection_type": "SEQUENCE", "description": "Rechtliche Prüfung i.O."},
+    {"connection_id": "C8", "source_element": "F_ERSTELLEN", "target_element": "IO_BESCHEID", "connection_type": "SEQUENCE", "description": "Bescheinigung erzeugt"},
+    {"connection_id": "C9", "source_element": "IO_BESCHEID", "target_element": "F_SIGNIEREN", "connection_type": "SEQUENCE", "description": "Dokument zur Signatur"},
+    {"connection_id": "C10", "source_element": "F_SIGNIEREN", "target_element": "F_AUSGABE", "connection_type": "SEQUENCE", "description": "Signatur abgeschlossen"},
+    {"connection_id": "C11", "source_element": "F_AUSGABE", "target_element": "E_ERLEDIGT", "connection_type": "SEQUENCE", "description": "Bescheinigung zugestellt"}
+  ]
+}

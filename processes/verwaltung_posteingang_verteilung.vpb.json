@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "name": "Posteingang & Verteilung",
+    "description": "Standardprozess für den zentralen Posteingang inkl. Digitalisierung, Klassifikation und Weiterleitung an Fachbereiche."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Posteingang erreicht", "x": 60, "y": 220, "description": "Dokument oder Nachricht geht ein (physisch oder digital)", "responsible_authority": "Zentrale Poststelle", "legal_basis": "§ 10 VwVfG; Registraturrichtlinie", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Eingang registrieren", "x": 220, "y": 220, "description": "Eingangskanal erfassen, Zeitstempel setzen, Vorgangsnummer vergeben", "responsible_authority": "Poststelle / Service Center", "legal_basis": "§ 3a VwVfG; Geschäftsordnung", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Welcher Kanal?", "x": 380, "y": 220, "description": "Branch nach Medium", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Digitale Nachricht prüfen", "x": 540, "y": 80, "description": "E-Mail/De-Mail/D-Stack/XÖV: Signaturen, Anhänge, Malware-Scan", "responsible_authority": "IT-Service / Fachpostkorb", "legal_basis": "§ 3a VwVfG; EGovG", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Papierpost vorbereiten", "x": 540, "y": 220, "description": "Öffnen, Heften entfernen, Vorsortierung nach Vertraulichkeit", "responsible_authority": "Scan-Team", "legal_basis": "Registraturrichtlinie; Datenschutzkonzept", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Sonderkanal behandeln", "x": 540, "y": 360, "description": "Fax, Kurier, USB/CD: physische Sicherheit, Virenscan, Quarantäne", "responsible_authority": "IT-Sicherheit / Poststelle", "legal_basis": "BSI Grundschutz; DSGVO Art. 32", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Scannen & OCR", "x": 700, "y": 220, "description": "Scan erzeugen, OCR durchführen, Qualitätskontrolle, Original kennzeichnen", "responsible_authority": "Digitalisierungsstraße", "legal_basis": "E-Rechnungsverordnung analog; ersetzendes Scannen TR-RESISCAN", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "X2", "element_type": "XOR_CONNECTOR", "name": "Dringend/Frist?", "x": 860, "y": 220, "description": "Prüfung auf Fristsachen", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Frist markieren & eskalieren", "x": 860, "y": 80, "description": "Fristdatum erfassen, Eskalationspfad aktivieren, Wiedervorlage setzen", "responsible_authority": "Poststelle / Fachkoordination", "legal_basis": "§ 31 VwVfG; Dienstanweisung Fristensachen", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Inhalt klassifizieren", "x": 1020, "y": 220, "description": "Dokumenttyp identifizieren, Schlagworte setzen, Schutzstufe prüfen", "responsible_authority": "Poststelle / Registratur", "legal_basis": "Registraturrichtlinie; DSGVO Art. 30", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F8", "element_type": "FUNCTION", "name": "Routing festlegen", "x": 1180, "y": 220, "description": "Zuständige Organisationseinheit ermitteln, Fachverfahren auswählen", "responsible_authority": "Poststelle / Organisationsservice", "legal_basis": "Geschäftsverteilungsplan", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F9", "element_type": "FUNCTION", "name": "Bereitstellen & Benachrichtigen", "x": 1340, "y": 220, "description": "Akte befüllen, Aufgaben anlegen, Benachrichtigung an Fachbereich senden", "responsible_authority": "Service-Center", "legal_basis": "§ 10 VwVfG; OZG", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F10", "element_type": "FUNCTION", "name": "Archiv / Originale behandeln", "x": 1500, "y": 220, "description": "Original archivieren oder zurücksenden, Löschfristen dokumentieren", "responsible_authority": "Registratur", "legal_basis": "Archivgesetz; DSGVO Art. 5", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "F11", "element_type": "FUNCTION", "name": "Service-Level überwachen", "x": 1660, "y": 220, "description": "SLA-Tracking, Eskalation bei Verzögerungen, Reporting", "responsible_authority": "Qualitätsmanagement", "legal_basis": "Dienstleistungsvereinbarung", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Post verteilt", "x": 1820, "y": 220, "description": "Dokument im Fachprozess angekommen und dokumentiert", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "X1", "target_element": "F2", "connection_type": "SEQUENCE", "description": "Digital"},
+    {"connection_id": "C4", "source_element": "X1", "target_element": "F3", "connection_type": "SEQUENCE", "description": "Papier"},
+    {"connection_id": "C5", "source_element": "X1", "target_element": "F4", "connection_type": "SEQUENCE", "description": "Sonderkanal"},
+    {"connection_id": "C6", "source_element": "F2", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C7", "source_element": "F3", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C8", "source_element": "F4", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C9", "source_element": "F5", "target_element": "X2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C10", "source_element": "X2", "target_element": "F6", "connection_type": "SEQUENCE", "description": "Fristsache"},
+    {"connection_id": "C11", "source_element": "F6", "target_element": "F7", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C12", "source_element": "X2", "target_element": "F7", "connection_type": "SEQUENCE", "description": "keine Frist"},
+    {"connection_id": "C13", "source_element": "F7", "target_element": "F8", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C14", "source_element": "F8", "target_element": "F9", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C15", "source_element": "F9", "target_element": "F10", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C16", "source_element": "F10", "target_element": "F11", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C17", "source_element": "F11", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

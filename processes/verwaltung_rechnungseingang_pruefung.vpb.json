@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "name": "Rechnungseingang & Prüfung",
+    "description": "Standardablauf für die Bearbeitung eingehender Rechnungen inkl. formaler und sachlicher Prüfung, Freigabe und Zahlungsanweisung."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Rechnung eingegangen", "x": 60, "y": 220, "description": "Rechnung trifft digital oder physisch ein", "responsible_authority": "Poststelle / Kreditorenbuchhaltung", "legal_basis": "§ 70 GO; § 34 KommHV", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Rechnung erfassen", "x": 220, "y": 220, "description": "Rechnungsdaten erfassen (XRechnung, ZUGFeRD, Scan), Belegnummer vergeben", "responsible_authority": "Kreditorenbuchhaltung", "legal_basis": "E-Rechnungs-Verordnung; § 36 KommHV", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Formale Prüfung", "x": 380, "y": 220, "description": "Pflichtangaben, Steuernummer, IBAN, Bestellbezug, Fristen prüfen", "responsible_authority": "Kreditorenbuchhaltung", "legal_basis": "§ 14 UStG; § 36 KommHV", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Formale Mängel?", "x": 540, "y": 220, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Korrektur anfordern", "x": 540, "y": 80, "description": "Lieferant informieren, fehlende Angaben nachfordern", "responsible_authority": "Kreditorenbuchhaltung", "legal_basis": "§ 37 VwVfG; Vertragsbedingungen", "deadline_days": 5, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Sachliche Prüfung", "x": 700, "y": 220, "description": "Leistungsnachweis, Mengen, Preise mit Bestellung/Fachbereich abstimmen", "responsible_authority": "Fachvorgesetzte / Leistungsbestätigende Stelle", "legal_basis": "Dienstanweisung Rechnungsprüfung", "deadline_days": 5, "geo_reference": ""},
+    {"element_id": "X2", "element_type": "XOR_CONNECTOR", "name": "Sachliche Abweichung?", "x": 860, "y": 220, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Klärung veranlassen", "x": 860, "y": 80, "description": "Abweichungen mit Lieferant/Fachbereich klären, Gutschrift oder Nachlieferung anstoßen", "responsible_authority": "Fachbereich / Einkauf", "legal_basis": "§ 58 BHO analog; Vertragsbedingungen", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Kontierung & Buchung vorbereiten", "x": 1020, "y": 220, "description": "Kostenstelle, Produkt, Sachkonto zuordnen, Beleg im ERP vorkontieren", "responsible_authority": "Kreditorenbuchhaltung", "legal_basis": "§ 34 KommHV; GoBD", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Freigabe Stufe 1", "x": 1180, "y": 220, "description": "Vier-Augen-Prinzip: Betragsklasse prüfen, Freigabe erteilen", "responsible_authority": "Fachvorgesetzte/r", "legal_basis": "Dienstanweisung Zahlungsfreigabe", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "X3", "element_type": "XOR_CONNECTOR", "name": "Betrag über Limit?", "x": 1340, "y": 220, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F8", "element_type": "FUNCTION", "name": "Freigabe Stufe 2", "x": 1340, "y": 80, "description": "Zusätzliche Freigabe durch Kämmerei/Haushaltsbeauftragte", "responsible_authority": "Kämmerei", "legal_basis": "Kommunale Haushaltsverordnung", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "F9", "element_type": "FUNCTION", "name": "Zahlung anweisen", "x": 1500, "y": 220, "description": "Zahltermin setzen, Zahlungsdatei im ERP freigeben, Skontofrist beachten", "responsible_authority": "Kasse / Zahlungsverkehr", "legal_basis": "§ 82 GO; Zahlungsrichtlinie", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "F10", "element_type": "FUNCTION", "name": "Archiv & Reporting", "x": 1660, "y": 220, "description": "Digitale Ablage, Originalbeleg archivieren, Kontrollliste aktualisieren", "responsible_authority": "Rechnungswesen / Revision", "legal_basis": "GoBD; DSGVO Art. 5", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Rechnung abgeschlossen", "x": 1820, "y": 220, "description": "Zahlung erfolgt und Vorgang dokumentiert", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "X1", "target_element": "F3", "connection_type": "SEQUENCE", "description": "Mängel"},
+    {"connection_id": "C5", "source_element": "F3", "target_element": "F1", "connection_type": "SEQUENCE", "description": "Korrigierte Rechnung"},
+    {"connection_id": "C6", "source_element": "X1", "target_element": "F4", "connection_type": "SEQUENCE", "description": "Keine Mängel"},
+    {"connection_id": "C7", "source_element": "F4", "target_element": "X2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C8", "source_element": "X2", "target_element": "F5", "connection_type": "SEQUENCE", "description": "Abweichung"},
+    {"connection_id": "C9", "source_element": "F5", "target_element": "F4", "connection_type": "SEQUENCE", "description": "Korrektur"},
+    {"connection_id": "C10", "source_element": "X2", "target_element": "F6", "connection_type": "SEQUENCE", "description": "OK"},
+    {"connection_id": "C11", "source_element": "F6", "target_element": "F7", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C12", "source_element": "F7", "target_element": "X3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C13", "source_element": "X3", "target_element": "F8", "connection_type": "SEQUENCE", "description": "Über Limit"},
+    {"connection_id": "C14", "source_element": "F8", "target_element": "F9", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C15", "source_element": "X3", "target_element": "F9", "connection_type": "SEQUENCE", "description": "Innerhalb Limit"},
+    {"connection_id": "C16", "source_element": "F9", "target_element": "F10", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C17", "source_element": "F10", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

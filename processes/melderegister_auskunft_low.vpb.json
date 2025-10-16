@@ -1,0 +1,21 @@
+{
+  "metadata": {"name": "Melderegisterauskunft (Low)", "description": "Prüfen, Identität feststellen, Auskunft oder Ablehnen"},
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Start", "x": 50, "y": 650, "description": "", "responsible_authority": "Einwohnermeldeamt", "legal_basis": "BMG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Antrag prüfen", "x": 200, "y": 650, "description": "Zulässigkeit", "responsible_authority": "Sachbearbeitung", "legal_basis": "BMG", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Identität prüfen", "x": 350, "y": 650, "description": "Legitimation", "responsible_authority": "Sachbearbeitung", "legal_basis": "BMG", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "G1", "element_type": "GATEWAY", "name": "Auskunft zulässig?", "x": 500, "y": 650, "description": "", "responsible_authority": "", "legal_basis": "BMG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Auskunft erteilen", "x": 650, "y": 600, "description": "Einfache/erweiterte Auskunft", "responsible_authority": "Einwohnermeldeamt", "legal_basis": "BMG", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Ablehnen", "x": 650, "y": 700, "description": "Begründung, Rechtsbehelf", "responsible_authority": "Einwohnermeldeamt", "legal_basis": "BMG", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Ende", "x": 800, "y": 650, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "G1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "G1", "target_element": "F3", "connection_type": "SEQUENCE", "description": "Ja"},
+    {"connection_id": "C5", "source_element": "G1", "target_element": "F4", "connection_type": "SEQUENCE", "description": "Nein"},
+    {"connection_id": "C6", "source_element": "F3", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C7", "source_element": "F4", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

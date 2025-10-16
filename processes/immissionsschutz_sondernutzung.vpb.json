@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "name": "Immissionsschutz – Sondernutzung nach LImSchG",
+    "description": "Genehmigungsverfahren für temporäre Lärm- oder Emissionsereignisse (Baustellen, Veranstaltungen) nach Landes-Immissionsschutzgesetz einschließlich Auflagenmanagement und Kontrolle."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Antrag eingegangen", "x": 60, "y": 200, "description": "Antrag auf temporäre Sondernutzung bzw. Lärmerlaubnis liegt vor", "responsible_authority": "Ordnungsamt / Immissionsschutzbehörde", "legal_basis": "§ 10 LImSchG (Land)", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Unterlagen prüfen", "x": 220, "y": 200, "description": "Vollständigkeit, Plausibilität und Terminlage bewerten", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 10 Abs. 3 LImSchG; § 3 BImSchG", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Ortstermin / Besichtigung", "x": 380, "y": 200, "description": "Gegebenheiten vor Ort prüfen, Messpunkte festlegen", "responsible_authority": "Immissionsschutzbehörde / Ordnungsamt", "legal_basis": "§ 26 LImSchG", "deadline_days": 10, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Immissionsbewertung durchführen", "x": 540, "y": 200, "description": "Prognoseberechnungen, Lärmkontingente, Ruhezeiten vergleichen", "responsible_authority": "Immissionsschutzbehörde / Fachgutachter", "legal_basis": "§ 22 BImSchG; 18. BImSchV", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Auflagenentwurf erstellen", "x": 700, "y": 200, "description": "Betriebszeiten, Schallschutzmaßnahmen, Dokumentationspflichten festlegen", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 12 LImSchG; § 15 Abs. 1 BImSchG", "deadline_days": 5, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Nachforderung nötig?", "x": 860, "y": 200, "description": "Fehlen Angaben oder sind zusätzliche Gutachten notwendig?", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Nachforderung senden", "x": 860, "y": 60, "description": "Antragsteller zur Ergänzung oder Anpassung auffordern", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 26 Abs. 2 VwVfG", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Bescheid fertigen", "x": 1020, "y": 200, "description": "Genehmigung oder Ablehnung mit Nebenbestimmungen und Gebührenbescheid erstellen", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 12 LImSchG; § 36 VwVfG", "deadline_days": 5, "geo_reference": ""},
+    {"element_id": "X2", "element_type": "XOR_CONNECTOR", "name": "Genehmigung?", "x": 1180, "y": 200, "description": "Entscheidung über Zulassung", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Auflagen abstimmen", "x": 1180, "y": 60, "description": "Auflagen mit Polizei, Feuerwehr, Bauaufsicht oder Veranstalter abstimmen", "responsible_authority": "Immissionsschutzbehörde / Kooperationspartner", "legal_basis": "§ 12 LImSchG; Polizeiverordnungen", "deadline_days": 5, "geo_reference": ""},
+    {"element_id": "F8", "element_type": "FUNCTION", "name": "Bekanntgabe & Gebühren", "x": 1340, "y": 200, "description": "Bescheid zustellen, Gebühren erheben, Rechtsbehelfsbelehrung", "responsible_authority": "Immissionsschutzbehörde / Stadtkasse", "legal_basis": "§ 41 VwVfG; Gebührensatzung", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "F9", "element_type": "FUNCTION", "name": "Kontrolle & Monitoring planen", "x": 1500, "y": 200, "description": "Kontrolltermine festlegen, Messkonzept oder Nachweise einfordern", "responsible_authority": "Immissionsschutzbehörde / Ordnungsamt", "legal_basis": "§ 17 BImSchG; § 14 LImSchG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F10", "element_type": "FUNCTION", "name": "Durchführung überwachen", "x": 1660, "y": 200, "description": "Auflagenkontrolle, Messungen begleiten, Beschwerden bearbeiten", "responsible_authority": "Immissionsschutzbehörde / Ordnungsamt", "legal_basis": "§ 17 BImSchG; § 15 LImSchG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Sondernutzung abgeschlossen", "x": 1820, "y": 200, "description": "Genehmigung umgesetzt, Kontrolle erfolgt, Verfahren geschlossen", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "F3", "target_element": "F4", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C5", "source_element": "F4", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C6", "source_element": "X1", "target_element": "F5", "connection_type": "SEQUENCE", "description": "Ja"},
+    {"connection_id": "C7", "source_element": "F5", "target_element": "F1", "connection_type": "SEQUENCE", "description": "Ergänzt"},
+    {"connection_id": "C8", "source_element": "X1", "target_element": "F6", "connection_type": "SEQUENCE", "description": "Nein"},
+    {"connection_id": "C9", "source_element": "F6", "target_element": "X2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C10", "source_element": "X2", "target_element": "F7", "connection_type": "SEQUENCE", "description": "Auflagen abstimmen"},
+    {"connection_id": "C11", "source_element": "F7", "target_element": "F6", "connection_type": "SEQUENCE", "description": "Rücklauf"},
+    {"connection_id": "C12", "source_element": "X2", "target_element": "F8", "connection_type": "SEQUENCE", "description": "Genehmigt"},
+    {"connection_id": "C13", "source_element": "F8", "target_element": "F9", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C14", "source_element": "F9", "target_element": "F10", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C15", "source_element": "F10", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

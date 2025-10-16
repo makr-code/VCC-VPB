@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "name": "Immissionsschutz – Störfall- & Notfallmanagement",
+    "description": "Ablauf zur Umsetzung der Pflichten nach §§ 52a BImSchG und 12. BImSchV (Störfall-Verordnung) einschließlich Vorsorge, Ereignismanagement und Nachbereitung."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Betriebsbereich festgelegt", "x": 60, "y": 220, "description": "Anlage wird als Betriebsbereich (unter/oberer Störfallbereich) eingestuft", "responsible_authority": "Betreiber", "legal_basis": "§ 7 12. BImSchV", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Sicherheitsmanagement aufbauen", "x": 220, "y": 220, "description": "Organisation, Verantwortlichkeiten und Verfahren festlegen", "responsible_authority": "Betreiber", "legal_basis": "§ 8 12. BImSchV", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Sicherheitsbericht erstellen", "x": 380, "y": 220, "description": "Gefahrenquellen analysieren, Szenarien bewerten, Schutzmaßnahmen dokumentieren", "responsible_authority": "Betreiber", "legal_basis": "§ 9 12. BImSchV", "deadline_days": 90, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Behörden & Öffentlichkeit informieren", "x": 540, "y": 220, "description": "Sicherheitsbericht einreichen, Informationsblätter an Öffentlichkeit versenden", "responsible_authority": "Betreiber", "legal_basis": "§ 11 12. BImSchV", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Alarm- & Gefahrenabwehrplan abstimmen", "x": 700, "y": 220, "description": "Plan mit Feuerwehr, Leitstelle, Behörden abstimmen und freigeben", "responsible_authority": "Betreiber / Katastrophenschutzbehörde", "legal_basis": "§ 10 12. BImSchV", "deadline_days": 21, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Notfallübungen durchführen", "x": 860, "y": 220, "description": "Regelmäßige Übungen vor Ort, Dokumentation von Erkenntnissen", "responsible_authority": "Betreiber / Einsatzkräfte", "legal_basis": "§ 10 Abs. 4 12. BImSchV", "deadline_days": 1095, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Störfall aufgetreten?", "x": 1020, "y": 220, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Alarm auslösen", "x": 1020, "y": 80, "description": "Interne/ externe Alarmierung, Leitstelle informieren", "responsible_authority": "Betreiber", "legal_basis": "§ 11 Abs. 1 12. BImSchV", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Einsatz koordinieren", "x": 1180, "y": 80, "description": "Gefahrenabwehrmaßnahmen durchführen, Lageführung, Kommunikation", "responsible_authority": "Einsatzleitung / Betreiber", "legal_basis": "§ 11 Abs. 2 12. BImSchV", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F8", "element_type": "FUNCTION", "name": "Behördenmeldung & Öffentlichkeit", "x": 1340, "y": 80, "description": "Behörden laufend informieren, Bevölkerung warnen", "responsible_authority": "Betreiber", "legal_basis": "§ 11 Abs. 1 12. BImSchV; § 52a BImSchG", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F9", "element_type": "FUNCTION", "name": "Ereignis analysieren", "x": 1180, "y": 220, "description": "Ursachenanalyse, Wirksamkeit der Maßnahmen bewerten", "responsible_authority": "Betreiber", "legal_basis": "§ 11 Abs. 3 12. BImSchV", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F10", "element_type": "FUNCTION", "name": "Maßnahmenplan aktualisieren", "x": 1340, "y": 220, "description": "Sicherheitsmanagement, Pläne und Übungen anpassen", "responsible_authority": "Betreiber", "legal_basis": "§ 8 12. BImSchV", "deadline_days": 45, "geo_reference": ""},
+    {"element_id": "F11", "element_type": "FUNCTION", "name": "Bericht an Behörden senden", "x": 1500, "y": 220, "description": "Störfallbericht, Lessons Learned, Fristnachweise übermitteln", "responsible_authority": "Betreiber", "legal_basis": "§ 11 Abs. 3 12. BImSchV", "deadline_days": 45, "geo_reference": ""},
+    {"element_id": "F12", "element_type": "FUNCTION", "name": "Überwachung planen", "x": 1660, "y": 220, "description": "Behördliche und interne Audits, Kontrolltermine setzen", "responsible_authority": "Immissionsschutzbehörde / Betreiber", "legal_basis": "§ 17 BImSchG; § 16 12. BImSchV", "deadline_days": 60, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Störfallmanagement aktualisiert", "x": 1820, "y": 220, "description": "Vorbereitung und Nachbereitung abgeschlossen", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "F3", "target_element": "F4", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C5", "source_element": "F4", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C6", "source_element": "F5", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C7", "source_element": "X1", "target_element": "F6", "connection_type": "SEQUENCE", "description": "Störfall"},
+    {"connection_id": "C8", "source_element": "F6", "target_element": "F7", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C9", "source_element": "F7", "target_element": "F8", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C10", "source_element": "F8", "target_element": "F9", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C11", "source_element": "X1", "target_element": "F9", "connection_type": "SEQUENCE", "description": "kein Ereignis"},
+    {"connection_id": "C12", "source_element": "F9", "target_element": "F10", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C13", "source_element": "F10", "target_element": "F11", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C14", "source_element": "F11", "target_element": "F12", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C15", "source_element": "F12", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

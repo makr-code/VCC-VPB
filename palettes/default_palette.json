@@ -1,0 +1,61 @@
+{
+  "categories": [
+    {
+      "id": "connections-core",
+      "title": "Verbindungen – Kern",
+      "items": [
+        { "type": "SEQUENCE", "name": "Geschäftsgang", "arrow_style": "single" },
+        { "type": "MESSAGE", "name": "Informationsfluss", "arrow_style": "double" },
+        { "type": "ASSOCIATION", "name": "Assoziation", "arrow_style": "none" }
+      ]
+    },
+    {
+      "id": "connections-governance",
+      "title": "Verbindungen – Governance",
+      "items": [
+        { "type": "LEGAL", "name": "Rechtsbezug", "arrow_style": "single" },
+        { "type": "APPROVAL", "name": "Genehmigung", "arrow_style": "single" },
+        { "type": "REJECTION", "name": "Ablehnung", "arrow_style": "single" },
+        { "type": "DEADLINE", "name": "Frist-Hinweis", "arrow_style": "single" },
+        { "type": "ESCALATION", "name": "Eskalation", "arrow_style": "double" }
+      ]
+    },
+    {
+      "id": "connections-context",
+      "title": "Verbindungen – Kontext",
+      "items": [
+        { "type": "DOCUMENT", "name": "Dokumentfluss", "arrow_style": "single" },
+        { "type": "NOTIFICATION", "name": "Benachrichtigung", "arrow_style": "single" },
+        { "type": "GEO_REF", "name": "Geo-Referenz", "arrow_style": "none" }
+      ]
+    },
+    {
+      "id": "bpmn-basic",
+      "title": "Elemente – Basis",
+      "items": [
+        { "type": "START_EVENT", "name": "Start", "shape": "circle", "fill": "#C3F7C3", "outline": "#2E8B57" },
+        { "type": "FUNCTION", "name": "Aufgabe", "shape": "rect", "fill": "#E6F3FF", "outline": "#004C99" },
+        { "type": "GATEWAY", "name": "Gateway", "shape": "diamond", "fill": "#FFFF99", "outline": "#B3B300" },
+        { "type": "END_EVENT", "name": "Ende", "shape": "circle", "fill": "#FFB6C1", "outline": "#B22222" }
+      ]
+    },
+    {
+      "id": "epk-ext",
+      "title": "Elemente – EPK/VPB",
+      "items": [
+        { "type": "EVENT", "name": "Ereignis", "shape": "oval", "fill": "#FFE6E6", "outline": "#CC0000" },
+        { "type": "GROUP", "name": "Gruppe/Container", "shape": "rect", "fill": "", "outline": "#666666", "dash": [6,4] },
+        { "type": "ORGANIZATION_UNIT", "name": "Organisation", "shape": "rect", "fill": "#F0F0F0", "outline": "#666666" },
+        { "type": "INFORMATION_OBJECT", "name": "Information", "shape": "diamond", "fill": "#FFFFCC", "outline": "#999900" },
+        { "type": "AND_CONNECTOR", "name": "UND", "shape": "circle", "fill": "#E6FFE6", "outline": "#00AA00" },
+        { "type": "OR_CONNECTOR", "name": "ODER", "shape": "circle", "fill": "#FFE6CC", "outline": "#CC6600" },
+        { "type": "XOR_CONNECTOR", "name": "Exklusiv ODER", "shape": "diamond", "fill": "#FFCCCC", "outline": "#CC0000" },
+        { "type": "SUBPROCESS", "name": "Subprozess (Ref)", "shape": "rect", "fill": "#F9F9F9", "outline": "#444444", "dash": [4,4] },
+        { "type": "LEGAL_CHECKPOINT", "name": "Rechtsprüfung", "shape": "hex", "fill": "#E6E6FA", "outline": "#6A5ACD" },
+        { "type": "DEADLINE", "name": "Frist", "shape": "rect", "fill": "#FFA07A", "outline": "#CD5C5C" },
+        { "type": "COMPETENCY_CHECK", "name": "Zuständigkeit", "shape": "rect", "fill": "#DDA0DD", "outline": "#9932CC" },
+        { "type": "GEO_CONTEXT", "name": "Geo-Kontext", "shape": "rect", "fill": "#87CEEB", "outline": "#4682B4" }
+      ]
+    }
+  ]
+}

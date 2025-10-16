@@ -1,0 +1,12 @@
+{
+  "metadata": {"name": "Hello World – Minimal", "description": "Start → Hello → Ende"},
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Start", "x": 50, "y": 50, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Hello", "x": 200, "y": 50, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Ende", "x": 350, "y": 50, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

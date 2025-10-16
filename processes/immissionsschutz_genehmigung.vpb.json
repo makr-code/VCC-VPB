@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "name": "Immissionsschutzrechtliche Genehmigung",
+    "description": "Verfahren zur Genehmigung genehmigungsbedürftiger Anlagen nach §§ 4–16 BImSchG i. V. m. 4. BImSchV inklusive UVP- und Beteiligungsschritten."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Antrag eingegangen", "x": 60, "y": 220, "description": "Antragsunterlagen nach 9. BImSchV werden bei der Behörde eingereicht", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 10 Abs. 1 BImSchG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Antrag registrieren", "x": 220, "y": 220, "description": "Erfassen, Eingangsbestätigung, Aktenzeichen vergeben", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 10 Abs. 1 BImSchG; 9. BImSchV", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Vollständigkeit prüfen", "x": 380, "y": 220, "description": "Unterlagen gegen Anforderungskatalog prüfen, ggf. Antragskonferenz", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 10 Abs. 1a BImSchG; § 3a 9. BImSchV", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Unterlagen vollständig?", "x": 540, "y": 220, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Nachforderung stellen", "x": 540, "y": 80, "description": "Fehlende Unterlagen anfordern, Frist setzen", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 10 Abs. 1a BImSchG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "UVP-Vorprüfung durchführen", "x": 700, "y": 220, "description": "Prüfen ob UVP-Pflicht nach UVPG/4. BImSchV Anhang gegeben ist", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 10 Abs. 4 BImSchG; § 3c UVPG", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "X2", "element_type": "XOR_CONNECTOR", "name": "UVP erforderlich?", "x": 860, "y": 220, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "UVP & Umweltbericht umsetzen", "x": 860, "y": 80, "description": "Erstellen/Prüfen Umweltverträglichkeitsstudie, Scoping, Behörde informiert", "responsible_authority": "Genehmigungsbehörde / Fachgutachter", "legal_basis": "§ 12 UVPG; § 10 Abs. 3 BImSchG", "deadline_days": 90, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Fachbehörden beteiligen", "x": 1020, "y": 220, "description": "Stellungnahmen von Fachbehörden, ggf. EU-Notifizierung", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 10 Abs. 5 BImSchG", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Öffentliche Auslegung & Anhörung", "x": 1180, "y": 220, "description": "Bekanntmachung, Einsichtnahme, Erörterungstermin durchführen", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 10 Abs. 3–6 BImSchG", "deadline_days": 42, "geo_reference": ""},
+    {"element_id": "F8", "element_type": "FUNCTION", "name": "Stellungnahmen auswerten", "x": 1340, "y": 220, "description": "Einwendungen bewerten, fachliche Abwägung dokumentieren", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 10 Abs. 6 BImSchG", "deadline_days": 21, "geo_reference": ""},
+    {"element_id": "F9", "element_type": "FUNCTION", "name": "Nebenbestimmungen entwerfen", "x": 1500, "y": 220, "description": "Auflagen, Befristungen, Monitoringauflagen abstimmen", "responsible_authority": "Genehmigungsbehörde / Fachbehörden", "legal_basis": "§ 12 BImSchG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F10", "element_type": "FUNCTION", "name": "Genehmigungsbescheid erstellen", "x": 1660, "y": 220, "description": "Bescheidentwurf mit Begründung und Rechtsbehelfsbelehrung", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 13 BImSchG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F11", "element_type": "FUNCTION", "name": "Bekanntgabe & Veröffentlichung", "x": 1820, "y": 220, "description": "Bescheid zustellen, Veröffentlichung nach § 10 Abs. 8 BImSchG", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 10 Abs. 8 BImSchG; § 4a UVPG", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F12", "element_type": "FUNCTION", "name": "Monitoring vorbereiten", "x": 1980, "y": 220, "description": "Überwachungspfad und Meldepflichten festlegen", "responsible_authority": "Genehmigungsbehörde", "legal_basis": "§ 26 BImSchG", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Genehmigung wirksam", "x": 2140, "y": 220, "description": "Bescheid bestandskräftig / sofort vollziehbar", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "X1", "target_element": "F3", "connection_type": "SEQUENCE", "description": "Nachforderung"},
+    {"connection_id": "C5", "source_element": "F3", "target_element": "F2", "connection_type": "SEQUENCE", "description": "Unterlagen ergänzt"},
+    {"connection_id": "C6", "source_element": "X1", "target_element": "F4", "connection_type": "SEQUENCE", "description": "vollständig"},
+    {"connection_id": "C7", "source_element": "F4", "target_element": "X2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C8", "source_element": "X2", "target_element": "F5", "connection_type": "SEQUENCE", "description": "UVP"},
+    {"connection_id": "C9", "source_element": "F5", "target_element": "F6", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C10", "source_element": "X2", "target_element": "F6", "connection_type": "SEQUENCE", "description": "keine UVP"},
+    {"connection_id": "C11", "source_element": "F6", "target_element": "F7", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C12", "source_element": "F7", "target_element": "F8", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C13", "source_element": "F8", "target_element": "F9", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C14", "source_element": "F9", "target_element": "F10", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C15", "source_element": "F10", "target_element": "F11", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C16", "source_element": "F11", "target_element": "F12", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C17", "source_element": "F12", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

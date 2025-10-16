@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "name": "Immissionsschutz – Anzeige nach § 15 BImSchG",
+    "description": "Verfahren für die Anzeige wesentlicher Änderungen genehmigungsbedürftiger Anlagen mit Prüfung auf Genehmigungspflicht." 
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Änderungsanzeige eingegangen", "x": 60, "y": 220, "description": "Betreiber zeigt geplante Änderung der Anlage an", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 15 Abs. 1 BImSchG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Anzeige registrieren", "x": 220, "y": 220, "description": "Eingang bestätigen, Aktenzeichen und Fristen setzen", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 15 BImSchG", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Vollständigkeit prüfen", "x": 380, "y": 220, "description": "Unterlagen (Beschreibung, Auswirkungen, Vergleich) prüfen", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 15 BImSchG; 9. BImSchV", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Unterlagen vollständig?", "x": 540, "y": 220, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Nachforderung formulieren", "x": 540, "y": 80, "description": "Weitere Unterlagen anfordern, Frist setzen", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 15 BImSchG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Änderungsbewertung durchführen", "x": 700, "y": 220, "description": "Bewerten ob Änderung wesentlich (4. BImSchV Anhang) und Auswirkungen auf Emissionen", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 15 BImSchG", "deadline_days": 10, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Fachbehörden beteiligen", "x": 860, "y": 220, "description": "Stellungnahmen einholen (z. B. Wasser, Arbeitsschutz)", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 10 Abs. 5 BImSchG analog", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "X2", "element_type": "XOR_CONNECTOR", "name": "Genehmigungspflicht?", "x": 1020, "y": 220, "description": "Abwägung ob Änderung wesentliche Auswirkungen hat", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Bescheid Genehmigungspflicht", "x": 1020, "y": 80, "description": "Mitteilung, dass Änderung genehmigungspflichtig ist, Hinweis auf Antrag", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 15 Abs. 1 Satz 2 BImSchG", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Anzeige bestätigen", "x": 1180, "y": 220, "description": "Bestätigung der Änderung mit Auflagen/Fristen", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 15 Abs. 1 Satz 1 BImSchG", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F8", "element_type": "FUNCTION", "name": "Auflagen / Monitoring festlegen", "x": 1340, "y": 220, "description": "Dokumentations- und Überwachungspflichten ergänzen", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 15 BImSchG; § 26 BImSchG", "deadline_days": 10, "geo_reference": ""},
+    {"element_id": "F9", "element_type": "FUNCTION", "name": "Akte aktualisieren", "x": 1500, "y": 220, "description": "Genehmigungsbestand anpassen, Kontrollen planen", "responsible_authority": "Immissionsschutzbehörde", "legal_basis": "§ 52 BImSchG", "deadline_days": 5, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Änderung abgeschlossen", "x": 1660, "y": 220, "description": "Anzeige bearbeitet bzw. Genehmigungsverfahren eingeleitet", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "X1", "target_element": "F3", "connection_type": "SEQUENCE", "description": "Nachforderung"},
+    {"connection_id": "C5", "source_element": "F3", "target_element": "F2", "connection_type": "SEQUENCE", "description": "Unterlagen ergänzt"},
+    {"connection_id": "C6", "source_element": "X1", "target_element": "F4", "connection_type": "SEQUENCE", "description": "vollständig"},
+    {"connection_id": "C7", "source_element": "F4", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C8", "source_element": "F5", "target_element": "X2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C9", "source_element": "X2", "target_element": "F6", "connection_type": "SEQUENCE", "description": "Genehmigungspflicht"},
+    {"connection_id": "C10", "source_element": "F6", "target_element": "E1", "connection_type": "SEQUENCE", "description": "Genehmigungsantrag erforderlich"},
+    {"connection_id": "C11", "source_element": "X2", "target_element": "F7", "connection_type": "SEQUENCE", "description": "anzeigefähig"},
+    {"connection_id": "C12", "source_element": "F7", "target_element": "F8", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C13", "source_element": "F8", "target_element": "F9", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C14", "source_element": "F9", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

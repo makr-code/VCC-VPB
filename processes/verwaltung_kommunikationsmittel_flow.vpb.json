@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "name": "Kommunikationsmittel – Eingang & Routing",
+    "description": "Standardisierter Ablauf zur Erfassung und Weiterleitung von eingehenden Kommunikationskanälen (digital, telefonisch, physisch)."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Kommunikation eingegangen", "x": 60, "y": 200, "description": "Auslöser durch beliebiges Medium", "responsible_authority": "Organisationseinheit Posteingang / Service Center", "legal_basis": "§§ 3, 10 VwVfG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Eingangsart registrieren", "x": 220, "y": 200, "description": "Kanal erfassen, Vorgang anlegen, Zeitstempel setzen", "responsible_authority": "Poststelle / Service Center", "legal_basis": "§ 3a VwVfG; Organisationsverfügung Kommunikationsmanagement", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Welches Medium?", "x": 380, "y": 200, "description": "Verzweigung nach Kanal", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Digitale Nachricht prüfen", "x": 540, "y": 80, "description": "E-Mail, De-Mail, D-Stack, XÖV: Signatur prüfen, Anhänge sichten, Spam-Check", "responsible_authority": "IT-Service / Fachpostkorb", "legal_basis": "§ 3a VwVfG; § 2 EGovG Bund; OZG", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Telefonat dokumentieren", "x": 540, "y": 200, "description": "Gesprächsnotiz erstellen, Kontaktdaten prüfen, Rückrufbedarf festhalten", "responsible_authority": "Bürgertelefon / Service Center", "legal_basis": "§ 25 VwVfG; Dienstanweisung Bürgerkommunikation", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Schriftstück digitalisieren", "x": 540, "y": 320, "description": "Brief oder Fax erfassen, Scan erzeugen, Originale archivieren", "responsible_authority": "Poststelle / Registratur", "legal_basis": "§ 3a Abs. 2 VwVfG; Landes-Registraturrichtlinie", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Datenträger absichern", "x": 540, "y": 440, "description": "USB-Stick, CD-ROM prüfen, Malware-Scan, Daten exportieren", "responsible_authority": "IT-Sicherheit / Service Center", "legal_basis": "§ 8 EGovG; BSI Grundschutz; DSGVO Art. 32", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "X2", "element_type": "XOR_CONNECTOR", "name": "Bearbeitung abgeschlossen", "x": 700, "y": 200, "description": "Zusammenführung der Kanäle", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Inhalt klassifizieren", "x": 860, "y": 200, "description": "Vorgangsart bestimmen, Schlagworte setzen, Zuständigkeit prüfen", "responsible_authority": "Poststelle / Fachvorgesetzte", "legal_basis": "§ 10 VwVfG; Registraturrichtlinie", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Routing festlegen", "x": 1020, "y": 200, "description": "Fachverfahren oder Team auswählen, Fristen definieren, Aufgaben erzeugen", "responsible_authority": "Poststelle / Fachkoordination", "legal_basis": "§ 9 EGovG; Dienstanweisung Posteingang", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F8", "element_type": "FUNCTION", "name": "Eingang bestätigen", "x": 1180, "y": 200, "description": "Absender informieren, Ticket/Journal aktualisieren", "responsible_authority": "Service Center", "legal_basis": "Art. 6 DSGVO; § 10 VwVfG", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Kommunikation übergeben", "x": 1340, "y": 200, "description": "Fachprozess gestartet / Wiedervorlage gesetzt", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "X1", "target_element": "F2", "connection_type": "SEQUENCE", "description": "Digital"},
+    {"connection_id": "C4", "source_element": "X1", "target_element": "F3", "connection_type": "SEQUENCE", "description": "Telefon"},
+    {"connection_id": "C5", "source_element": "X1", "target_element": "F4", "connection_type": "SEQUENCE", "description": "Brief/Fax"},
+    {"connection_id": "C6", "source_element": "X1", "target_element": "F5", "connection_type": "SEQUENCE", "description": "Datenträger"},
+    {"connection_id": "C7", "source_element": "F2", "target_element": "X2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C8", "source_element": "F3", "target_element": "X2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C9", "source_element": "F4", "target_element": "X2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C10", "source_element": "F5", "target_element": "X2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C11", "source_element": "X2", "target_element": "F6", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C12", "source_element": "F6", "target_element": "F7", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C13", "source_element": "F7", "target_element": "F8", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C14", "source_element": "F8", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

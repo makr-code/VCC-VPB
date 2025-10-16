@@ -1,0 +1,537 @@
+{
+  "categories": [
+    {
+      "id": "ref-buergerdienste",
+      "title": "Referenzprozesse – Bürgerdienste",
+      "items": [
+        {
+          "type": "SUBPROCESS",
+          "name": "Terminvereinbarung (Ref)",
+          "symbol": "🗓",
+          "fill": "#F0F4FF",
+          "outline": "#2F54A3",
+          "text_color": "#102A6B",
+          "reference": {
+            "id": "ref-terminvereinbarung",
+            "snippet": "processes/terminvereinbarung_einfach.vpb.json",
+            "name": "Terminvereinbarung – Bürgerbüro",
+            "default_name": "Terminvereinbarung – Bürgerbüro",
+            "element_type": "SUBPROCESS",
+            "category": "Bürgerdienste",
+            "label": "Terminvereinbarung",
+            "description": "Standardprozess für Online- und Telefon-Terminbuchungen inklusive Erinnerungsversand.",
+            "responsible_authority": "Bürgeramt",
+            "legal_basis": "§ 39 VwVfG",
+            "deadline_days": 3,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Meldebescheinigung (Ref)",
+          "symbol": "🪪",
+          "fill": "#FFF6E6",
+          "outline": "#C47F1F",
+          "text_color": "#6B3D00",
+          "reference": {
+            "id": "ref-meldebescheinigung",
+            "snippet": "processes/meldebescheinigung_hierarchie.vpb.json",
+            "name": "Meldebescheinigung – Mehrstufig",
+            "default_name": "Meldebescheinigung ausstellen",
+            "element_type": "SUBPROCESS",
+            "category": "Bürgerdienste",
+            "label": "Meldebescheinigung",
+            "description": "Antragsannahme, Identitätsprüfung und Ausgabe nach Bundesmeldegesetz.",
+            "responsible_authority": "Einwohnermeldeamt",
+            "legal_basis": "§ 18 BMG",
+            "deadline_days": 7,
+            "auto_group": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "ref-wirtschaft",
+      "title": "Referenzprozesse – Wirtschaft & Förderung",
+      "items": [
+        {
+          "type": "SUBPROCESS",
+          "name": "Gewerbeanmeldung (Ref)",
+          "symbol": "🏢",
+          "fill": "#E9FBF4",
+          "outline": "#1C8870",
+          "text_color": "#0F4F3F",
+          "reference": {
+            "id": "ref-gewerbeanmeldung",
+            "snippet": "processes/gewerbeanmeldung_medium.vpb.json",
+            "name": "Gewerbeanmeldung – Standard",
+            "default_name": "Gewerbeanmeldung bearbeiten",
+            "element_type": "SUBPROCESS",
+            "category": "Wirtschaft",
+            "label": "Gewerbeanmeldung",
+            "description": "Anmeldung, Sachbearbeitung und Bescheid-Generierung für neue Gewerbetreibende.",
+            "responsible_authority": "Gewerbeamt",
+            "deadline_days": 10,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Förderantrag (Ref)",
+          "symbol": "💶",
+          "fill": "#F3E9FF",
+          "outline": "#6A40B4",
+          "text_color": "#402066",
+          "reference": {
+            "id": "ref-foerderantrag",
+            "snippet": "processes/foerderantrag_mehrstufig.vpb.json",
+            "name": "Förderantrag – Mehrstufig",
+            "default_name": "Förderantrag prüfen",
+            "element_type": "SUBPROCESS",
+            "category": "Förderprogramme",
+            "label": "Förderantrag",
+            "description": "Vorprüfung, fachliche Bewertung und Förderbescheid mit Auflagenverwaltung.",
+            "responsible_authority": "Wirtschaftsförderung",
+            "deadline_days": 30,
+            "auto_group": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "ref-bauen-umwelt",
+      "title": "Referenzprozesse – Bauen & Umwelt",
+      "items": [
+        {
+          "type": "SUBPROCESS",
+          "name": "Bauantrag (Ref)",
+          "symbol": "🏗",
+          "fill": "#FFEFF2",
+          "outline": "#B9405D",
+          "text_color": "#712133",
+          "reference": {
+            "id": "ref-bauantrag",
+            "snippet": "processes/bauantrag_pruefung_komplex.vpb.json",
+            "name": "Bauantrag – Prüfung komplex",
+            "default_name": "Bauantrag prüfen",
+            "element_type": "SUBPROCESS",
+            "category": "Bauen",
+            "label": "Bauantrag",
+            "description": "Formelle und materielle Prüfung komplexer Bauvorhaben inklusive Fachbeteiligungen.",
+            "responsible_authority": "Bauaufsichtsamt",
+            "legal_basis": "BauO Ländervariante",
+            "deadline_days": 42,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Umweltprüfung (Ref)",
+          "symbol": "🌿",
+          "fill": "#E8F8ED",
+          "outline": "#3C8C4A",
+          "text_color": "#1F4F28",
+          "reference": {
+            "id": "ref-umweltpruefung",
+            "snippet": "processes/bauleitplanung_umweltpruefung_20250923_vpb.json",
+            "name": "Bauleitplanung – Umweltprüfung",
+            "default_name": "Umweltprüfung durchführen",
+            "element_type": "SUBPROCESS",
+            "category": "Bauen",
+            "label": "Umweltprüfung",
+            "description": "Screening, Vertiefung und Ausgleichsmaßnahmen im Rahmen der Umweltprüfung.",
+            "responsible_authority": "Umweltamt",
+            "deadline_days": 28,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Immissionsschutz-Genehmigung (Ref)",
+          "symbol": "🏭",
+          "fill": "#EEF2FF",
+          "outline": "#4C51BF",
+          "text_color": "#1A237E",
+          "reference": {
+            "id": "ref-immissionsschutz-genehmigung",
+            "snippet": "processes/immissionsschutz_genehmigung.vpb.json",
+            "name": "Immissionsschutzrechtliche Genehmigung",
+            "default_name": "Immissionsschutz-Genehmigung",
+            "element_type": "SUBPROCESS",
+            "category": "Bauen & Umwelt",
+            "label": "Immissionsschutz",
+            "description": "Genehmigungsverfahren für genehmigungsbedürftige Anlagen nach §§ 4–16 BImSchG inkl. UVP und Beteiligung.",
+            "responsible_authority": "Immissionsschutzbehörde",
+            "legal_basis": "§§ 4–16 BImSchG; 4. BImSchV",
+            "deadline_days": 210,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Immissionsschutz-Änderung (Ref)",
+          "symbol": "♻️",
+          "fill": "#F0FDFF",
+          "outline": "#0E7490",
+          "text_color": "#0C4A6E",
+          "reference": {
+            "id": "ref-immissionsschutz-aenderung",
+            "snippet": "processes/immissionsschutz_aenderungsanzeige.vpb.json",
+            "name": "Immissionsschutz – Anzeige nach § 15 BImSchG",
+            "default_name": "Änderung anzeigen",
+            "element_type": "SUBPROCESS",
+            "category": "Bauen & Umwelt",
+            "label": "Änderungsanzeige",
+            "description": "Verfahren zur Anzeige wesentlicher Änderungen und Prüfung auf Genehmigungspflicht nach § 15 BImSchG.",
+            "responsible_authority": "Immissionsschutzbehörde",
+            "legal_basis": "§ 15 BImSchG; 4. BImSchV",
+            "deadline_days": 30,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Emissionsmonitoring (Ref)",
+          "symbol": "📈",
+          "fill": "#E8F7FF",
+          "outline": "#1D4F91",
+          "text_color": "#0A2A61",
+          "reference": {
+            "id": "ref-immissionsschutz-monitoring",
+            "snippet": "processes/immissionsschutz_emissionsmonitoring.vpb.json",
+            "name": "Immissionsschutz – Emissionsüberwachung & Jahresbericht",
+            "default_name": "Emissionsüberwachung",
+            "element_type": "SUBPROCESS",
+            "category": "Bauen & Umwelt",
+            "label": "Monitoring",
+            "description": "Planung, Messung und Berichterstattung der Emissionen inkl. Grenzwertüberwachung und Behördenkommunikation.",
+            "responsible_authority": "Anlagenbetreiber / Immissionsschutzbehörde",
+            "legal_basis": "§§ 26, 28 BImSchG; 17., 27., 30., 31. BImSchV",
+            "deadline_days": 90,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Störfall- & Notfallmanagement (Ref)",
+          "symbol": "🚨",
+          "fill": "#FFE4E6",
+          "outline": "#BE123C",
+          "text_color": "#7F1D1D",
+          "reference": {
+            "id": "ref-immissionsschutz-stoerfall",
+            "snippet": "processes/immissionsschutz_stoerfallmanagement.vpb.json",
+            "name": "Immissionsschutz – Störfall- & Notfallmanagement",
+            "default_name": "Störfallmanagement",
+            "element_type": "SUBPROCESS",
+            "category": "Bauen & Umwelt",
+            "label": "Störfall",
+            "description": "Sicherheitsbericht, Alarm- und Gefahrenabwehrplanung, Übungen sowie Ereignisbewältigung nach 12. BImSchV.",
+            "responsible_authority": "Betreiber / Katastrophenschutzbehörde",
+            "legal_basis": "§§ 52a BImSchG, 8–12 12. BImSchV",
+            "deadline_days": 180,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Lärmaktionsplan (Ref)",
+          "symbol": "🔊",
+          "fill": "#FFF4E5",
+          "outline": "#D97706",
+          "text_color": "#92400E",
+          "reference": {
+            "id": "ref-immissionsschutz-laermaktionsplan",
+            "snippet": "processes/immissionsschutz_laermaktionsplan.vpb.json",
+            "name": "Immissionsschutz – Kommunaler Lärmaktionsplan",
+            "default_name": "Lärmaktionsplan umsetzen",
+            "element_type": "SUBPROCESS",
+            "category": "Bauen & Umwelt",
+            "label": "Lärmaktionsplan",
+            "description": "Aufstellung und Fortschreibung eines kommunalen Lärmaktionsplans mit Öffentlichkeitsbeteiligung und Monitoring.",
+            "responsible_authority": "Umweltamt / Stadtplanung",
+            "legal_basis": "§§ 47a–47f BImSchG; 18., 32., 39. BImSchV",
+            "deadline_days": 365,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "LImSchG-Sondernutzung (Ref)",
+          "symbol": "🎪",
+          "fill": "#EEFDF5",
+          "outline": "#047857",
+          "text_color": "#065F46",
+          "reference": {
+            "id": "ref-immissionsschutz-sondernutzung",
+            "snippet": "processes/immissionsschutz_sondernutzung.vpb.json",
+            "name": "Immissionsschutz – Sondernutzung nach LImSchG",
+            "default_name": "Sondernutzung genehmigen",
+            "element_type": "SUBPROCESS",
+            "category": "Bauen & Umwelt",
+            "label": "Sondernutzung",
+            "description": "Genehmigung temporärer Lärmereignisse oder Veranstaltungen einschließlich Auflagen- und Kontrollmanagement.",
+            "responsible_authority": "Immissionsschutzbehörde / Ordnungsamt",
+            "legal_basis": "§§ 10–15 LImSchG; § 22 BImSchG",
+            "deadline_days": 30,
+            "auto_group": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "ref-verwaltung-recht",
+      "title": "Referenzprozesse – Verwaltungsverfahren & Rechtsschutz",
+      "items": [
+        {
+          "type": "SUBPROCESS",
+          "name": "Bescheidserlass (Ref)",
+          "symbol": "📜",
+          "fill": "#EEF2FF",
+          "outline": "#3F51B5",
+          "text_color": "#1A237E",
+          "reference": {
+            "id": "ref-bescheidserlass",
+            "snippet": "processes/verwaltungsverfahren_bescheid.vpb.json",
+            "name": "Allgemeines Verwaltungsverfahren – Bescheidserlass",
+            "default_name": "Bescheid nach VwVfG erlassen",
+            "element_type": "SUBPROCESS",
+            "category": "Verwaltungsverfahren",
+            "label": "Bescheid",
+            "description": "Standardverfahren vom Antragseingang über Anhörung bis zur Bekanntgabe eines Verwaltungsakts.",
+            "responsible_authority": "Fachbehörde",
+            "legal_basis": "§§ 22–41 VwVfG",
+            "deadline_days": 30,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Anhörung (Ref)",
+          "symbol": "🗣",
+          "fill": "#FFF3E0",
+          "outline": "#FB8C00",
+          "text_color": "#E65100",
+          "reference": {
+            "id": "ref-anhoerung",
+            "snippet": "processes/verwaltungsverfahren_anhoerung.vpb.json",
+            "name": "Anhörung Beteiligter – § 28 VwVfG",
+            "default_name": "Anhörung nach § 28 VwVfG",
+            "element_type": "SUBPROCESS",
+            "category": "Verwaltungsverfahren",
+            "label": "Anhörung",
+            "description": "Durchführung einer Anhörung mit Zustellung, Auswertung und Protokoll.",
+            "responsible_authority": "Fachreferat",
+            "legal_basis": "§ 28 VwVfG",
+            "deadline_days": 21,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Widerspruch (Ref)",
+          "symbol": "⚖️",
+          "fill": "#E8F5E9",
+          "outline": "#2E7D32",
+          "text_color": "#1B5E20",
+          "reference": {
+            "id": "ref-widerspruch",
+            "snippet": "processes/verwaltungsverfahren_widerspruch.vpb.json",
+            "name": "Widerspruchsverfahren – §§ 68 ff. VwGO",
+            "default_name": "Widerspruchsverfahren durchführen",
+            "element_type": "SUBPROCESS",
+            "category": "Rechtsschutz",
+            "label": "Widerspruch",
+            "description": "Vorverfahren inklusive Abhilfeprüfung und Widerspruchsbescheid.",
+            "responsible_authority": "Widerspruchsbehörde",
+            "legal_basis": "§§ 68–73 VwGO",
+            "deadline_days": 30,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Anfechtungsklage (Ref)",
+          "symbol": "🏛",
+          "fill": "#F9EBFF",
+          "outline": "#8E24AA",
+          "text_color": "#4A148C",
+          "reference": {
+            "id": "ref-anfechtungsklage",
+            "snippet": "processes/verwaltungsgericht_anfechtungsklage.vpb.json",
+            "name": "Anfechtungsklage – §§ 42 ff. VwGO",
+            "default_name": "Anfechtungsklage vor dem VG",
+            "element_type": "SUBPROCESS",
+            "category": "Rechtsschutz",
+            "label": "Anfechtungsklage",
+            "description": "Gerichtliches Verfahren vom Klageeingang bis zum Urteil.",
+            "responsible_authority": "Verwaltungsgericht",
+            "legal_basis": "§§ 42–124 VwGO",
+            "deadline_days": 90,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Verpflichtungsklage (Ref)",
+          "symbol": "📑",
+          "fill": "#E0F7FA",
+          "outline": "#00838F",
+          "text_color": "#006064",
+          "reference": {
+            "id": "ref-verpflichtungsklage",
+            "snippet": "processes/verwaltungsgericht_verpflichtungsklage.vpb.json",
+            "name": "Verpflichtungs- / Untätigkeitsklage – §§ 42, 75 VwGO",
+            "default_name": "Verpflichtungsklage führen",
+            "element_type": "SUBPROCESS",
+            "category": "Rechtsschutz",
+            "label": "Verpflichtungsklage",
+            "description": "Gerichtliche Verpflichtung der Behörde zur Entscheidung oder Leistung.",
+            "responsible_authority": "Verwaltungsgericht",
+            "legal_basis": "§§ 42, 75, 113 Abs. 5 VwGO",
+            "deadline_days": 60,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Eilverfahren § 80 Abs. 5 (Ref)",
+          "symbol": "⏱",
+          "fill": "#FFF8E1",
+          "outline": "#FFA000",
+          "text_color": "#E65100",
+          "reference": {
+            "id": "ref-eilverfahren-80-5",
+            "snippet": "processes/verwaltungsgericht_eilverfahren_80_5.vpb.json",
+            "name": "Eilverfahren – § 80 Abs. 5 VwGO",
+            "default_name": "Eilverfahren § 80 Abs. 5",
+            "element_type": "SUBPROCESS",
+            "category": "Rechtsschutz",
+            "label": "Eilverfahren",
+            "description": "Interimsrechtsschutz zur Wiederherstellung/Anordnung der aufschiebenden Wirkung.",
+            "responsible_authority": "Verwaltungsgericht",
+            "legal_basis": "§§ 80, 146 VwGO",
+            "deadline_days": 7,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Fortsetzungsfeststellung (Ref)",
+          "symbol": "🧾",
+          "fill": "#F0FFF4",
+          "outline": "#2E7D32",
+          "text_color": "#1B5E20",
+          "reference": {
+            "id": "ref-fortsetzungsfeststellung",
+            "snippet": "processes/verwaltungsgericht_fortsetzungsfeststellungsklage.vpb.json",
+            "name": "Fortsetzungsfeststellungsklage – § 113 Abs. 1 S. 4 VwGO",
+            "default_name": "Fortsetzungsfeststellungsklage",
+            "element_type": "SUBPROCESS",
+            "category": "Rechtsschutz",
+            "label": "Fortsetzungsfeststellung",
+            "description": "Feststellung der Rechtswidrigkeit eines erledigten Verwaltungsakts mit Feststellungsinteresse.",
+            "responsible_authority": "Verwaltungsgericht",
+            "legal_basis": "§ 113 Abs. 1 S. 4 VwGO",
+            "deadline_days": 30,
+            "auto_group": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "ref-verwaltung-intern",
+      "title": "Referenzprozesse – Verwaltung intern",
+      "items": [
+        {
+          "type": "SUBPROCESS",
+          "name": "Kommunikationsmittel (Ref)",
+          "symbol": "📬",
+          "fill": "#E6F0FF",
+          "outline": "#1D4ED8",
+          "text_color": "#112A60",
+          "reference": {
+            "id": "ref-kommunikationsmittel",
+            "snippet": "processes/verwaltung_kommunikationsmittel_flow.vpb.json",
+            "name": "Kommunikationsmittel – Eingang & Routing",
+            "default_name": "Kommunikationsmittel koordinieren",
+            "element_type": "SUBPROCESS",
+            "category": "Verwaltung intern",
+            "label": "Kommunikationsmittel",
+            "description": "Kanalübergreifender Eingang: E-Mail, Telefon, Brief, D-Stack, Datenträger – Prüfung, Klassifizierung und Routing.",
+            "responsible_authority": "Zentrale Poststelle / Service Center",
+            "legal_basis": "§§ 3a, 10 VwVfG; EGovG; OZG",
+            "deadline_days": 2,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Rechnungseingang & Prüfung (Ref)",
+          "symbol": "💶",
+          "fill": "#FFF1F2",
+          "outline": "#BE123C",
+          "text_color": "#7F1D1D",
+          "reference": {
+            "id": "ref-rechnungseingang",
+            "snippet": "processes/verwaltung_rechnungseingang_pruefung.vpb.json",
+            "name": "Rechnungseingang & Prüfung",
+            "default_name": "Rechnungseingang prüfen",
+            "element_type": "SUBPROCESS",
+            "category": "Verwaltung intern",
+            "label": "Rechnungseingang",
+            "description": "Prozess für formale und sachliche Rechnungsprüfung, mehrstufige Freigabe und Zahlungsanweisung.",
+            "responsible_authority": "Kreditorenbuchhaltung / Kämmerei",
+            "legal_basis": "§§ 70 GO, 34 KommHV; E-Rechnungsverordnung",
+            "deadline_days": 7,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Posteingang & Verteilung (Ref)",
+          "symbol": "📨",
+          "fill": "#F1F5F9",
+          "outline": "#0F172A",
+          "text_color": "#1E293B",
+          "reference": {
+            "id": "ref-posteingang",
+            "snippet": "processes/verwaltung_posteingang_verteilung.vpb.json",
+            "name": "Posteingang & Verteilung",
+            "default_name": "Posteingang verteilen",
+            "element_type": "SUBPROCESS",
+            "category": "Verwaltung intern",
+            "label": "Posteingang",
+            "description": "Zentraler Posteingang mit Digitalisierung, Fristenerkennung, Klassifikation und Weiterleitung in Fachverfahren.",
+            "responsible_authority": "Zentrale Poststelle / Registratur",
+            "legal_basis": "§ 10 VwVfG; Registratur- und Archivgesetze; TR-RESISCAN",
+            "deadline_days": 2,
+            "auto_group": true
+          }
+        },
+        {
+          "type": "SUBPROCESS",
+          "name": "Beschlussvorlage erstellen (Ref)",
+          "symbol": "📄",
+          "fill": "#FEF3C7",
+          "outline": "#B45309",
+          "text_color": "#7C2D12",
+          "reference": {
+            "id": "ref-beschlussvorlage",
+            "snippet": "processes/verwaltung_beschlussvorlage_erstellen.vpb.json",
+            "name": "Beschlussvorlage erstellen",
+            "default_name": "Beschlussvorlage erstellen",
+            "element_type": "SUBPROCESS",
+            "category": "Verwaltung intern",
+            "label": "Beschlussvorlage",
+            "description": "Erstellung, Abstimmung und Freigabe einer Beschlussvorlage mit Veröffentlichung im Ratsinformationssystem.",
+            "responsible_authority": "Fachbereich / Gremienbüro",
+            "legal_basis": "Gemeindeordnung; Geschäftsordnung Rat",
+            "deadline_days": 10,
+            "auto_group": true
+          }
+        }
+      ]
+    }
+  ]
+}

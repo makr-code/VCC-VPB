@@ -1,0 +1,40 @@
+{
+  "ollama_endpoint": "http://localhost:11434",
+  "ollama_model": "phi3:latest",
+  "ollama_temperature": 0.2,
+  "ollama_num_predict": 600,
+  "window": {
+    "width": 1536,
+    "height": 773,
+    "x": null,
+    "y": null,
+    "state": "zoomed"
+  },
+  "sidebars": {
+    "left_width": 397,
+    "right_width": 401
+  },
+  "view": {
+    "grid_visible": true,
+    "snap_to_grid": true,
+    "routing_style": "smart",
+    "time_axis_enabled": true,
+    "time_axis_interval": 100.0,
+    "mousewheel_behavior": "zoom-primary"
+  },
+  "element_styles": {},
+  "hierarchy_categories": [],
+  "navigation": {
+    "nudge_small": 2,
+    "nudge_big": 10,
+    "pan_small": 30,
+    "pan_big": 60
+  },
+  "onboarding": {
+    "pan_hint_dismissed": false
+  },
+  "autosave": {
+    "enabled": true,
+    "interval_minutes": 3
+  }
+}

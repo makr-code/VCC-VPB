@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "name": "Terminvereinbarung – Einfach",
+    "description": "Ein digitaler Standardprozess für Terminabstimmungen mit einfachem Wiederholungspfad"
+  },
+  "elements": [
+    {"element_id": "S_START", "element_type": "START_EVENT", "name": "Anfrage eingegangen", "x": 60, "y": 100, "description": "Auslöser ist eine Online- oder Telefonanfrage", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F_ERFASSEN", "element_type": "FUNCTION", "name": "Anfragedaten erfassen", "x": 220, "y": 100, "description": "Kontakt- und Anliegeninformationen aufnehmen", "responsible_authority": "Servicecenter", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F_VORSCHLAG", "element_type": "FUNCTION", "name": "Terminvorschlag ermitteln", "x": 400, "y": 100, "description": "Verfügbarkeiten im Kalender prüfen", "responsible_authority": "Servicecenter", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "GW_PASS", "element_type": "XOR_CONNECTOR", "name": "Passt der Vorschlag?", "x": 580, "y": 100},
+    {"element_id": "F_ALTERNATIVE", "element_type": "FUNCTION", "name": "Alternativtermin prüfen", "x": 580, "y": 220, "description": "Falls der Termin nicht passt, weitere freie Slots suchen", "responsible_authority": "Servicecenter", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F_BESTAETIGEN", "element_type": "FUNCTION", "name": "Termin bestätigen", "x": 760, "y": 100, "description": "Bestätigung mit allen Eckdaten versenden", "responsible_authority": "Servicecenter", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "E_ENDE", "element_type": "END_EVENT", "name": "Termin gebucht", "x": 940, "y": 100, "description": "Prozess endet nach erfolgreicher Terminbestätigung", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S_START", "target_element": "F_ERFASSEN", "connection_type": "SEQUENCE", "description": "Start löst Erfassung aus"},
+    {"connection_id": "C2", "source_element": "F_ERFASSEN", "target_element": "F_VORSCHLAG", "connection_type": "SEQUENCE", "description": "Anfrage vollständig"},
+    {"connection_id": "C3", "source_element": "F_VORSCHLAG", "target_element": "GW_PASS", "connection_type": "SEQUENCE", "description": "Terminvorschlag liegt vor"},
+    {"connection_id": "C4", "source_element": "GW_PASS", "target_element": "F_BESTAETIGEN", "connection_type": "SEQUENCE", "description": "Vorschlag angenommen"},
+    {"connection_id": "C5", "source_element": "GW_PASS", "target_element": "F_ALTERNATIVE", "connection_type": "SEQUENCE", "description": "Ablehnung durch Bürger"},
+    {"connection_id": "C6", "source_element": "F_ALTERNATIVE", "target_element": "F_VORSCHLAG", "connection_type": "SEQUENCE", "description": "Neuen Vorschlag berechnen"},
+    {"connection_id": "C7", "source_element": "F_BESTAETIGEN", "target_element": "E_ENDE", "connection_type": "SEQUENCE", "description": "Terminbestätigung versendet"}
+  ]
+}

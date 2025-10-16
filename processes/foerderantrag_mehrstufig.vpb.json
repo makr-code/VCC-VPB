@@ -1,0 +1,45 @@
+{
+  "metadata": {
+    "name": "Förderantrag – Mehrstufig",
+    "description": "Mittlerer Komplexitätsgrad mit optionalen Nachforderungen und paralleler Bewertung"
+  },
+  "elements": [
+    {"element_id": "S_INIT", "element_type": "START_EVENT", "name": "Antrag eingegangen", "x": 60, "y": 80, "description": "Antrag wird elektronisch eingereicht", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F_ERFASSEN", "element_type": "FUNCTION", "name": "Antragsdaten erfassen", "x": 200, "y": 80, "description": "Datenimport und Vollständigkeitscheck", "responsible_authority": "Servicestelle", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F_VORPRUEFUNG", "element_type": "FUNCTION", "name": "Vorprüfung durchführen", "x": 360, "y": 80, "description": "Formale Kriterien prüfen", "responsible_authority": "Servicestelle", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "OR_UNTERLAGEN", "element_type": "OR_CONNECTOR", "name": "Zusatzinfo nötig?", "x": 520, "y": 80},
+    {"element_id": "F_FACHINFO", "element_type": "FUNCTION", "name": "Fachinfo einholen", "x": 520, "y": -20, "description": "Optionaler Austausch mit Fachreferat", "responsible_authority": "Servicestelle", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F_NACHFORDERN", "element_type": "FUNCTION", "name": "Unterlagen anfordern", "x": 520, "y": 180, "description": "Bittet Antragsteller um Ergänzungen", "responsible_authority": "Servicestelle", "legal_basis": "", "deadline_days": 10, "geo_reference": ""},
+    {"element_id": "AND_PARALLEL", "element_type": "AND_CONNECTOR", "name": "Bewertungen starten", "x": 700, "y": 80},
+    {"element_id": "F_BUDGET", "element_type": "FUNCTION", "name": "Budget prüfen", "x": 860, "y": 20, "description": "Finanzielle Fördermittel prüfen", "responsible_authority": "Finanzen", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F_FACHREFERAT", "element_type": "FUNCTION", "name": "Fachliche Bewertung", "x": 860, "y": 140, "description": "Inhaltliche Bewertung des Vorhabens", "responsible_authority": "Fachreferat", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "AND_JOIN", "element_type": "AND_CONNECTOR", "name": "Bewertungen gesammelt", "x": 1040, "y": 80},
+    {"element_id": "F_BEWERTUNG", "element_type": "FUNCTION", "name": "Gesamtempfehlung erstellen", "x": 1200, "y": 80, "description": "Zusammenfassung der Bewertungen", "responsible_authority": "Programmleitung", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "XOR_ENTSCHEID", "element_type": "XOR_CONNECTOR", "name": "Förderung möglich?", "x": 1360, "y": 80},
+    {"element_id": "F_ZUSAGE", "element_type": "FUNCTION", "name": "Zuwendungsbescheid erstellen", "x": 1520, "y": 40, "description": "Bescheid mit Bewilligung vorbereiten", "responsible_authority": "Programmleitung", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F_ABSAGE", "element_type": "FUNCTION", "name": "Ablehnung begründen", "x": 1520, "y": 140, "description": "Ablehnungsgründe dokumentieren", "responsible_authority": "Programmleitung", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "E_ZUSAGE", "element_type": "END_EVENT", "name": "Förderung bewilligt", "x": 1700, "y": 40, "description": "Positive Entscheidung", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "E_ABSAGE", "element_type": "END_EVENT", "name": "Förderung abgelehnt", "x": 1700, "y": 140, "description": "Negative Entscheidung", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "G_BEARBEITUNG", "element_type": "GROUP", "name": "Bewertungsphase", "x": 960, "y": 80, "description": "Zusammenführung aller Bewertungen", "members": ["F_BUDGET", "F_FACHREFERAT", "AND_JOIN", "F_BEWERTUNG"], "collapsed": false}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S_INIT", "target_element": "F_ERFASSEN", "connection_type": "SEQUENCE", "description": "Antragsannahme"},
+    {"connection_id": "C2", "source_element": "F_ERFASSEN", "target_element": "F_VORPRUEFUNG", "connection_type": "SEQUENCE", "description": "Daten vollständig"},
+    {"connection_id": "C3", "source_element": "F_VORPRUEFUNG", "target_element": "OR_UNTERLAGEN", "connection_type": "SEQUENCE", "description": "Vorprüfung abgeschlossen"},
+    {"connection_id": "C4", "source_element": "OR_UNTERLAGEN", "target_element": "AND_PARALLEL", "connection_type": "SEQUENCE", "description": "Alle Unterlagen vollständig"},
+    {"connection_id": "C5", "source_element": "OR_UNTERLAGEN", "target_element": "F_NACHFORDERN", "connection_type": "SEQUENCE", "description": "Ergänzungen nötig"},
+    {"connection_id": "C6", "source_element": "F_NACHFORDERN", "target_element": "F_ERFASSEN", "connection_type": "SEQUENCE", "description": "Neue Unterlagen eingetroffen"},
+    {"connection_id": "C7", "source_element": "OR_UNTERLAGEN", "target_element": "F_FACHINFO", "connection_type": "SEQUENCE", "description": "Optional fachliche Rücksprache"},
+    {"connection_id": "C8", "source_element": "F_FACHINFO", "target_element": "AND_PARALLEL", "connection_type": "SEQUENCE", "description": "Fachinfo geliefert"},
+    {"connection_id": "C9", "source_element": "AND_PARALLEL", "target_element": "F_BUDGET", "connection_type": "SEQUENCE", "description": "Budgetprüfung starten"},
+    {"connection_id": "C10", "source_element": "AND_PARALLEL", "target_element": "F_FACHREFERAT", "connection_type": "SEQUENCE", "description": "Fachliche Bewertung starten"},
+    {"connection_id": "C11", "source_element": "F_BUDGET", "target_element": "AND_JOIN", "connection_type": "SEQUENCE", "description": "Budgetergebnis vorliegt"},
+    {"connection_id": "C12", "source_element": "F_FACHREFERAT", "target_element": "AND_JOIN", "connection_type": "SEQUENCE", "description": "Fachliches Ergebnis vorliegt"},
+    {"connection_id": "C13", "source_element": "AND_JOIN", "target_element": "F_BEWERTUNG", "connection_type": "SEQUENCE", "description": "Alle Bewertungen gesammelt"},
+    {"connection_id": "C14", "source_element": "F_BEWERTUNG", "target_element": "XOR_ENTSCHEID", "connection_type": "SEQUENCE", "description": "Empfehlung erstellt"},
+    {"connection_id": "C15", "source_element": "XOR_ENTSCHEID", "target_element": "F_ZUSAGE", "connection_type": "SEQUENCE", "description": "Positive Entscheidung"},
+    {"connection_id": "C16", "source_element": "XOR_ENTSCHEID", "target_element": "F_ABSAGE", "connection_type": "SEQUENCE", "description": "Negative Entscheidung"},
+    {"connection_id": "C17", "source_element": "F_ZUSAGE", "target_element": "E_ZUSAGE", "connection_type": "SEQUENCE", "description": "Zuwendungsbescheid versendet"},
+    {"connection_id": "C18", "source_element": "F_ABSAGE", "target_element": "E_ABSAGE", "connection_type": "SEQUENCE", "description": "Ablehnung versendet"}
+  ]
+}

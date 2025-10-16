@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "Eilverfahren – § 80 Abs. 5 VwGO",
+    "description": "Verfahren auf Wiederherstellung oder Anordnung der aufschiebenden Wirkung vor dem Verwaltungsgericht."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Antrag eingereicht", "x": 60, "y": 180, "description": "Eilantrag gem. § 80 Abs. 5 VwGO", "responsible_authority": "Antragsteller/in", "legal_basis": "§ 80 Abs. 5 VwGO", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Zulässigkeit & Rechtsschutzbedürfnis prüfen", "x": 220, "y": 180, "description": "Vorverfahren? Statthaftigkeit?", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§§ 68, 80 VwGO", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Behörde zur Stellungnahme anhören", "x": 380, "y": 180, "description": "Akteneinsicht, Gegenvortrag, Fristsetzung", "responsible_authority": "Kammer/Senat", "legal_basis": "§ 80 Abs. 5 S. 3 VwGO", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Interessenabwägung vorbereiten", "x": 540, "y": 180, "description": "Anordnungsanspruch & -grund", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§ 80 Abs. 5 VwGO", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Eilbedürftigkeit?", "x": 700, "y": 180, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Mündliche Anhörung / Telefonat", "x": 860, "y": 100, "description": "Ergänzende Stellungnahmen, Vergleich", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§ 80 Abs. 5 VwGO", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Beschluss entwerfen", "x": 860, "y": 260, "description": "Tenor, Kosten, Rechtsbehelfsbelehrung", "responsible_authority": "Kammer/Senat", "legal_basis": "§ 80 Abs. 5 VwGO", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Beschluss bekanntgeben", "x": 1020, "y": 260, "description": "Sofortige Zustellung an Beteiligte", "responsible_authority": "Gerichtsgeschäftsstelle", "legal_basis": "§ 80 Abs. 5 VwGO", "deadline_days": 1, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Eilverfahren abgeschlossen", "x": 1180, "y": 260, "description": "Beschluss wirksam; ggf. Beschwerde", "responsible_authority": "", "legal_basis": "§ 146 VwGO", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "F3", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C5", "source_element": "X1", "target_element": "F4", "connection_type": "SEQUENCE", "description": "Hohe Eilbedürftigkeit"},
+    {"connection_id": "C6", "source_element": "F4", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C7", "source_element": "X1", "target_element": "F5", "connection_type": "SEQUENCE", "description": "Regelfall"},
+    {"connection_id": "C8", "source_element": "F5", "target_element": "F6", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C9", "source_element": "F6", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "Erkläre das aktuelle Diagramm kurz und prägnant."
+  },
+  {
+    "role": "assistant",
+    "content": "Das aktuelle Diagramm zeigt einen Prozess, der aus einem Start-Event (S001), einer Vorbereitung-Funktion (F100), zwei Teilprozessen (SP200 und SP210) und einem End-Event (E999) besteht. Der Prozess verläuft sequenziell: Er beginnt mit dem Start-Event, folgt dann der Vorbereitung, danach den beiden Teilprozessen in dieser Reihenfolge und schließlich endet er am End-Event. Die Teilprozesse SP200 und SP210 sind Subprocesses, die auf andere VPB-Dateien verweisen (ref_file)."
+  }
+]

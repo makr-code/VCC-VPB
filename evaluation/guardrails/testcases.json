@@ -1,0 +1,134 @@
+[
+  {
+    "name": "clean_diff",
+    "description": "Erweiterung mit sauberem Element und Verbindung",
+    "base_diagram": {
+      "metadata": {"name": "Baseline"},
+      "elements": [
+        {"element_id": "E_START", "element_type": "START_EVENT", "name": "Start", "x": 0, "y": 0},
+        {"element_id": "E_FUNC_1", "element_type": "FUNCTION", "name": "Vorbereitung", "x": 100, "y": 0}
+      ],
+      "connections": [
+        {"connection_id": "C_START_F1", "source_element": "E_START", "target_element": "E_FUNC_1", "connection_type": "SEQUENCE"}
+      ]
+    },
+    "diff": {
+      "elements": [
+        {"element_id": "E_FUNC_2", "element_type": "FUNCTION", "name": "Bearbeiten", "x": 200, "y": 0}
+      ],
+      "connections": [
+        {"connection_id": "C_F1_F2", "source_element": "E_FUNC_1", "target_element": "E_FUNC_2", "connection_type": "SEQUENCE"}
+      ]
+    },
+    "expected": {"error": 0, "warning": 0, "info": 0}
+  },
+  {
+    "name": "duplicate_element_id",
+    "description": "Diff enthält Element-ID, die bereits existiert",
+    "diff": {
+      "elements": [
+        {"element_id": "E_FUNC_1", "element_type": "FUNCTION", "name": "Bearbeiten", "x": 200, "y": 0}
+      ],
+      "connections": []
+    },
+    "expected": {"error": 1}
+  },
+  {
+    "name": "duplicate_element_name",
+    "description": "Zwei neue Elemente besitzen identische Namen",
+    "diff": {
+      "elements": [
+        {"element_id": "E_FUNC_2", "element_type": "FUNCTION", "name": "Bearbeiten", "x": 200, "y": 0},
+        {"element_id": "E_FUNC_3", "element_type": "FUNCTION", "name": "Bearbeiten", "x": 200, "y": 100}
+      ],
+      "connections": [
+        {"connection_id": "C_F1_F2_A", "source_element": "E_FUNC_1", "target_element": "E_FUNC_2", "connection_type": "SEQUENCE"},
+        {"connection_id": "C_F1_F3_A", "source_element": "E_FUNC_1", "target_element": "E_FUNC_3", "connection_type": "SEQUENCE"}
+      ]
+    },
+    "expected": {"warning": 1}
+  },
+  {
+    "name": "missing_name",
+    "description": "Neues Element ohne Namen",
+    "diff": {
+      "elements": [
+        {"element_id": "E_FUNC_4", "element_type": "FUNCTION", "name": "   ", "x": 200, "y": 0}
+      ],
+      "connections": [
+        {"connection_id": "C_F1_F4", "source_element": "E_FUNC_1", "target_element": "E_FUNC_4", "connection_type": "SEQUENCE"}
+      ]
+    },
+    "expected": {"warning": 1}
+  },
+  {
+    "name": "self_loop",
+    "description": "Verbindung erzeugt Selbstschleife",
+    "diff": {
+      "elements": [],
+      "connections": [
+        {"connection_id": "C_LOOP", "source_element": "E_FUNC_1", "target_element": "E_FUNC_1", "connection_type": "SEQUENCE"}
+      ]
+    },
+    "expected": {"warning": 1}
+  },
+  {
+    "name": "dangling_connection",
+    "description": "Verbindung referenziert unbekanntes Element",
+    "diff": {
+      "elements": [],
+      "connections": [
+        {"connection_id": "C_DANGLING", "source_element": "E_FUNC_1", "target_element": "E_UNKNOWN", "connection_type": "SEQUENCE"}
+      ]
+    },
+    "expected": {"error": 1}
+  },
+  {
+    "name": "unconnected_function",
+    "description": "Neue Funktion ohne eingehende/ausgehende Verbindung",
+    "diff": {
+      "elements": [
+        {"element_id": "E_FUNC_5", "element_type": "FUNCTION", "name": "Isoliert", "x": 200, "y": 200}
+      ],
+      "connections": []
+    },
+    "expected": {"warning": 1}
+  },
+  {
+    "name": "duplicate_connection_id",
+    "description": "Diff enthält Connection-ID, die bereits existiert",
+    "diff": {
+      "elements": [
+        {"element_id": "E_FUNC_6", "element_type": "FUNCTION", "name": "Weiter", "x": 200, "y": 0}
+      ],
+      "connections": [
+        {"connection_id": "C_START_F1", "source_element": "E_FUNC_1", "target_element": "E_FUNC_6", "connection_type": "SEQUENCE"}
+      ]
+    },
+    "expected": {"error": 1}
+  },
+  {
+    "name": "duplicate_connection_pair",
+    "description": "Relation zwischen zwei Elementen wird doppelt angelegt",
+    "diff": {
+      "elements": [],
+      "connections": [
+        {"connection_id": "C_DUP_PAIR", "source_element": "E_START", "target_element": "E_FUNC_1", "connection_type": "SEQUENCE"}
+      ]
+    },
+    "expected": {"warning": 1}
+  },
+  {
+    "name": "off_grid_position",
+    "description": "Element wird nicht am Raster platziert",
+    "diff": {
+      "elements": [
+        {"element_id": "E_FUNC_7", "element_type": "FUNCTION", "name": "OffGrid", "x": 215, "y": 45}
+      ],
+      "connections": [
+        {"connection_id": "C_F1_F7", "source_element": "E_FUNC_1", "target_element": "E_FUNC_7", "connection_type": "SEQUENCE"}
+      ]
+    },
+    "expected": {"info": 1}
+  }
+]

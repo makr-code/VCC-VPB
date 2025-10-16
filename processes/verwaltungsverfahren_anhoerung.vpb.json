@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "Anhörung Beteiligter – § 28 VwVfG",
+    "description": "Standardisierte Anhörung vor Erlass eines belastenden Verwaltungsakts."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Anhörungspflicht prüfen", "x": 60, "y": 160, "description": "Belastender Verwaltungsakt geplant", "responsible_authority": "Fachreferat", "legal_basis": "§ 28 Abs. 1 VwVfG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Beteiligte identifizieren", "x": 220, "y": 160, "description": "Betroffene Personen, Bevollmächtigte, Dritte", "responsible_authority": "Fachreferat", "legal_basis": "§§ 13, 14 VwVfG", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Anhörungsschreiben erstellen", "x": 380, "y": 160, "description": "Sachverhalt darstellen, Frist setzen", "responsible_authority": "Fachreferat", "legal_basis": "§ 28 Abs. 1 VwVfG", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Zustellung veranlassen", "x": 540, "y": 160, "description": "Bekanntgabe, Zustellnachweis sichern", "responsible_authority": "Serviceeinheit", "legal_basis": "§ 41 VwVfG", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Stellungnahmen auswerten", "x": 700, "y": 160, "description": "Eingänge prüfen, Sachverhalt fortschreiben", "responsible_authority": "Fachreferat", "legal_basis": "§ 26 VwVfG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Anhörungsprotokoll erstellen", "x": 860, "y": 160, "description": "Ergebnis dokumentieren, Abwägung festhalten", "responsible_authority": "Fachreferat", "legal_basis": "§ 28 Abs. 2 VwVfG", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Anhörung abgeschlossen", "x": 1020, "y": 160, "description": "Ergebnis fließt in Entscheidung ein", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "F3", "target_element": "F4", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C5", "source_element": "F4", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C6", "source_element": "F5", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

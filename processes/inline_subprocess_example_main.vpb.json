@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "name": "Inline-Subprozess Beispiel (Main)",
+    "description": "Demonstriert SUBPROCESS-Elemente mit ref_file auf andere VPB-Dateien."
+  },
+  "elements": [
+    {"element_id": "S001", "element_type": "START_EVENT", "name": "Start", "x": 120, "y": 160},
+    {"element_id": "F100", "element_type": "FUNCTION", "name": "Vorbereitung", "x": 320, "y": 160},
+    {"element_id": "SP200", "element_type": "SUBPROCESS", "name": "Teilprozess A", "x": 560, "y": 160, "ref_file": "default_two_steps.vpb.json"},
+    {"element_id": "SP210", "element_type": "SUBPROCESS", "name": "Teilprozess B", "x": 560, "y": 320, "ref_file": "default_decision.vpb.json"},
+    {"element_id": "E999", "element_type": "END_EVENT", "name": "Ende", "x": 900, "y": 220}
+  ],
+  "connections": [
+    {"connection_id": "C001", "source_element": "S001", "target_element": "F100", "connection_type": "SEQUENCE"},
+    {"connection_id": "C002", "source_element": "F100", "target_element": "SP200", "connection_type": "SEQUENCE"},
+    {"connection_id": "C003", "source_element": "SP200", "target_element": "SP210", "connection_type": "SEQUENCE"},
+    {"connection_id": "C004", "source_element": "SP210", "target_element": "E999", "connection_type": "SEQUENCE"}
+  ]
+}

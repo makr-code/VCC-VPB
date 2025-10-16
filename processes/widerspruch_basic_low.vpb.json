@@ -1,0 +1,19 @@
+{
+  "metadata": {"name": "Widerspruch – Basic (Low)", "description": "Widerspruch prüfen, Abhilfe oder Widerspruchsbescheid"},
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Start", "x": 50, "y": 250, "description": "", "responsible_authority": "Widerspruchsbehörde", "legal_basis": "VwGO", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Widerspruch prüfen", "x": 200, "y": 250, "description": "Formelle u. materielle Prüfung", "responsible_authority": "Sachbearbeitung", "legal_basis": "", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "G1", "element_type": "GATEWAY", "name": "Abhilfe möglich?", "x": 350, "y": 250, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Abhilfe-Bescheid", "x": 500, "y": 200, "description": "Bescheid zugunsten des Antragstellers", "responsible_authority": "Ursprungsbehörde", "legal_basis": "VwGO", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Widerspruchsbescheid", "x": 500, "y": 300, "description": "Bescheid durch Widerspruchsbehörde", "responsible_authority": "Widerspruchsbehörde", "legal_basis": "§ 73 VwGO", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Ende", "x": 650, "y": 250, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "G1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "G1", "target_element": "F2", "connection_type": "SEQUENCE", "description": "Ja"},
+    {"connection_id": "C4", "source_element": "G1", "target_element": "F3", "connection_type": "SEQUENCE", "description": "Nein"},
+    {"connection_id": "C5", "source_element": "F2", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C6", "source_element": "F3", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

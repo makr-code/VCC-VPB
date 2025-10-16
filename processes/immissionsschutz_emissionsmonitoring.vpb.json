@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "name": "Immissionsschutz – Emissionsüberwachung & Jahresbericht",
+    "description": "Ablauf zur Planung, Durchführung und Berichterstattung der Emissionsüberwachung gemäß §§ 26, 28 BImSchG und zugehörigen Verordnungen."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Jahreszyklus starten", "x": 60, "y": 220, "description": "Neues Berichtsjahr beginnt", "responsible_authority": "Anlagenbetreiber", "legal_basis": "§ 26 BImSchG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Monitoring planen", "x": 220, "y": 220, "description": "Messkonzept aktualisieren, Messstellen und Termine festlegen", "responsible_authority": "Anlagenbetreiber", "legal_basis": "§ 26 Abs. 1 BImSchG", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Messstelle beauftragen", "x": 380, "y": 220, "description": "Anerkannte Messstelle nach § 26 BImSchG beauftragen", "responsible_authority": "Anlagenbetreiber", "legal_basis": "§ 26 Abs. 3 BImSchG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Messgeräte kalibrieren", "x": 540, "y": 220, "description": "Kalibrierung/Referenzierung kontinuierlicher Messgeräte", "responsible_authority": "Messstelle", "legal_basis": "13. BImSchV; 17. BImSchV", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Emissionen erfassen", "x": 700, "y": 220, "description": "Kontinuierliche Messung oder Einzelmessung durchführen", "responsible_authority": "Messstelle / Betreiber", "legal_basis": "§ 26 BImSchG; 17. BImSchV", "deadline_days": 120, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Messdaten validieren", "x": 860, "y": 220, "description": "Plausibilitätsprüfung, Datenaufbereitung, Abweichungen markieren", "responsible_authority": "Betreiber", "legal_basis": "27. BImSchV", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Grenzwert überschritten?", "x": 1020, "y": 220, "description": "Bewertung gegen Genehmigungswerte", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Abweichung melden", "x": 1020, "y": 80, "description": "Behörde informieren, Sofortmaßnahmen festlegen", "responsible_authority": "Anlagenbetreiber", "legal_basis": "§ 26 Abs. 3 BImSchG; 44. BImSchV", "deadline_days": 2, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Korrekturmaßnahmen planen", "x": 1180, "y": 80, "description": "Ursache analysieren, Maßnahmen und Fristen definieren", "responsible_authority": "Betreiber", "legal_basis": "§ 17 Abs. 1 Nr. 4 BImSchG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F8", "element_type": "FUNCTION", "name": "Monitoring fortsetzen", "x": 1340, "y": 80, "description": "Ersatzmessung/Monitoring nach Abweichung", "responsible_authority": "Messstelle", "legal_basis": "§ 26 BImSchG", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F9", "element_type": "FUNCTION", "name": "Jahresbericht erstellen", "x": 1180, "y": 220, "description": "Messdaten, Grenzwertvergleiche, Maßnahmen zusammenfassen", "responsible_authority": "Betreiber", "legal_basis": "§ 28 BImSchG; 30. BImSchV", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F10", "element_type": "FUNCTION", "name": "Bericht übermitteln", "x": 1340, "y": 220, "description": "Übermittlung via e-KAS/Onlineportal an Immissionsschutzbehörde", "responsible_authority": "Betreiber", "legal_basis": "§ 28 Abs. 1 BImSchG; 31. BImSchV", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F11", "element_type": "FUNCTION", "name": "Behördenfeedback verarbeiten", "x": 1500, "y": 220, "description": "Nachforderungen, Auflagen, Terminsetzungen dokumentieren", "responsible_authority": "Betreiber / Behörde", "legal_basis": "§ 28 Abs. 2 BImSchG", "deadline_days": 21, "geo_reference": ""},
+    {"element_id": "F12", "element_type": "FUNCTION", "name": "Monitoring archivieren", "x": 1660, "y": 220, "description": "Daten, Berichte, Kalibriernachweise archivieren", "responsible_authority": "Betreiber", "legal_basis": "§ 52 BImSchG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Berichtsjahr abgeschlossen", "x": 1820, "y": 220, "description": "Monitoring erfüllt, nächste Zyklusplanung beginnt", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "F3", "target_element": "F4", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C5", "source_element": "F4", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C6", "source_element": "F5", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C7", "source_element": "X1", "target_element": "F6", "connection_type": "SEQUENCE", "description": "Überschreitung"},
+    {"connection_id": "C8", "source_element": "F6", "target_element": "F7", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C9", "source_element": "F7", "target_element": "F8", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C10", "source_element": "F8", "target_element": "F9", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C11", "source_element": "X1", "target_element": "F9", "connection_type": "SEQUENCE", "description": "OK"},
+    {"connection_id": "C12", "source_element": "F9", "target_element": "F10", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C13", "source_element": "F10", "target_element": "F11", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C14", "source_element": "F11", "target_element": "F12", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C15", "source_element": "F12", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

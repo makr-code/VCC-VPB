@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "name": "Fortsetzungsfeststellungsklage – § 113 Abs. 1 S. 4 VwGO",
+    "description": "Ablauf eines Verfahrens zur Feststellung der Rechtswidrigkeit eines erledigten Verwaltungsakts."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Verwaltungsakt erledigt", "x": 60, "y": 200, "description": "Erledigung nach Klageerhebung eingetreten", "responsible_authority": "Kläger/in", "legal_basis": "§ 113 Abs. 1 S. 4 VwGO", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Erledigung protokollieren", "x": 220, "y": 200, "description": "Behörde informiert, Aktenvermerk erstellen", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§ 83 VwGO", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Feststellungsantrag präzisieren", "x": 380, "y": 200, "description": "Antrag auf Fortsetzungsfeststellung formulieren", "responsible_authority": "Kläger/in", "legal_basis": "§ 113 Abs. 1 S. 4 VwGO", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Feststellungsinteresse prüfen", "x": 540, "y": 200, "description": "Wiederholungsgefahr, Rehabilitationsinteresse, Präjudizwert", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§ 113 Abs. 1 S. 4 VwGO", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Feststellungsinteresse gegeben?", "x": 700, "y": 200, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Klage abweisen (kein Interesse)", "x": 860, "y": 120, "description": "Beschluss/Urteil zur Erledigung ohne Feststellung", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§ 113 Abs. 1 S. 4 VwGO", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Sach- & Rechtsprüfung", "x": 860, "y": 280, "description": "Rechtswidrigkeit des erledigten Verwaltungsakts prüfen", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§§ 108, 113 VwGO", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Urteil (Feststellung) vorbereiten", "x": 1020, "y": 280, "description": "Tenor formulieren, Kostentscheidung, Rechtsbehelfsbelehrung", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§§ 113, 117 VwGO", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Urteil verkünden & zustellen", "x": 1180, "y": 280, "description": "Zustellung an Beteiligte, Fristen starten", "responsible_authority": "Verwaltungsgericht", "legal_basis": "§§ 117, 122 VwGO", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Verfahren beendet", "x": 1340, "y": 200, "description": "Fortsetzungsfeststellung erledigt", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "F3", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C5", "source_element": "X1", "target_element": "F4", "connection_type": "SEQUENCE", "description": "Kein Interesse"},
+    {"connection_id": "C6", "source_element": "F4", "target_element": "E1", "connection_type": "SEQUENCE", "description": "Klage abgewiesen"},
+    {"connection_id": "C7", "source_element": "X1", "target_element": "F5", "connection_type": "SEQUENCE", "description": "Feststellungsinteresse"},
+    {"connection_id": "C8", "source_element": "F5", "target_element": "F6", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C9", "source_element": "F6", "target_element": "F7", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C10", "source_element": "F7", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

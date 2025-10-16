@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "name": "Bauleitplanung – Umweltprüfung/Scoping",
+    "version": "1.0",
+    "author": "VPB Demo",
+    "created": "2025-09-23",
+    "domain": "Bauleitplanung"
+  },
+  "hierarchy_categories": [
+    {"name": "Land", "y0": -900, "y1": -500, "color": "#eef3ff"},
+    {"name": "Kreis", "y0": -500, "y1": -200, "color": "#eefaf2"},
+    {"name": "Gemeinde", "y0": -200, "y1": 200, "color": "#fff7e6"},
+    {"name": "TÖB", "y0": 200, "y1": 500, "color": "#f3f3ff"},
+    {"name": "Bürger", "y0": 500, "y1": 900, "color": "#fff0f0"}
+  ],
+  "elements": [
+    {"element_id": "UV_START", "element_type": "START_EVENT", "name": "Scoping-Start", "x": 100, "y": -100, "hierarchy": "Kreis"},
+    {"element_id": "TASK_SCOPING", "element_type": "FUNCTION", "name": "Scoping-Termin durchführen", "x": 320, "y": -100, "hierarchy": "Kreis"},
+    {"element_id": "OU_UVB", "element_type": "ORGANIZATION_UNIT", "name": "Untere Naturschutzbehörde", "x": 320, "y": -200, "hierarchy": "Kreis"},
+    {"element_id": "LC_UV_RECHT", "element_type": "LEGAL_CHECKPOINT", "name": "UVP-Recht prüfen", "x": 540, "y": -160, "hierarchy": "Land"},
+    {"element_id": "DOC_SCOPING", "element_type": "INFORMATION_OBJECT", "name": "Scoping-Vermerk", "x": 540, "y": -60, "hierarchy": "Kreis"},
+    {"element_id": "TASK_UMWELTBERICHT", "element_type": "FUNCTION", "name": "Umweltbericht erstellen", "x": 760, "y": -100, "hierarchy": "Gemeinde"},
+    {"element_id": "DL_UV_FRIST", "element_type": "DEADLINE", "name": "Frist Umweltbericht 8 Wochen", "x": 980, "y": -100, "hierarchy": "Gemeinde", "deadline_days": 56},
+    {"element_id": "XOR_QUALITAET", "element_type": "XOR_CONNECTOR", "name": "Qualität ausreichend?", "x": 1200, "y": -100, "hierarchy": "Gemeinde"},
+    {"element_id": "TASK_NACHARBEIT", "element_type": "FUNCTION", "name": "Nacharbeit Umweltbericht", "x": 1400, "y": -20, "hierarchy": "Gemeinde"},
+    {"element_id": "TASK_UV_FERTIG", "element_type": "FUNCTION", "name": "UV-Abschlussvermerk", "x": 1400, "y": -180, "hierarchy": "Gemeinde"},
+    {"element_id": "END_UV", "element_type": "END_EVENT", "name": "Umweltprüfung abgeschlossen", "x": 1600, "y": -180, "hierarchy": "Gemeinde"},
+
+    {"element_id": "GRP_UV", "element_type": "GROUP", "name": "Umweltprüfung/Scoping", "x": 960, "y": -100, "members": ["TASK_SCOPING", "OU_UVB", "LC_UV_RECHT", "DOC_SCOPING", "TASK_UMWELTBERICHT", "DL_UV_FRIST", "XOR_QUALITAET", "TASK_NACHARBEIT", "TASK_UV_FERTIG", "END_UV"], "collapsed": false}
+  ],
+  "connections": [
+    {"connection_id": "CU1", "source_element": "UV_START", "target_element": "TASK_SCOPING", "connection_type": "SEQUENCE"},
+    {"connection_id": "CU2", "source_element": "TASK_SCOPING", "target_element": "DOC_SCOPING", "connection_type": "DOCUMENT"},
+    {"connection_id": "CU3", "source_element": "TASK_SCOPING", "target_element": "LC_UV_RECHT", "connection_type": "LEGAL"},
+    {"connection_id": "CU4", "source_element": "DOC_SCOPING", "target_element": "TASK_UMWELTBERICHT", "connection_type": "SEQUENCE"},
+    {"connection_id": "CU5", "source_element": "TASK_UMWELTBERICHT", "target_element": "DL_UV_FRIST", "connection_type": "NOTIFICATION", "description": "Start Frist"},
+    {"connection_id": "CU6", "source_element": "DL_UV_FRIST", "target_element": "XOR_QUALITAET", "connection_type": "DEADLINE"},
+    {"connection_id": "CU7", "source_element": "XOR_QUALITAET", "target_element": "TASK_UV_FERTIG", "connection_type": "APPROVAL", "arrow_style": "double", "description": "Gut/ausreichend"},
+    {"connection_id": "CU8", "source_element": "XOR_QUALITAET", "target_element": "TASK_NACHARBEIT", "connection_type": "REJECTION", "description": "Mängel"},
+    {"connection_id": "CU9", "source_element": "TASK_NACHARBEIT", "target_element": "XOR_QUALITAET", "connection_type": "SEQUENCE", "description": "erneute Prüfung"},
+    {"connection_id": "CU10", "source_element": "TASK_UV_FERTIG", "target_element": "END_UV", "connection_type": "SEQUENCE"}
+  ]
+}

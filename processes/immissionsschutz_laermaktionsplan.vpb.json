@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "name": "Immissionsschutz – Kommunaler Lärmaktionsplan",
+    "description": "Prozess zur Aufstellung und Fortschreibung eines Lärmaktionsplans nach §§ 47a ff. BImSchG sowie LImSchG einschließlich Öffentlichkeitsbeteiligung und Monitoring."
+  },
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Auslöser dokumentiert", "x": 60, "y": 220, "description": "Pflicht zur Erstellung oder Fortschreibung festgestellt (z. B. 5-Jahres-Zyklus, neue Lärmbelastung)", "responsible_authority": "Umweltamt", "legal_basis": "§ 47d Abs. 1 BImSchG", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Lärmkarten übernehmen", "x": 220, "y": 220, "description": "Aktuelle strategische Lärmkarten und Messdaten zusammenführen", "responsible_authority": "Umweltamt", "legal_basis": "§ 47c BImSchG; 32. BImSchV", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Hotspots analysieren", "x": 380, "y": 220, "description": "Belastungsschwerpunkte, sensible Gebiete und Risikogruppen identifizieren", "responsible_authority": "Umweltamt / Stadtplanung", "legal_basis": "§ 47a Abs. 2 BImSchG", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Maßnahmenentwurf erstellen", "x": 540, "y": 220, "description": "Maßnahmenkatalog mit Priorisierung, Kosten und Zuständigkeiten erarbeiten", "responsible_authority": "Verwaltungsinterner Arbeitskreis", "legal_basis": "§ 47d Abs. 2 BImSchG", "deadline_days": 45, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Öffentlichkeit beteiligen", "x": 700, "y": 220, "description": "Entwurf veröffentlichen, Beteiligungsportal und Informationsveranstaltungen durchführen", "responsible_authority": "Umweltamt / Öffentlichkeitsarbeit", "legal_basis": "§ 47d Abs. 3 BImSchG; 18. BImSchV", "deadline_days": 30, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Stellungnahmen auswerten", "x": 860, "y": 220, "description": "Eingegangene Hinweise prüfen, Abwägungsvorschlag erstellen", "responsible_authority": "Umweltamt", "legal_basis": "§ 47d Abs. 3 BImSchG", "deadline_days": 21, "geo_reference": ""},
+    {"element_id": "X1", "element_type": "XOR_CONNECTOR", "name": "Änderung notwendig?", "x": 1020, "y": 220, "description": "Erfordern die Stellungnahmen Anpassungen?", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Entwurf überarbeiten", "x": 1020, "y": 80, "description": "Maßnahmen und Begründung anpassen, Abwägung dokumentieren", "responsible_authority": "Umweltamt / Fachbereiche", "legal_basis": "§ 47d Abs. 3 BImSchG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Ressortabstimmung abschließen", "x": 1180, "y": 220, "description": "Endfassung mit betroffenen Fachbereichen, Straßenverkehrsbehörde und ggf. Nachbarkommunen abstimmen", "responsible_authority": "Umweltamt / Stadtverwaltung", "legal_basis": "§ 47d Abs. 2 BImSchG; § 3 LImSchG", "deadline_days": 21, "geo_reference": ""},
+    {"element_id": "F8", "element_type": "FUNCTION", "name": "Ratsbeschluss vorbereiten", "x": 1340, "y": 220, "description": "Vorlage mit Maßnahmen, Kostenplan und Monitoringkonzept erstellen", "responsible_authority": "Umweltamt / Gremienbüro", "legal_basis": "§ 47d Abs. 5 BImSchG", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F9", "element_type": "FUNCTION", "name": "Beschluss fassen", "x": 1500, "y": 220, "description": "Beschlussfassung im Rat oder zuständigem Ausschuss", "responsible_authority": "Kommunalparlament", "legal_basis": "§ 47d Abs. 5 BImSchG; Kommunalverfassung", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F10", "element_type": "FUNCTION", "name": "Plan veröffentlichen", "x": 1660, "y": 220, "description": "Lärmaktionsplan bekanntmachen, Online-Publikation und Mitteilung an Landesbehörden", "responsible_authority": "Umweltamt", "legal_basis": "§ 47d Abs. 6 BImSchG", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F11", "element_type": "FUNCTION", "name": "Monitoring & Bericht", "x": 1820, "y": 220, "description": "Umsetzung verfolgen, Bericht an Landes-/Bundesstellen übermitteln, Fortschreibung planen", "responsible_authority": "Umweltamt", "legal_basis": "§ 47f BImSchG; 39. BImSchV", "deadline_days": 730, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Lärmaktionsplan umgesetzt", "x": 1980, "y": 220, "description": "Plan beschlossen, veröffentlicht und Monitoring aufgesetzt", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "F3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "F3", "target_element": "F4", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C5", "source_element": "F4", "target_element": "F5", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C6", "source_element": "F5", "target_element": "X1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C7", "source_element": "X1", "target_element": "F6", "connection_type": "SEQUENCE", "description": "Ja"},
+    {"connection_id": "C8", "source_element": "F6", "target_element": "F7", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C9", "source_element": "X1", "target_element": "F7", "connection_type": "SEQUENCE", "description": "Nein"},
+    {"connection_id": "C10", "source_element": "F7", "target_element": "F8", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C11", "source_element": "F8", "target_element": "F9", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C12", "source_element": "F9", "target_element": "F10", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C13", "source_element": "F10", "target_element": "F11", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C14", "source_element": "F11", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

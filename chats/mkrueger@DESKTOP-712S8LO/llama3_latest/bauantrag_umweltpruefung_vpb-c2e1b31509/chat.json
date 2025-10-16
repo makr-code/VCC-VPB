@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "Erkläre das aktuelle Diagramm kurz und prägnant."
+  },
+  {
+    "role": "assistant",
+    "content": "Das aktuelle Diagramm beschreibt den Prozess der Umweltprüfung innerhalb eines Baugenehmigungsverfahrens. Der Prozess startet mit dem Ereignis \"Umweltprüfung starten\" (S_ENV) und besteht aus vier Funktionen: \"Relevante Umweltthemen bestimmen\" (F_SCOPING), \"Fachbehörden beteiligen\" (F_BEHOERDEN), \"Bewertung Umweltbelange\" (F_BEWERTEN) und \"Stellungnahmen eingegangen?\" (DEADL_STELLUNG). Der Prozess endet mit dem Ereignis \"Umweltbericht abgeschlossen\" (E_ENV)."
+  }
+]

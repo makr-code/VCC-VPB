@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "name": "Test Prozess",
+    "version": "1.0",
+    "author": "VPB Test",
+    "created": "2025-10-14"
+  },
+  "elements": [
+    {
+      "element_id": "F001",
+      "element_type": "FUNCTION",
+      "name": "Antrag prüfen",
+      "x": 200,
+      "y": 150,
+      "description": "Prüfung des eingegangenen Antrags"
+    },
+    {
+      "element_id": "D001",
+      "element_type": "DECISION",
+      "name": "Vollständig?",
+      "x": 400,
+      "y": 150,
+      "description": "Ist der Antrag vollständig?"
+    },
+    {
+      "element_id": "F002",
+      "element_type": "FUNCTION",
+      "name": "Bescheid erstellen",
+      "x": 600,
+      "y": 150,
+      "description": "Erstellung des Bescheids"
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "C001",
+      "source_element": "F001",
+      "target_element": "D001",
+      "connection_type": "SEQUENCE",
+      "label": ""
+    },
+    {
+      "connection_id": "C002",
+      "source_element": "D001",
+      "target_element": "F002",
+      "connection_type": "SEQUENCE",
+      "label": "Ja"
+    }
+  ]
+}

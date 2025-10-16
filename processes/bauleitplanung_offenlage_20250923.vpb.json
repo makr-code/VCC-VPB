@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "name": "Bauleitplanung – Frühzeitige Öffentlichkeitsbeteiligung",
+    "version": "1.0",
+    "author": "VPB Demo",
+    "created": "2025-09-23",
+    "domain": "Bauleitplanung"
+  },
+  "hierarchy_categories": [
+    {"name": "Land", "y0": -900, "y1": -500, "color": "#eef3ff"},
+    {"name": "Kreis", "y0": -500, "y1": -200, "color": "#eefaf2"},
+    {"name": "Gemeinde", "y0": -200, "y1": 200, "color": "#fff7e6"},
+    {"name": "TÖB", "y0": 200, "y1": 500, "color": "#f3f3ff"},
+    {"name": "Bürger", "y0": 500, "y1": 900, "color": "#fff0f0"}
+  ],
+  "elements": [
+    {"element_id": "PUB_START", "element_type": "START_EVENT", "name": "Start Öffentlichkeitsbeteiligung", "x": 100, "y": 600, "hierarchy": "Bürger"},
+    {"element_id": "TASK_BEKANNTMACHUNG", "element_type": "FUNCTION", "name": "Bekanntmachung im Amtsblatt", "x": 320, "y": 600, "hierarchy": "Gemeinde"},
+    {"element_id": "DOC_BEK", "element_type": "INFORMATION_OBJECT", "name": "Bekanntmachungstext", "x": 320, "y": 520, "hierarchy": "Gemeinde"},
+    {"element_id": "MSG_WEB", "element_type": "EVENT", "name": "Online-Veröffentlichung", "x": 540, "y": 600, "hierarchy": "Bürger"},
+    {"element_id": "DL_AUSL1M", "element_type": "DEADLINE", "name": "Auslegung 1 Monat", "x": 760, "y": 600, "hierarchy": "Bürger", "deadline_days": 30},
+    {"element_id": "XOR_HINWEISE", "element_type": "XOR_CONNECTOR", "name": "Hinweise ausreichend?", "x": 980, "y": 600, "hierarchy": "Gemeinde"},
+    {"element_id": "TASK_DOKU", "element_type": "FUNCTION", "name": "Hinweise dokumentieren", "x": 1200, "y": 520, "hierarchy": "Gemeinde"},
+    {"element_id": "TASK_RUECKFRAGEN", "element_type": "FUNCTION", "name": "Rückfragen beantworten", "x": 1200, "y": 680, "hierarchy": "Gemeinde"},
+    {"element_id": "END_PUB", "element_type": "END_EVENT", "name": "Öffentlichkeitsbeteiligung beendet", "x": 1420, "y": 600, "hierarchy": "Gemeinde"}
+  ],
+  "connections": [
+    {"connection_id": "CP1", "source_element": "PUB_START", "target_element": "TASK_BEKANNTMACHUNG", "connection_type": "SEQUENCE"},
+    {"connection_id": "CP2", "source_element": "TASK_BEKANNTMACHUNG", "target_element": "DOC_BEK", "connection_type": "DOCUMENT"},
+    {"connection_id": "CP3", "source_element": "TASK_BEKANNTMACHUNG", "target_element": "MSG_WEB", "connection_type": "NOTIFICATION"},
+    {"connection_id": "CP4", "source_element": "MSG_WEB", "target_element": "DL_AUSL1M", "connection_type": "SEQUENCE"},
+    {"connection_id": "CP5", "source_element": "DL_AUSL1M", "target_element": "XOR_HINWEISE", "connection_type": "DEADLINE"},
+    {"connection_id": "CP6", "source_element": "XOR_HINWEISE", "target_element": "TASK_DOKU", "connection_type": "APPROVAL", "arrow_style": "double"},
+    {"connection_id": "CP7", "source_element": "XOR_HINWEISE", "target_element": "TASK_RUECKFRAGEN", "connection_type": "REJECTION"},
+    {"connection_id": "CP8", "source_element": "TASK_DOKU", "target_element": "END_PUB", "connection_type": "SEQUENCE"},
+    {"connection_id": "CP9", "source_element": "TASK_RUECKFRAGEN", "target_element": "END_PUB", "connection_type": "SEQUENCE"}
+  ]
+}

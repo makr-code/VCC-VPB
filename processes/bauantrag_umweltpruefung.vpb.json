@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "Bauantrag – Umweltprüfung",
+    "description": "Teilprozess für Umweltbelange innerhalb eines Baugenehmigungsverfahrens"
+  },
+  "elements": [
+    {"element_id": "S_ENV", "element_type": "START_EVENT", "name": "Umweltprüfung starten", "x": 60, "y": 80, "description": "Parallele Prüfung wird aktiviert", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Umweltprüfung"},
+    {"element_id": "F_SCOPING", "element_type": "FUNCTION", "name": "Relevante Umweltthemen bestimmen", "x": 220, "y": 80, "description": "Festlegen, welche Schutzgüter betroffen sind", "responsible_authority": "Umweltamt", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Umweltprüfung"},
+    {"element_id": "F_BEHOERDEN", "element_type": "FUNCTION", "name": "Fachbehörden beteiligen", "x": 400, "y": 80, "description": "Einholen von Stellungnahmen", "responsible_authority": "Umweltamt", "legal_basis": "BNatSchG", "deadline_days": 30, "geo_reference": "", "hierarchy": "Fachbehörden"},
+    {"element_id": "DEADL_STELLUNG", "element_type": "DEADLINE", "name": "Stellungnahmen eingegangen?", "x": 400, "y": 180, "description": "Frist zur Abgabe von Stellungnahmen", "responsible_authority": "Fachbehörden", "legal_basis": "", "deadline_days": 30, "geo_reference": "", "hierarchy": "Fachbehörden"},
+    {"element_id": "F_BEWERTEN", "element_type": "FUNCTION", "name": "Bewertung Umweltbelange", "x": 580, "y": 80, "description": "Auswirkungen und Auflagen ableiten", "responsible_authority": "Umweltamt", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Umweltprüfung"},
+    {"element_id": "E_ENV", "element_type": "END_EVENT", "name": "Umweltbericht abgeschlossen", "x": 760, "y": 80, "description": "Ergebnisse fließen in Gesamtverfahren ein", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Umweltprüfung"}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S_ENV", "target_element": "F_SCOPING", "connection_type": "SEQUENCE", "description": "Start Umweltprüfung"},
+    {"connection_id": "C2", "source_element": "F_SCOPING", "target_element": "F_BEHOERDEN", "connection_type": "SEQUENCE", "description": "Fachbehörden ermitteln"},
+    {"connection_id": "C3", "source_element": "F_BEHOERDEN", "target_element": "DEADL_STELLUNG", "connection_type": "SEQUENCE", "description": "Fristen setzen"},
+    {"connection_id": "C4", "source_element": "DEADL_STELLUNG", "target_element": "F_BEWERTEN", "connection_type": "SEQUENCE", "description": "Stellungnahmen liegen vor"},
+    {"connection_id": "C5", "source_element": "F_BEWERTEN", "target_element": "E_ENV", "connection_type": "SEQUENCE", "description": "Ergebnis übergeben"}
+  ]
+}

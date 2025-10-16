@@ -1,0 +1,439 @@
+"""
+LayoutController
+================
+
+Controller für Layout und Alignment Operationen.
+
+Responsibilities:
+- Auto-Layout Algorithmen (Hierarchical, Force-Directed, etc.)
+- Align Operationen (Left, Right, Top, Bottom, Center-H, Center-V)
+- Distribute Operationen (Horizontal, Vertical)
+- Formation Operationen (Line, Circle, Grid, Tree)
+
+Event Subscriptions:
+- ui:menu:layout:auto_layout
+- ui:menu:layout:align:* (left, right, top, bottom, center_h, center_v)
+- ui:menu:layout:distribute:* (horizontal, vertical)
+- ui:menu:layout:formation:* (line, circle, grid, tree)
+- document:created, document:loaded, document:closed
+
+Event Publications:
+- layout:applied (layout_type, element_ids)
+- layout:failed (error)
+"""
+
+from __future__ import annotations
+from typing import TYPE_CHECKING, Optional, Dict, Any, List
+import math
+
+if TYPE_CHECKING:
+    from vpb.infrastructure.event_bus import EventBus
+    from vpb.models import DocumentModel, VPBElement
+
+
+class LayoutController:
+    """
+    Controller für Layout und Alignment.
+    
+    Koordiniert Layout-Algorithmen und Positionierung von Elementen.
+    """
+    
+    def __init__(
+        self,
+        event_bus: EventBus,
+        current_document: Optional[DocumentModel] = None
+    ):
+        """
+        Initialisiert LayoutController.
+        
+        Args:
+            event_bus: Event-Bus für Kommunikation
+            current_document: Aktuelles Dokument (optional)
+        """
+        self.event_bus = event_bus
+        self.current_document = current_document
+        
+        # Subscribe to Events
+        self._subscribe_to_events()
+        
+    def _subscribe_to_events(self) -> None:
+        """Subscribe zu relevanten Events."""
+        # Layout Events
+        self.event_bus.subscribe("ui:menu:layout:auto_layout", self._on_auto_layout)
+        
+        # Align Events
+        self.event_bus.subscribe("ui:menu:layout:align:left", self._on_align_left)
+        self.event_bus.subscribe("ui:menu:layout:align:right", self._on_align_right)
+        self.event_bus.subscribe("ui:menu:layout:align:top", self._on_align_top)
+        self.event_bus.subscribe("ui:menu:layout:align:bottom", self._on_align_bottom)
+        self.event_bus.subscribe("ui:menu:layout:align:center_h", self._on_align_center_h)
+        self.event_bus.subscribe("ui:menu:layout:align:center_v", self._on_align_center_v)
+        
+        # Distribute Events
+        self.event_bus.subscribe("ui:menu:layout:distribute:horizontal", self._on_distribute_horizontal)
+        self.event_bus.subscribe("ui:menu:layout:distribute:vertical", self._on_distribute_vertical)
+        
+        # Formation Events
+        self.event_bus.subscribe("ui:menu:layout:formation:line", self._on_formation_line)
+        self.event_bus.subscribe("ui:menu:layout:formation:circle", self._on_formation_circle)
+        self.event_bus.subscribe("ui:menu:layout:formation:grid", self._on_formation_grid)
+        
+        # Document Events
+        self.event_bus.subscribe("document:created", self._on_document_changed)
+        self.event_bus.subscribe("document:loaded", self._on_document_changed)
+        self.event_bus.subscribe("document:closed", self._on_document_closed)
+        
+    # ===== Auto Layout =====
+    
+    def _on_auto_layout(self, data: Dict[str, Any]) -> None:
+        """
+        Automatisches Layout anwenden.
+        
+        Args:
+            data: {"algorithm": str} (optional, default: "hierarchical")
+        """
+        if not self.current_document:
+            return
+            
+        algorithm = data.get("algorithm", "hierarchical")
+        elements = self.current_document.get_all_elements()
+        
+        if not elements:
+            return
+            
+        # Simple hierarchical layout (top to bottom)
+        if algorithm == "hierarchical":
+            self._apply_hierarchical_layout(elements)
+        
+        # Publish Event
+        element_ids = [elem.element_id for elem in elements]
+        self.event_bus.publish("layout:applied", {
+            "layout_type": f"auto_{algorithm}",
+            "element_ids": element_ids
+        })
+        
+        # Status-Feedback
+        self.event_bus.publish("ui:statusbar:message", {
+            "text": f"Auto-Layout angewendet ({algorithm})",
+            "timeout": 3000
+        })
+        
+    def _apply_hierarchical_layout(self, elements: List[VPBElement]) -> None:
+        """Hierarchisches Layout (Top-Down)."""
+        x_start = 100
+        y_start = 100
+        x_spacing = 200
+        y_spacing = 150
+        
+        cols = math.ceil(math.sqrt(len(elements)))
+        
+        for idx, elem in enumerate(elements):
+            row = idx // cols
+            col = idx % cols
+            elem.x = x_start + col * x_spacing
+            elem.y = y_start + row * y_spacing
+    
+    # ===== Align Operations =====
+    
+    def _on_align_left(self, data: Dict[str, Any]) -> None:
+        """Links ausrichten."""
+        self._align_elements(data, align_type="left")
+        
+    def _on_align_right(self, data: Dict[str, Any]) -> None:
+        """Rechts ausrichten."""
+        self._align_elements(data, align_type="right")
+        
+    def _on_align_top(self, data: Dict[str, Any]) -> None:
+        """Oben ausrichten."""
+        self._align_elements(data, align_type="top")
+        
+    def _on_align_bottom(self, data: Dict[str, Any]) -> None:
+        """Unten ausrichten."""
+        self._align_elements(data, align_type="bottom")
+        
+    def _on_align_center_h(self, data: Dict[str, Any]) -> None:
+        """Horizontal zentrieren."""
+        self._align_elements(data, align_type="center_h")
+        
+    def _on_align_center_v(self, data: Dict[str, Any]) -> None:
+        """Vertikal zentrieren."""
+        self._align_elements(data, align_type="center_v")
+        
+    def _align_elements(self, data: Dict[str, Any], align_type: str) -> None:
+        """
+        Elemente ausrichten.
+        
+        Args:
+            data: {"element_ids": List[str]}
+            align_type: Art der Ausrichtung
+        """
+        if not self.current_document:
+            return
+            
+        element_ids = data.get("element_ids", [])
+        
+        if len(element_ids) < 2:
+            return
+            
+        elements = [self.current_document.get_element(eid) for eid in element_ids]
+        elements = [e for e in elements if e is not None]
+        
+        if len(elements) < 2:
+            return
+        
+        # Default element dimensions (VPBElement doesn't have width/height)
+        default_width = 120
+        default_height = 80
+        
+        # Calculate alignment reference
+        if align_type == "left":
+            ref = min(e.x for e in elements)
+            for elem in elements:
+                elem.x = ref
+        elif align_type == "right":
+            ref = max(e.x + default_width for e in elements)
+            for elem in elements:
+                elem.x = ref - default_width
+        elif align_type == "top":
+            ref = min(e.y for e in elements)
+            for elem in elements:
+                elem.y = ref
+        elif align_type == "bottom":
+            ref = max(e.y + default_height for e in elements)
+            for elem in elements:
+                elem.y = ref - default_height
+        elif align_type == "center_h":
+            ref = sum(e.x + default_width / 2 for e in elements) / len(elements)
+            for elem in elements:
+                elem.x = ref - default_width / 2
+        elif align_type == "center_v":
+            ref = sum(e.y + default_height / 2 for e in elements) / len(elements)
+            for elem in elements:
+                elem.y = ref - default_height / 2
+        
+        # Publish Event
+        self.event_bus.publish("layout:applied", {
+            "layout_type": f"align_{align_type}",
+            "element_ids": element_ids
+        })
+        
+        # Status-Feedback
+        self.event_bus.publish("ui:statusbar:message", {
+            "text": f"{len(elements)} Elemente ausgerichtet ({align_type})",
+            "timeout": 3000
+        })
+    
+    # ===== Distribute Operations =====
+    
+    def _on_distribute_horizontal(self, data: Dict[str, Any]) -> None:
+        """Horizontal verteilen."""
+        self._distribute_elements(data, direction="horizontal")
+        
+    def _on_distribute_vertical(self, data: Dict[str, Any]) -> None:
+        """Vertikal verteilen."""
+        self._distribute_elements(data, direction="vertical")
+        
+    def _distribute_elements(self, data: Dict[str, Any], direction: str) -> None:
+        """
+        Elemente gleichmäßig verteilen.
+        
+        Args:
+            data: {"element_ids": List[str]}
+            direction: "horizontal" oder "vertical"
+        """
+        if not self.current_document:
+            return
+            
+        element_ids = data.get("element_ids", [])
+        
+        if len(element_ids) < 3:
+            return
+            
+        elements = [self.current_document.get_element(eid) for eid in element_ids]
+        elements = [e for e in elements if e is not None]
+        
+        if len(elements) < 3:
+            return
+        
+        # Default element dimensions
+        default_width = 120
+        default_height = 80
+        
+        # Sort elements
+        if direction == "horizontal":
+            elements.sort(key=lambda e: e.x)
+            first = elements[0].x
+            last = elements[-1].x + default_width
+            total_width = sum(default_width for e in elements)
+            spacing = (last - first - total_width) / (len(elements) - 1)
+            
+            current_x = first
+            for elem in elements:
+                elem.x = current_x
+                current_x += default_width + spacing
+        else:  # vertical
+            elements.sort(key=lambda e: e.y)
+            first = elements[0].y
+            last = elements[-1].y + default_height
+            total_height = sum(default_height for e in elements)
+            spacing = (last - first - total_height) / (len(elements) - 1)
+            
+            current_y = first
+            for elem in elements:
+                elem.y = current_y
+                current_y += default_height + spacing
+        
+        # Publish Event
+        self.event_bus.publish("layout:applied", {
+            "layout_type": f"distribute_{direction}",
+            "element_ids": element_ids
+        })
+        
+        # Status-Feedback
+        self.event_bus.publish("ui:statusbar:message", {
+            "text": f"{len(elements)} Elemente verteilt ({direction})",
+            "timeout": 3000
+        })
+    
+    # ===== Formation Operations =====
+    
+    def _on_formation_line(self, data: Dict[str, Any]) -> None:
+        """In Linie anordnen."""
+        self._formation_elements(data, formation_type="line")
+        
+    def _on_formation_circle(self, data: Dict[str, Any]) -> None:
+        """Im Kreis anordnen."""
+        self._formation_elements(data, formation_type="circle")
+        
+    def _on_formation_grid(self, data: Dict[str, Any]) -> None:
+        """Im Gitter anordnen."""
+        self._formation_elements(data, formation_type="grid")
+        
+    def _formation_elements(self, data: Dict[str, Any], formation_type: str) -> None:
+        """
+        Elemente in Formation anordnen.
+        
+        Args:
+            data: {"element_ids": List[str]}
+            formation_type: "line", "circle", "grid"
+        """
+        if not self.current_document:
+            return
+            
+        element_ids = data.get("element_ids", [])
+        
+        if len(element_ids) < 2:
+            return
+            
+        elements = [self.current_document.get_element(eid) for eid in element_ids]
+        elements = [e for e in elements if e is not None]
+        
+        if len(elements) < 2:
+            return
+        
+        if formation_type == "line":
+            # Horizontal line
+            x_start = 100
+            y_pos = 200
+            x_spacing = 200
+            for idx, elem in enumerate(elements):
+                elem.x = x_start + idx * x_spacing
+                elem.y = y_pos
+                
+        elif formation_type == "circle":
+            # Circle formation
+            center_x = 400
+            center_y = 300
+            radius = 200
+            angle_step = 2 * math.pi / len(elements)
+            
+            default_width = 120
+            default_height = 80
+            
+            for idx, elem in enumerate(elements):
+                angle = idx * angle_step
+                elem.x = center_x + radius * math.cos(angle) - default_width / 2
+                elem.y = center_y + radius * math.sin(angle) - default_height / 2
+                
+        elif formation_type == "grid":
+            # Grid formation
+            x_start = 100
+            y_start = 100
+            x_spacing = 200
+            y_spacing = 150
+            cols = math.ceil(math.sqrt(len(elements)))
+            
+            for idx, elem in enumerate(elements):
+                row = idx // cols
+                col = idx % cols
+                elem.x = x_start + col * x_spacing
+                elem.y = y_start + row * y_spacing
+        
+        # Publish Event
+        self.event_bus.publish("layout:applied", {
+            "layout_type": f"formation_{formation_type}",
+            "element_ids": element_ids
+        })
+        
+        # Status-Feedback
+        self.event_bus.publish("ui:statusbar:message", {
+            "text": f"{len(elements)} Elemente in {formation_type} angeordnet",
+            "timeout": 3000
+        })
+    
+    # ===== Document Lifecycle =====
+    
+    def _on_document_changed(self, data: Dict[str, Any]) -> None:
+        """
+        Neues Dokument erstellt oder geladen.
+        
+        Args:
+            data: {"document": DocumentModel}
+        """
+        document = data.get("document")
+        self.current_document = document
+        
+    def _on_document_closed(self, data: Dict[str, Any]) -> None:
+        """
+        Dokument geschlossen.
+        
+        Args:
+            data: Event-Daten (leer)
+        """
+        self.current_document = None
+        
+    # ===== Public API =====
+    
+    def set_document(self, document: Optional[DocumentModel]) -> None:
+        """
+        Setzt das aktuelle Dokument.
+        
+        Args:
+            document: DocumentModel oder None
+        """
+        self.current_document = document
+        
+    def apply_auto_layout(self, algorithm: str = "hierarchical") -> None:
+        """
+        Wendet Auto-Layout an.
+        
+        Args:
+            algorithm: Layout-Algorithmus (default: "hierarchical")
+        """
+        self._on_auto_layout({"algorithm": algorithm})
+        
+    def align_elements(self, element_ids: List[str], align_type: str) -> None:
+        """
+        Richtet Elemente aus.
+        
+        Args:
+            element_ids: Liste von Element-IDs
+            align_type: Art der Ausrichtung
+        """
+        self._align_elements({"element_ids": element_ids}, align_type)
+        
+    def __repr__(self) -> str:
+        """String-Repräsentation."""
+        doc_status = "with document" if self.current_document else "no document"
+        elem_count = len(self.current_document.get_all_elements()) if self.current_document else 0
+        return f"<LayoutController({doc_status}, elements={elem_count})>"
