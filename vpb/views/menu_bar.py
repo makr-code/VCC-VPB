@@ -109,6 +109,12 @@ class MenuBarView:
             label="Öffnen… (Strg+O)",
             command=lambda: self._publish_action("file.open")
         )
+        
+        # Recent Files Untermenü
+        self.recent_files_menu = tk.Menu(file_menu, tearoff=0)
+        file_menu.add_cascade(label="Zuletzt geöffnet", menu=self.recent_files_menu)
+        self._update_recent_files_menu([])  # Initial leer
+        
         file_menu.add_command(
             label="AI-Ingestion Wizard…",
             command=lambda: self._publish_action("file.ingestion_wizard")
@@ -205,8 +211,12 @@ class MenuBarView:
         )
         edit_menu.add_separator()
         edit_menu.add_command(
-            label="Gruppe bilden",
+            label="Gruppe aus Auswahl bilden",
             command=lambda: self._publish_action("edit.group")
+        )
+        edit_menu.add_command(
+            label="Zeitschleife aus Auswahl bilden",
+            command=lambda: self._publish_action("edit.time_loop")
         )
         edit_menu.add_command(
             label="Gruppe auflösen",
@@ -391,6 +401,33 @@ class MenuBarView:
             label="Prozess prüfen…",
             command=lambda: self._publish_action("tools.validate_process")
         )
+        
+        tools_menu.add_separator()
+        
+        # Migration-Untermenü
+        migration_menu = tk.Menu(tools_menu, tearoff=0)
+        migration_menu.add_command(
+            label="Migration starten…",
+            command=lambda: self._publish_action("tools.migration.start")
+        )
+        migration_menu.add_command(
+            label="Gap Detection ausführen…",
+            command=lambda: self._publish_action("tools.migration.gap_detection")
+        )
+        migration_menu.add_command(
+            label="Validierung durchführen…",
+            command=lambda: self._publish_action("tools.migration.validate")
+        )
+        migration_menu.add_separator()
+        migration_menu.add_command(
+            label="Migration Konfiguration…",
+            command=lambda: self._publish_action("tools.migration.configure")
+        )
+        migration_menu.add_command(
+            label="Letzten Report anzeigen…",
+            command=lambda: self._publish_action("tools.migration.show_report")
+        )
+        tools_menu.add_cascade(label="SQLite → UDS3 Migration", menu=migration_menu)
         
         self.menubar.add_cascade(label="Werkzeuge", menu=tools_menu)
     
@@ -722,6 +759,53 @@ class MenuBarView:
             True = aktiviert, False = deaktiviert
         """
         return self._auto_rename_var.get()
+    
+    def update_recent_files(self, recent_files: list) -> None:
+        """
+        Aktualisiert das Recent Files Menü.
+        
+        Args:
+            recent_files: Liste der zuletzt geöffneten Dateien
+        """
+        self._update_recent_files_menu(recent_files)
+    
+    def _update_recent_files_menu(self, recent_files: list) -> None:
+        """
+        Aktualisiert das Recent Files Untermenü.
+        
+        Args:
+            recent_files: Liste der Dateipfade
+        """
+        import os
+        
+        # Lösche alle bisherigen Einträge
+        self.recent_files_menu.delete(0, tk.END)
+        
+        if not recent_files:
+            self.recent_files_menu.add_command(
+                label="(Keine zuletzt geöffneten Dateien)",
+                state="disabled"
+            )
+            return
+        
+        # Füge Dateien hinzu (max 10)
+        for i, file_path in enumerate(recent_files[:10]):
+            # Zeige nur Dateinamen (nicht vollständigen Pfad)
+            file_name = os.path.basename(file_path)
+            label = f"{i+1}. {file_name}"
+            
+            # Command muss file_path als default parameter haben (closure)
+            self.recent_files_menu.add_command(
+                label=label,
+                command=lambda fp=file_path: self._publish_action("file.open", {"file_path": fp})
+            )
+        
+        # Separator und "Clear Recent Files"
+        self.recent_files_menu.add_separator()
+        self.recent_files_menu.add_command(
+            label="Liste leeren",
+            command=lambda: self._publish_action("file.clear_recent_files")
+        )
     
     def __repr__(self) -> str:
         """String-Repräsentation für Debugging."""

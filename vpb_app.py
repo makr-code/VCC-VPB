@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import ttk
 from vpb.infrastructure.event_bus import EventBus
 from vpb.infrastructure.settings_manager import SettingsManager
+from vpb.infrastructure.user_profile_manager import UserProfileManager
 from vpb.services.document_service import DocumentService
 from vpb.services.validation_service import ValidationService
 from vpb.services.export_service import ExportService
@@ -31,6 +32,7 @@ from vpb.controllers.layout_controller import LayoutController
 from vpb.controllers.validation_controller import ValidationController
 from vpb.controllers.ai_controller import AIController
 from vpb.controllers.export_controller import ExportController
+from vpb.controllers.background_task_controller import BackgroundTaskController
 from vpb.services.code_sync_service import CodeSyncService
 
 class VPBApplication:
@@ -44,6 +46,12 @@ class VPBApplication:
         self.args = args or argparse.Namespace()
         self.event_bus = EventBus()
         self.settings_manager = SettingsManager("settings.json")
+        
+        # User Profile Manager - Zentrales Benutzerprofil-System
+        self.user_profile_manager = UserProfileManager()
+        self.user_profile = self.user_profile_manager.load()
+        
+        print(f"👤 Benutzerprofil geladen: {self.user_profile.username}@{self.user_profile.hostname}")
         
         # Ollama Settings (für Chat)
         self._ollama_endpoint = "http://localhost:11434"
@@ -107,6 +115,30 @@ class VPBApplication:
         self.export_service = ExportService()
         self.layout_service = LayoutService()
         self.code_sync_service = CodeSyncService()
+        
+        # Recent Files Service
+        from vpb.services.recent_files_service import RecentFilesService
+        self.recent_files_service = RecentFilesService()
+        
+        # Backup Service
+        from vpb.services.backup_service import BackupService
+        self.backup_service = BackupService()
+        
+        # AutoSave Service (5 Minuten Intervall)
+        from vpb.services.autosave_service import AutoSaveService
+        settings = self.settings_manager.get_current()
+        if settings and hasattr(settings, 'autosave'):
+            autosave_interval = settings.autosave.interval_minutes * 60  # Minuten -> Sekunden
+            autosave_enabled = settings.autosave.enabled
+        else:
+            autosave_interval = 300  # Default: 5 Minuten
+            autosave_enabled = True
+        
+        self.autosave_service = AutoSaveService(
+            interval_seconds=autosave_interval,
+            enabled=autosave_enabled
+        )
+        
         try:
             self.ai_service = AIService()
         except:
@@ -136,21 +168,33 @@ class VPBApplication:
         self.paned_window = tk.PanedWindow(content_area, orient=tk.HORIZONTAL, sashwidth=5)
         self.paned_window.pack(fill=tk.BOTH, expand=True)
         
-        # Linke Spalte: Palette (Sidebar mit fester Mindestbreite)
-        self.palette_view = create_palette_view(self.paned_window, self.event_bus)
-        self.palette_view.pack(fill=tk.BOTH, expand=True)
-        self.paned_window.add(self.palette_view, minsize=250, width=250, stretch='never')
+        # Linke Spalte: Notebook mit Tabs (Sidebar mit fester Mindestbreite)
+        # Container-Frame für linke Sidebar, damit Scrollbar nicht vom Sash verdeckt wird
+        left_container = tk.Frame(self.paned_window)
+        self.left_notebook = ttk.Notebook(left_container)
+        self.left_notebook.pack(fill=tk.BOTH, expand=True, padx=(0, 3))
+        self.paned_window.add(left_container, minsize=250, width=250, stretch='never')
+        
+        # Tab 1: Palette
+        self.palette_view = create_palette_view(self.left_notebook, self.event_bus)
+        self.left_notebook.add(self.palette_view, text="Palette")
         
         # Palette-Daten laden
         self._load_palette_data()
+        
+        # Dynamische Anpassung der Palette-Breite beim Resize
+        self.left_notebook.bind('<Configure>', self._on_left_sidebar_resize)
         
         # Mittlere Spalte: Notebook mit Canvas/Code/XML Tabs (expandiert beim Fenster vergrößern)
         self.mid_notebook = ttk.Notebook(self.paned_window)
         self.paned_window.add(self.mid_notebook, minsize=400, stretch='always')
         
         # Rechte Spalte: Vertikales PanedWindow für Properties und MiniMap (Sidebar mit fester Mindestbreite)
-        self.right_paned = tk.PanedWindow(self.paned_window, orient=tk.VERTICAL, sashwidth=5)
-        self.paned_window.add(self.right_paned, minsize=250, width=300, stretch='never')
+        # Container-Frame für rechte Sidebar, damit Scrollbar nicht vom Sash verdeckt wird
+        right_container = tk.Frame(self.paned_window)
+        self.right_paned = tk.PanedWindow(right_container, orient=tk.VERTICAL, sashwidth=5)
+        self.right_paned.pack(fill=tk.BOTH, expand=True, padx=(3, 0))
+        self.paned_window.add(right_container, minsize=250, width=300, stretch='never')
         
         # oberes Notebook: MiniMap  
         self.minimap_notebook = ttk.Notebook(self.right_paned)
@@ -232,10 +276,23 @@ class VPBApplication:
         self.ruler_x.attach(self.canvas)
         self.ruler_y.attach(self.canvas)
         
-        # MiniMap im rechten Notebook-Tab erstellen
-        self.minimap = MiniMapCanvas(self.minimap_frame, height=400)
+        # Hierarchie mit Canvas verbinden (Anzeige und Sync aktivieren)
+        try:
+            self.hier_canvas.attach(
+                self.canvas,
+                on_select=self._on_hierarchy_select,
+                on_double_click=self._on_hierarchy_double_click,
+            )
+        except Exception as e:
+            print(f"⚠️ Hierarchie konnte nicht verbunden werden: {e}")
+        
+        # MiniMap im rechten Notebook-Tab erstellen (4:3 Seitenverhältnis)
+        self.minimap = MiniMapCanvas(self.minimap_frame)
         self.minimap.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.minimap.attach(self.canvas)
+        
+        # 4:3 Seitenverhältnis für MiniMap erzwingen
+        self._setup_minimap_aspect_ratio()
         
         # Canvas-Interaktionen konfigurieren (WICHTIG: self, nicht self.root!)
         configure_canvas_interactions(self, self.canvas, self.x_scroll, self.y_scroll)
@@ -259,8 +316,33 @@ class VPBApplication:
         # Koordinatenursprung vertikal mittig setzen (y=0 in Mitte)
         # WICHTIG: Nach GUI-Initialisierung aufrufen, damit Canvas-Größe bekannt ist
         # Wird in run() nach mainloop-Start aufgerufen
+    
+    def _setup_minimap_aspect_ratio(self):
+        """Richtet das 4:3 Seitenverhältnis für die MiniMap ein."""
+        def on_minimap_resize(event):
+            # Berechne Höhe für 4:3 Seitenverhältnis (Breite : Höhe = 4 : 3)
+            # Höhe = Breite * 3/4
+            width = event.width
+            target_height = int(width * 3 / 4)
+            
+            # Setze neue Höhe, falls sie sich geändert hat
+            current_height = self.minimap.winfo_height()
+            if abs(current_height - target_height) > 5:  # Toleranz von 5px
+                self.minimap.configure(height=target_height)
+        
+        # Binde Resize-Event an MiniMap-Frame
+        self.minimap_frame.bind("<Configure>", on_minimap_resize)
         
         print("✅ Canvas mit Linealen und Hierarchie erstellt")
+    
+    def _on_left_sidebar_resize(self, event):
+        """
+        Wird aufgerufen, wenn die linke Sidebar ihre Größe ändert.
+        Passt die Palette dynamisch an die neue Breite an.
+        """
+        # Die Palette passt sich automatisch an durch fill=BOTH, expand=True
+        # Hier könnten zusätzliche Anpassungen erfolgen, z.B. für Reflow
+        pass
     
     def _load_palette_data(self):
         """Lädt Palette-Daten aus default_palette.json."""
@@ -310,19 +392,62 @@ class VPBApplication:
 
     
     def _init_controllers(self):
-        self.document_controller = DocumentController(self.event_bus, self.document_service)
+        self.document_controller = DocumentController(
+            self.event_bus, 
+            self.document_service,
+            self.recent_files_service,
+            self.backup_service
+        )
         self.element_controller = ElementController(self.event_bus)
         self.connection_controller = ConnectionController(self.event_bus)
         self.layout_controller = LayoutController(self.event_bus, self.layout_service)
         self.validation_controller = ValidationController(self.event_bus, self.validation_service)
         self.export_controller = ExportController(self.event_bus, self.export_service)
+        
+        # Background Task Controller (für Ollama Chat Streams)
+        self.background_task_controller = BackgroundTaskController(self.event_bus)
+        
         if self.ai_service:
             self.ai_controller = AIController(self.event_bus, self.ai_service)
+        
+        # ChatController benötigt Zugriff auf _app_controller für submit/cancel
+        self._app_controller = self.background_task_controller
         
         # Canvas-Referenz an Controller übergeben
         if hasattr(self, 'canvas'):
             self.element_controller.set_canvas(self.canvas)
+            self.connection_controller.set_canvas(self.canvas)  # NEU: Connection-Controller braucht Canvas
             self.document_controller.set_canvas(self.canvas)  # Für Legacy-Kompatibilität
+            self.layout_controller.set_canvas(self.canvas)  # Layout-Controller braucht Canvas
+        
+        # AutoSave Callbacks konfigurieren
+        self._setup_autosave()
+    
+    def _setup_autosave(self):
+        """Konfiguriert AutoSave-Service mit Callbacks."""
+        if not hasattr(self, 'autosave_service'):
+            return
+        
+        # Callback für Speichern
+        def auto_save_callback():
+            if self.document_controller.current_file_path:
+                # Speichere in existierende Datei
+                self.event_bus.publish("ui:menu:file:save", {})
+            else:
+                # Erstelle Auto-Backup für ungespeicherte Projekte
+                if self.canvas and hasattr(self.canvas, 'to_dict'):
+                    canvas_data = self.canvas.to_dict()
+                    self.backup_service.create_auto_backup(None, canvas_data)
+        
+        # Callback für "ist modifiziert?"
+        def is_modified_callback():
+            return self.document_controller.is_document_modified()
+        
+        self.autosave_service.set_save_callback(auto_save_callback)
+        self.autosave_service.set_is_modified_callback(is_modified_callback)
+        
+        # Starte AutoSave
+        self.autosave_service.start()
     
     def _subscribe_to_events(self):
         self.event_bus.subscribe("app:exit", self._on_exit)
@@ -332,9 +457,41 @@ class VPBApplication:
         self.event_bus.subscribe("ui:error", self._on_show_error)
         self.event_bus.subscribe("ui:info", self._on_show_info)
         
+        # Window Events
+        self.event_bus.subscribe("ui:window:title", self._on_window_title_changed)
+        
+        # Recent Files Event
+        self.event_bus.subscribe("document:recent_files_changed", self._on_recent_files_changed)
+        
+        # Toolbar Update Events
+        self.event_bus.subscribe("toolbar:zoom_changed", self._on_toolbar_zoom_changed)
+        self.event_bus.subscribe("toolbar:grid_state_changed", self._on_toolbar_grid_changed)
+        
+        # Canvas View Changed Events (Auto-Save Profile)
+        self.event_bus.subscribe("canvas:zoom_changed", self._on_canvas_view_changed)
+        self.event_bus.subscribe("canvas:pan_changed", self._on_canvas_view_changed)
+        self.event_bus.subscribe("canvas:grid_toggled", self._on_canvas_view_changed)
+        
+        # Element/Connection Events (Canvas Redraw)
+        self.event_bus.subscribe("element:created", self._on_element_changed)
+        self.event_bus.subscribe("element:modified", self._on_element_changed)
+        self.event_bus.subscribe("element:deleted", self._on_element_changed)
+        self.event_bus.subscribe("connection:created", self._on_connection_changed)
+        self.event_bus.subscribe("connection:modified", self._on_connection_changed)
+        self.event_bus.subscribe("connection:deleted", self._on_connection_changed)
+        
+        # Background Task Events (für Chat-Controller)
+        self.event_bus.subscribe("task:stream_chunk", self._on_task_stream_chunk)
+        self.event_bus.subscribe("task:completed", self._on_task_completed)
+        self.event_bus.subscribe("task:failed", self._on_task_failed)
+        self.event_bus.subscribe("task:cancelled", self._on_task_cancelled)
+        
         # Event-Bridge: ui:action:* → Legacy Events
         # MenuBar/Toolbar publizieren ui:action:*, Controller erwarten ui:menu:*
         self._setup_action_bridge()
+        
+        # Initial Recent Files laden
+        self.root.after(100, self._load_initial_recent_files)
         
         self.root.protocol("WM_DELETE_WINDOW", self._on_window_close)
     
@@ -350,11 +507,15 @@ class VPBApplication:
         self.event_bus.subscribe("ui:action:file.save_as", lambda d: self._bridge_file_action("save_as", d))
         self.event_bus.subscribe("ui:action:file.export", lambda d: self.event_bus.publish("ui:menu:file:export", d))
         self.event_bus.subscribe("ui:action:file.close", lambda d: self.event_bus.publish("ui:menu:file:close", d))
+        self.event_bus.subscribe("ui:action:file.clear_recent_files", lambda d: self._on_clear_recent_files(d))
         
         # Edit Actions
         self.event_bus.subscribe("ui:action:edit.undo", lambda d: self.event_bus.publish("ui:menu:edit:undo", d))
         self.event_bus.subscribe("ui:action:edit.redo", lambda d: self.event_bus.publish("ui:menu:edit:redo", d))
         self.event_bus.subscribe("ui:action:edit.delete", lambda d: self.event_bus.publish("ui:menu:edit:delete", d))
+        self.event_bus.subscribe("ui:action:edit.group", lambda d: self._handle_group_from_selection(d))
+        self.event_bus.subscribe("ui:action:edit.time_loop", lambda d: self._handle_time_loop_from_selection(d))
+        self.event_bus.subscribe("ui:action:edit.ungroup", lambda d: self._handle_ungroup_selected(d))
         
         # Arrange Actions
         self.event_bus.subscribe("ui:action:arrange.align", lambda d: self._handle_arrange_align(d))
@@ -366,6 +527,13 @@ class VPBApplication:
         
         # Tools Actions
         self.event_bus.subscribe("ui:action:tools.validate", lambda d: self.event_bus.publish("ui:menu:tools:validate", d))
+        
+        # Migration Actions
+        self.event_bus.subscribe("ui:action:tools.migration.start", lambda d: self._on_migration_start(d))
+        self.event_bus.subscribe("ui:action:tools.migration.gap_detection", lambda d: self._on_migration_gap_detection(d))
+        self.event_bus.subscribe("ui:action:tools.migration.validate", lambda d: self._on_migration_validate(d))
+        self.event_bus.subscribe("ui:action:tools.migration.configure", lambda d: self._on_migration_configure(d))
+        self.event_bus.subscribe("ui:action:tools.migration.show_report", lambda d: self._on_migration_show_report(d))
         
         # Help Actions
         self.event_bus.subscribe("ui:action:help.about", lambda d: self._on_show_about(d))
@@ -390,6 +558,21 @@ class VPBApplication:
         mode = data.get("mode", "line")
         self.event_bus.publish(f"ui:menu:layout:formation:{mode}", data)
     
+    def _handle_group_from_selection(self, data):
+        """Erstellt eine Gruppe aus der Auswahl."""
+        if hasattr(self, 'canvas') and hasattr(self.canvas, '_group_from_selection'):
+            self.canvas._group_from_selection()
+    
+    def _handle_time_loop_from_selection(self, data):
+        """Erstellt eine Zeitschleife aus der Auswahl."""
+        if hasattr(self, 'canvas') and hasattr(self.canvas, '_time_loop_from_selection'):
+            self.canvas._time_loop_from_selection()
+    
+    def _handle_ungroup_selected(self, data):
+        """Löst die ausgewählte Gruppe auf."""
+        if hasattr(self, 'canvas') and hasattr(self.canvas, '_ungroup_selected'):
+            self.canvas._ungroup_selected()
+    
     def _on_exit(self, data=None):
         if self.document_controller.is_document_modified():
             from tkinter import messagebox
@@ -398,6 +581,24 @@ class VPBApplication:
                 return
             elif result:
                 self.event_bus.publish("document:save")
+        
+        # AutoSave beenden
+        if hasattr(self, 'autosave_service'):
+            try:
+                self.autosave_service.stop()
+            except Exception as e:
+                print(f"⚠️ Error stopping autosave: {e}")
+        
+        # Benutzerprofil speichern vor dem Beenden
+        self._save_user_profile()
+        
+        # Background Tasks beenden
+        if hasattr(self, 'background_task_controller'):
+            try:
+                self.background_task_controller.shutdown()
+            except Exception as e:
+                print(f"⚠️ Error shutting down background tasks: {e}")
+        
         self.root.quit()
         self.root.destroy()
     
@@ -415,6 +616,8 @@ class VPBApplication:
     def _on_file_dialog_requested(self, data):
         """Zeigt File-Dialog und publiziert Ergebnis."""
         from tkinter import filedialog
+        import os
+        
         mode = data.get("mode", "open")
         callback_event = data.get("callback")
         
@@ -428,8 +631,24 @@ class VPBApplication:
                 ]
             )
         else:  # save
+            # Ermittle aktuellen Dateinamen für Vorschlag
+            current_file = self.document_controller.get_current_file_path()
+            initial_file = ""
+            initial_dir = os.getcwd()
+            
+            if current_file:
+                initial_file = os.path.basename(current_file)
+                initial_dir = os.path.dirname(current_file)
+            else:
+                # Vorschlag für neue Datei
+                from datetime import datetime
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                initial_file = f"prozess_{timestamp}.vpb.json"
+            
             file_path = filedialog.asksaveasfilename(
                 title="VPB-Datei speichern",
+                initialfile=initial_file,
+                initialdir=initial_dir,
                 defaultextension=".vpb.json",
                 filetypes=[
                     ("VPB Files", "*.vpb.json"),
@@ -452,6 +671,30 @@ class VPBApplication:
         message = data.get("message", "Information")
         messagebox.showinfo("Information", message)
     
+    def _on_recent_files_changed(self, data):
+        """Aktualisiert das Recent Files Menü."""
+        recent_files = data.get("recent_files", [])
+        if hasattr(self, 'menu_bar') and hasattr(self.menu_bar, 'update_recent_files'):
+            self.menu_bar.update_recent_files(recent_files)
+    
+    def _load_initial_recent_files(self):
+        """Lädt initial die Recent Files in das Menü."""
+        if hasattr(self, 'recent_files_service'):
+            recent_files = self.recent_files_service.get_recent_files()
+            if hasattr(self, 'menu_bar') and hasattr(self.menu_bar, 'update_recent_files'):
+                self.menu_bar.update_recent_files(recent_files)
+    
+    def _on_clear_recent_files(self, data):
+        """Leert die Recent Files Liste."""
+        if hasattr(self, 'recent_files_service'):
+            self.recent_files_service.clear_recent_files()
+            self.event_bus.publish("document:recent_files_changed", {"recent_files": []})
+    
+    def _on_window_title_changed(self, data):
+        """Aktualisiert den Fenstertitel."""
+        title = data.get("title", "VPB Process Designer")
+        self.root.title(title)
+    
     def _on_canvas_status(self, message):
         """Callback für Canvas-Statusmeldungen."""
         if self.status_bar and hasattr(self.status_bar, 'set_message'):
@@ -467,6 +710,197 @@ class VPBApplication:
             self.properties_view.set_element(element)
         else:
             self.properties_view.clear()
+    
+    def _on_canvas_view_changed(self, data):
+        """Speichert Canvas-Ansicht im Benutzerprofil."""
+        try:
+            if hasattr(self, 'canvas') and hasattr(self, 'user_profile_manager'):
+                canvas = self.canvas
+                self.user_profile_manager.update_canvas_view(
+                    zoom=canvas.view_scale,
+                    pan_x=canvas.view_tx,
+                    pan_y=canvas.view_ty,
+                    grid_visible=canvas.grid_visible,
+                    snap_to_grid=canvas.snap_to_grid
+                )
+        except Exception as e:
+            # Stille Fehlerbehandlung, um UI nicht zu stören
+            pass
+    
+    def _on_element_changed(self, data):
+        """Synchronisiert Canvas mit Dokument, wenn Element erstellt/geändert/gelöscht wird."""
+        try:
+            if hasattr(self, 'canvas') and hasattr(self, 'document_controller'):
+                # Synchronisiere Canvas mit aktuellem Dokument
+                self._sync_canvas_with_document()
+        except Exception as e:
+            print(f"⚠️ Fehler beim Canvas-Sync nach Element-Änderung: {e}")
+    
+    def _on_connection_changed(self, data):
+        """Synchronisiert Canvas mit Dokument, wenn Verbindung erstellt/geändert/gelöscht wird."""
+        try:
+            if hasattr(self, 'canvas') and hasattr(self, 'document_controller'):
+                # Synchronisiere Canvas mit aktuellem Dokument
+                self._sync_canvas_with_document()
+        except Exception as e:
+            print(f"⚠️ Fehler beim Canvas-Sync nach Verbindungs-Änderung: {e}")
+    
+    def _sync_canvas_with_document(self):
+        """Synchronisiert Canvas-Elemente mit dem aktuellen Dokument."""
+        try:
+            if not hasattr(self, 'canvas') or not hasattr(self, 'document_controller'):
+                return
+            
+            document = self.document_controller.get_current_document()
+            if not document:
+                return
+            
+            # Aktualisiere Canvas-Elemente aus Dokument
+            self.canvas.elements.clear()
+            for element in document.elements:
+                self.canvas.elements[element.element_id] = element
+            
+            # Aktualisiere Canvas-Verbindungen aus Dokument
+            self.canvas.connections.clear()
+            for connection in document.connections:
+                self.canvas.connections[connection.connection_id] = connection
+            
+            # Jetzt neu zeichnen
+            self.canvas.redraw_all()
+            
+        except Exception as e:
+            print(f"⚠️ Fehler beim Sync von Canvas mit Dokument: {e}")
+
+    # =============================
+    # Toolbar Update Events
+    # =============================
+    def _on_toolbar_zoom_changed(self, data):
+        """Aktualisiert Zoom-Anzeige in Toolbar."""
+        try:
+            zoom = data.get("zoom", 1.0)
+            if hasattr(self, 'toolbar_view'):
+                self.toolbar_view.update_zoom_level(zoom)
+        except Exception as e:
+            print(f"⚠️ Error updating toolbar zoom: {e}")
+    
+    def _on_toolbar_grid_changed(self, data):
+        """Aktualisiert Grid-Button in Toolbar."""
+        try:
+            active = data.get("active", False)
+            if hasattr(self, 'toolbar_view'):
+                self.toolbar_view.set_grid_active(active)
+        except Exception as e:
+            print(f"⚠️ Error updating toolbar grid: {e}")
+
+    # =============================
+    # Background Task Events (Chat)
+    # =============================
+    def _on_task_stream_chunk(self, data):
+        """Wird aufgerufen, wenn ein Stream-Chunk empfangen wird."""
+        try:
+            task_id = data.get("task_id")
+            chunk = data.get("chunk", "")
+            # Weiterleiten an ChatController (im Haupt-Thread)
+            if hasattr(self, 'chat_controller') and hasattr(self, 'root'):
+                self.root.after_idle(lambda: self._handle_chunk_in_main_thread(chunk))
+        except Exception as e:
+            print(f"⚠️ Error handling stream chunk: {e}")
+    
+    def _handle_chunk_in_main_thread(self, chunk):
+        """Verarbeitet Chunk im Haupt-Thread (Tkinter-sicher)."""
+        try:
+            if chunk and hasattr(self.args, 'debug') and self.args.debug:
+                print(f"🔧 DEBUG: Chunk empfangen: {chunk[:50]}...")
+            if hasattr(self, 'chat_controller'):
+                self.chat_controller.handle_stream_event("chunk", chunk)
+        except Exception as e:
+            print(f"⚠️ Error in chunk handler: {e}")
+    
+    def _on_task_completed(self, data):
+        """Wird aufgerufen, wenn ein Task abgeschlossen ist."""
+        try:
+            task_id = data.get("task_id")
+            result = data.get("result", "")
+            # Weiterleiten an ChatController (im Haupt-Thread)
+            if hasattr(self, 'chat_controller') and hasattr(self, 'root'):
+                self.root.after_idle(lambda: self._handle_completion_in_main_thread(result))
+        except Exception as e:
+            print(f"⚠️ Error handling task completion: {e}")
+    
+    def _handle_completion_in_main_thread(self, result):
+        """Verarbeitet Completion im Haupt-Thread."""
+        try:
+            if hasattr(self, 'chat_controller'):
+                self.chat_controller.handle_stream_event("stream_end", result)
+        except Exception as e:
+            print(f"⚠️ Error in completion handler: {e}")
+    
+    def _on_task_failed(self, data):
+        """Wird aufgerufen, wenn ein Task fehlschlägt."""
+        try:
+            task_id = data.get("task_id")
+            error = data.get("error", "Unbekannter Fehler")
+            # Weiterleiten an ChatController (im Haupt-Thread)
+            if hasattr(self, 'chat_controller') and hasattr(self, 'root'):
+                self.root.after_idle(lambda: self._handle_error_in_main_thread(error))
+        except Exception as e:
+            print(f"⚠️ Error handling task failure: {e}")
+    
+    def _handle_error_in_main_thread(self, error):
+        """Verarbeitet Fehler im Haupt-Thread."""
+        try:
+            if hasattr(self, 'chat_controller'):
+                self.chat_controller.handle_stream_event("error", error)
+        except Exception as e:
+            print(f"⚠️ Error in error handler: {e}")
+    
+    def _on_task_cancelled(self, data):
+        """Wird aufgerufen, wenn ein Task abgebrochen wird."""
+        try:
+            task_id = data.get("task_id")
+            # Weiterleiten an ChatController (im Haupt-Thread)
+            if hasattr(self, 'chat_controller') and hasattr(self, 'root'):
+                self.root.after_idle(lambda: self._handle_cancel_in_main_thread())
+        except Exception as e:
+            print(f"⚠️ Error handling task cancellation: {e}")
+    
+    def _handle_cancel_in_main_thread(self):
+        """Verarbeitet Cancellation im Haupt-Thread."""
+        try:
+            if hasattr(self, 'chat_controller'):
+                self.chat_controller.handle_stream_event("cancelled", None)
+        except Exception as e:
+            print(f"⚠️ Error in cancel handler: {e}")
+
+    # =============================
+    # Hierarchie-Events
+    # =============================
+    def _on_hierarchy_select(self, index, category):
+        """Wird aufgerufen, wenn in der Hierarchie eine Kategorie selektiert wird."""
+        try:
+            name = category.get('name') if isinstance(category, dict) else str(category)
+            if hasattr(self, 'status'):
+                self.status.set(f"Hierarchie: {name if name else '—'}")
+        except Exception:
+            pass
+
+    def _on_hierarchy_double_click(self, index, category):
+        """Doppelklick: Canvas-Viewport auf die Kategorie zentrieren."""
+        try:
+            if not category or not hasattr(self, 'canvas'):
+                return
+            y0 = float(category.get('y0', 0.0)) if isinstance(category, dict) else 0.0
+            y1 = float(category.get('y1', 0.0)) if isinstance(category, dict) else 0.0
+            # Mitte der Kategorie in Model-Koordinaten
+            cy = (y0 + y1) / 2.0
+            # Aktuelle View-Breite/Höhe in Model-Einheiten
+            vw_m, vh_m = self.canvas.get_viewport_model_size()
+            # X beibehalten, Y so setzen, dass cy mittig ist
+            x0, y0 = self.canvas.get_view_origin_model()
+            self.canvas.set_view_origin_model(x0, cy - vh_m / 2.0)
+            self.canvas.redraw_all()
+        except Exception as e:
+            print(f"⚠️ Hierarchie-Navigation fehlgeschlagen: {e}")
     
     # Legacy App Compatibility - für canvas_interactions.py
     @property
@@ -624,45 +1058,98 @@ class VPBApplication:
     def _apply_full_process_json(self, parsed_data):
         """Wendet vollständigen Prozess-JSON an (Replace)."""
         try:
-            if hasattr(self, 'canvas') and isinstance(parsed_data, dict):
-                self.canvas.load_from_dict(parsed_data)
-                self.canvas.redraw_all()
-                self.status.set("✅ Prozess vollständig ersetzt")
-                print("✅ Prozess vollständig ersetzt via Chat")
+            print(f"\n🔧 _apply_full_process_json aufgerufen")
+            print(f"   Typ: {type(parsed_data)}")
+            
+            if not hasattr(self, 'canvas'):
+                print(f"❌ Kein Canvas verfügbar")
+                return
+            
+            if not isinstance(parsed_data, dict):
+                print(f"❌ parsed_data ist kein Dict: {type(parsed_data)}")
+                return
+            
+            # Zeige Struktur
+            elem_count = len(parsed_data.get('elements', []))
+            conn_count = len(parsed_data.get('connections', []))
+            print(f"   Struktur: {elem_count} Elemente, {conn_count} Verbindungen")
+            
+            # Lade in Canvas
+            self.canvas.load_from_dict(parsed_data)
+            self.canvas.redraw_all()
+            
+            # Erfolgsmeldung
+            self.status.set(f"✅ Prozess ersetzt: {elem_count} Elemente, {conn_count} Verbindungen")
+            print(f"✅ Prozess vollständig ersetzt: {elem_count} Elemente, {conn_count} Verbindungen")
+            
         except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
             self.status.set(f"❌ Fehler beim Ersetzen: {e}")
             print(f"❌ _apply_full_process_json Fehler: {e}")
+            print(f"   Traceback:\n{error_details}")
     
     def _merge_full_process_json(self, parsed_data):
         """Merged Prozess-JSON mit existierendem Canvas (Merge)."""
         try:
-            if hasattr(self, 'canvas') and isinstance(parsed_data, dict):
-                # Aktuellen Zustand speichern
-                current_data = self.canvas.to_dict()
-                
-                # Neue Elemente hinzufügen
-                for elem in parsed_data.get('elements', []):
-                    elem_id = elem.get('element_id')
-                    # Nur hinzufügen wenn ID noch nicht existiert
-                    if elem_id and elem_id not in self.canvas.elements:
-                        from vpb.models.element import VPBElement
-                        new_elem = VPBElement.from_dict(elem)
-                        self.canvas.elements[elem_id] = new_elem
-                
-                # Neue Connections hinzufügen
-                for conn in parsed_data.get('connections', []):
-                    conn_id = conn.get('connection_id')
-                    if conn_id and conn_id not in self.canvas.connections:
-                        from vpb.models.connection import VPBConnection
-                        new_conn = VPBConnection.from_dict(conn)
-                        self.canvas.connections[conn_id] = new_conn
-                
-                self.canvas.redraw_all()
-                self.status.set("✅ Prozess gemerged")
-                print("✅ Prozess gemerged via Chat")
+            print(f"\n🔧 _merge_full_process_json aufgerufen")
+            print(f"   Typ: {type(parsed_data)}")
+            
+            if not hasattr(self, 'canvas'):
+                print(f"❌ Kein Canvas verfügbar")
+                return
+            
+            if not isinstance(parsed_data, dict):
+                print(f"❌ parsed_data ist kein Dict: {type(parsed_data)}")
+                return
+            
+            # Zeige Struktur
+            elem_count_new = len(parsed_data.get('elements', []))
+            conn_count_new = len(parsed_data.get('connections', []))
+            elem_count_existing = len(self.canvas.elements)
+            conn_count_existing = len(self.canvas.connections)
+            
+            print(f"   Neu: {elem_count_new} Elemente, {conn_count_new} Verbindungen")
+            print(f"   Existierend: {elem_count_existing} Elemente, {conn_count_existing} Verbindungen")
+            
+            added_elements = 0
+            added_connections = 0
+            
+            # Neue Elemente hinzufügen
+            for elem in parsed_data.get('elements', []):
+                elem_id = elem.get('element_id')
+                # Nur hinzufügen wenn ID noch nicht existiert
+                if elem_id and elem_id not in self.canvas.elements:
+                    from vpb.models.element import VPBElement
+                    new_elem = VPBElement.from_dict(elem)
+                    self.canvas.elements[elem_id] = new_elem
+                    added_elements += 1
+                    print(f"   ➕ Element hinzugefügt: {elem_id} ({new_elem.element_type})")
+                else:
+                    print(f"   ⏭️  Element übersprungen (existiert): {elem_id}")
+            
+            # Neue Connections hinzufügen
+            for conn in parsed_data.get('connections', []):
+                conn_id = conn.get('connection_id')
+                if conn_id and conn_id not in self.canvas.connections:
+                    from vpb.models.connection import VPBConnection
+                    new_conn = VPBConnection.from_dict(conn)
+                    self.canvas.connections[conn_id] = new_conn
+                    added_connections += 1
+                    print(f"   ➕ Verbindung hinzugefügt: {conn_id}")
+                else:
+                    print(f"   ⏭️  Verbindung übersprungen (existiert): {conn_id}")
+            
+            self.canvas.redraw_all()
+            self.status.set(f"✅ Gemerged: +{added_elements} Elemente, +{added_connections} Verbindungen")
+            print(f"✅ Prozess gemerged: {added_elements} neue Elemente, {added_connections} neue Verbindungen")
+            
         except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
             self.status.set(f"❌ Fehler beim Mergen: {e}")
             print(f"❌ _merge_full_process_json Fehler: {e}")
+            print(f"   Traceback:\n{error_details}")
     
     def _apply_add_only_patch(self, parsed_data):
         """Wendet Add-Only Patch an (nur neue Elemente)."""
@@ -721,6 +1208,288 @@ class VPBApplication:
             print(f"❌ _apply_diagnose_patch Fehler: {e}")
     
     # ============================================================================
+    # Migration Event Handlers
+    # ============================================================================
+    
+    def _on_migration_start(self, data=None):
+        """Öffnet Migration Dialog."""
+        from vpb.ui.migration_dialog import MigrationDialog
+        
+        dialog = MigrationDialog(
+            self.root,
+            on_start_callback=self._run_migration
+        )
+    
+    def _run_migration(self, config: dict, dialog):
+        """
+        Führt Migration aus.
+        
+        Args:
+            config: Migration Configuration
+            dialog: MigrationDialog Instance
+        """
+        import time
+        from pathlib import Path
+        
+        try:
+            # Import Migration Tools
+            from migration.migration_tool import VPBMigrationTool, MigrationConfig
+            from migration.gap_detector import GapDetector
+            from migration.validation import DataValidator
+            
+            start_time = time.time()
+            
+            # Create MigrationConfig
+            migration_config = MigrationConfig(
+                source_config={
+                    "type": "sqlite",
+                    "db_path": config["source"]["db_path"]
+                },
+                target_config={
+                    "type": "uds3_polyglot",
+                    "backend_config": config["target"].get("backend_config")
+                },
+                batch_size=config["options"]["batch_size"],
+                continue_on_error=config["options"]["continue_on_error"]
+            )
+            
+            # Progress Callback
+            total_records = 0
+            processed_records = 0
+            
+            def progress_callback(batch_num, batch_size, table_name):
+                nonlocal processed_records
+                processed_records += batch_size
+                speed = processed_records / (time.time() - start_time) if time.time() > start_time else 0
+                dialog.update_progress(
+                    processed_records,
+                    total_records,
+                    status=f"Migriere {table_name} (Batch {batch_num})...",
+                    speed=speed
+                )
+                dialog._log_message(f"✓ Batch {batch_num} ({batch_size} records) verarbeitet", "info")
+            
+            # Gap Detection (optional)
+            gap_results = None
+            if config["options"]["gap_detection"]:
+                dialog._log_message("🔍 Gap Detection gestartet...", "info")
+                gap_detector = GapDetector(config["source"]["db_path"])
+                gap_results = gap_detector.detect_all_gaps()
+                
+                total_gaps = sum(len(gaps) for gaps in gap_results.values())
+                dialog._log_message(f"✓ Gap Detection abgeschlossen: {total_gaps} Gaps gefunden", 
+                                  "warning" if total_gaps > 0 else "success")
+            
+            # Zähle Datensätze
+            import sqlite3
+            conn = sqlite3.connect(config["source"]["db_path"])
+            cursor = conn.cursor()
+            
+            for table in config["options"]["tables"]:
+                cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                count = cursor.fetchone()[0]
+                total_records += count
+                dialog._log_message(f"📊 {table}: {count} Datensätze", "info")
+            
+            conn.close()
+            
+            dialog._log_message(f"📦 Gesamt: {total_records} Datensätze", "info")
+            dialog.update_progress(0, total_records, status="Starte Migration...")
+            
+            # Migration Tool erstellen
+            migration_tool = VPBMigrationTool(migration_config)
+            
+            # Migration durchführen
+            dialog._log_message("🚀 Migration gestartet...", "info")
+            
+            migration_results = {}
+            for table in config["options"]["tables"]:
+                dialog._log_message(f"📋 Migriere Tabelle: {table}", "info")
+                
+                result = migration_tool.migrate_table(
+                    table_name=table,
+                    progress_callback=progress_callback
+                )
+                
+                migration_results[table] = result
+                
+                if result["success"]:
+                    dialog._log_message(
+                        f"✅ {table}: {result['successful_records']}/{result['total_records']} erfolgreich",
+                        "success"
+                    )
+                else:
+                    dialog._log_message(
+                        f"❌ {table}: Fehler - {result.get('error', 'Unknown')}",
+                        "error"
+                    )
+            
+            # Validation (optional)
+            validation_results = None
+            if config["options"]["validation"]:
+                dialog._log_message("✓ Validierung gestartet...", "info")
+                
+                validator = DataValidator(migration_config)
+                validation_results = {}
+                
+                for table in config["options"]["tables"]:
+                    val_result = validator.validate_migration(table)
+                    validation_results[table] = val_result
+                    
+                    if val_result["valid"]:
+                        dialog._log_message(
+                            f"✅ {table} Validierung: PASS (Match Rate: {val_result['details']['id_match_rate']:.1%})",
+                            "success"
+                        )
+                    else:
+                        dialog._log_message(
+                            f"❌ {table} Validierung: FAIL",
+                            "error"
+                        )
+            
+            # Ergebnisse zusammenfassen
+            duration = time.time() - start_time
+            total_successful = sum(r["successful_records"] for r in migration_results.values())
+            total_failed = sum(r["failed_records"] for r in migration_results.values())
+            
+            result = {
+                "success": total_failed == 0,
+                "duration": duration,
+                "total_records": total_records,
+                "successful_records": total_successful,
+                "failed_records": total_failed,
+                "records_per_second": total_records / duration if duration > 0 else 0,
+                "migration_results": migration_results,
+                "gap_detection": gap_results,
+                "validation": validation_results
+            }
+            
+            dialog.show_results(result)
+            
+        except Exception as e:
+            import traceback
+            error_msg = f"Migration Fehler: {str(e)}\n{traceback.format_exc()}"
+            dialog._log_message(f"❌ {error_msg}", "error")
+            
+            result = {
+                "success": False,
+                "error": str(e),
+                "traceback": traceback.format_exc()
+            }
+            dialog.show_results(result)
+    
+    def _on_migration_gap_detection(self, data=None):
+        """Führt Gap Detection aus."""
+        from tkinter import filedialog, messagebox
+        from migration.gap_detector import GapDetector
+        import json
+        
+        # SQLite DB auswählen
+        db_path = filedialog.askopenfilename(
+            title="SQLite Datenbank auswählen",
+            filetypes=[("SQLite Database", "*.db"), ("All Files", "*.*")]
+        )
+        
+        if not db_path:
+            return
+        
+        try:
+            detector = GapDetector(db_path)
+            gaps = detector.detect_all_gaps()
+            
+            total_gaps = sum(len(gap_list) for gap_list in gaps.values())
+            
+            # Ergebnisse anzeigen
+            msg = f"Gap Detection abgeschlossen!\n\n"
+            msg += f"Datenbank: {db_path}\n\n"
+            
+            for gap_type, gap_list in gaps.items():
+                msg += f"{gap_type}: {len(gap_list)} Gaps\n"
+            
+            msg += f"\nGesamt: {total_gaps} Gaps gefunden"
+            
+            messagebox.showinfo("Gap Detection", msg)
+            
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Gap Detection Fehler:\n{str(e)}")
+    
+    def _on_migration_validate(self, data=None):
+        """Führt Validierung aus."""
+        from tkinter import filedialog, messagebox
+        from migration.validation import DataValidator
+        from migration.migration_tool import MigrationConfig
+        
+        # SQLite DB auswählen
+        db_path = filedialog.askopenfilename(
+            title="SQLite Datenbank auswählen",
+            filetypes=[("SQLite Database", "*.db"), ("All Files", "*.*")]
+        )
+        
+        if not db_path:
+            return
+        
+        try:
+            config = MigrationConfig(
+                source_config={"type": "sqlite", "db_path": db_path},
+                target_config={"type": "uds3_polyglot"}
+            )
+            
+            validator = DataValidator(config)
+            result = validator.validate_migration("vpb_processes")
+            
+            # Ergebnisse anzeigen
+            msg = f"Validierung abgeschlossen!\n\n"
+            msg += f"Status: {'✅ VALID' if result['valid'] else '❌ INVALID'}\n"
+            msg += f"Datensätze: {result['details']['record_count']}\n"
+            msg += f"ID Match Rate: {result['details']['id_match_rate']:.1%}\n"
+            msg += f"Checksum Match Rate: {result['details'].get('checksum_match_rate', 0):.1%}\n"
+            
+            if result.get('errors'):
+                msg += f"\nFehler: {len(result['errors'])}"
+            
+            messagebox.showinfo("Validierung", msg)
+            
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Validierung Fehler:\n{str(e)}")
+    
+    def _on_migration_configure(self, data=None):
+        """Öffnet Migration Configuration Dialog."""
+        self._on_migration_start(data)
+    
+    def _on_migration_show_report(self, data=None):
+        """Zeigt letzten Migration Report."""
+        from tkinter import filedialog, messagebox
+        import json
+        
+        # Report-Datei auswählen
+        report_path = filedialog.askopenfilename(
+            title="Migration Report auswählen",
+            filetypes=[("JSON Files", "*.json"), ("All Files", "*.*")],
+            initialdir="."
+        )
+        
+        if not report_path:
+            return
+        
+        try:
+            with open(report_path, 'r', encoding='utf-8') as f:
+                report = json.load(f)
+            
+            # Ergebnisse formatieren
+            msg = f"Migration Report\n\n"
+            msg += f"Status: {'✅ ERFOLG' if report.get('success') else '❌ FEHLER'}\n"
+            msg += f"Dauer: {report.get('duration', 0):.2f}s\n"
+            msg += f"Datensätze: {report.get('total_records', 0)}\n"
+            msg += f"Erfolgreich: {report.get('successful_records', 0)}\n"
+            msg += f"Fehler: {report.get('failed_records', 0)}\n"
+            msg += f"Durchsatz: {report.get('records_per_second', 0):.1f} rec/s\n"
+            
+            messagebox.showinfo("Migration Report", msg)
+            
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Report laden Fehler:\n{str(e)}")
+    
+    # ============================================================================
     # Main Loop
     # ============================================================================
     
@@ -729,14 +1498,140 @@ class VPBApplication:
         # GUI updaten damit alle Größen bekannt sind
         self.root.update_idletasks()
         
+        # Benutzerprofil wiederherstellen (UI-Zustand)
+        self._restore_user_profile()
+        
         # Koordinatenursprung vertikal mittig setzen (y=0 in Mitte)
-        # Jetzt sind die Canvas-Dimensionen bekannt
+        # Verzögert aufrufen, wenn das Canvas gerendert wurde
         if hasattr(self, 'canvas'):
-            self.canvas.center_time_axis_vertical()
-            print(f"✅ Koordinatenursprung zentriert: view_ty = {self.canvas.view_ty:.1f}")
+            def center_after_render():
+                canvas_h = self.canvas.winfo_height()
+                if canvas_h > 1:  # Canvas ist gerendert
+                    self.canvas.center_time_axis_vertical()
+                    print(f"✅ Koordinatenursprung zentriert: Canvas-Höhe={canvas_h}px, view_ty={self.canvas.view_ty:.1f}")
+                else:  # Noch nicht gerendert, nochmal versuchen
+                    self.root.after(50, center_after_render)
+            self.root.after(100, center_after_render)
         
         # Mainloop starten
         self.root.mainloop()
+    
+    def _restore_user_profile(self):
+        """Stellt Benutzereinstellungen aus dem Profil wieder her."""
+        try:
+            profile = self.user_profile
+            
+            # Canvas-Ansicht wiederherstellen
+            if hasattr(self, 'canvas'):
+                canvas = self.canvas
+                view = profile.canvas_view
+                
+                # Zoom-Level
+                if view.zoom_level != 1.0:
+                    canvas.view_scale = view.zoom_level
+                
+                # Pan-Position
+                if view.pan_x != 0.0 or view.pan_y != 0.0:
+                    canvas.view_tx = view.pan_x
+                    canvas.view_ty = view.pan_y
+                
+                # Grid-Sichtbarkeit
+                canvas.grid_visible = view.grid_visible
+                canvas.snap_to_grid = view.snap_to_grid
+                
+                # Rulers und Minimap
+                # TODO: Implementiere ruler_visible und minimap_visible Steuerung
+                
+                canvas.redraw_all()
+                print(f"✅ Canvas-Ansicht wiederhergestellt: Zoom={view.zoom_level:.1f}x, Grid={'an' if view.grid_visible else 'aus'}")
+            
+            # Sidebar-Breiten wiederherstellen
+            if hasattr(self, 'paned_window'):
+                prefs = profile.ui_preferences
+                
+                # Linke Sidebar
+                if prefs.left_sidebar_width > 0:
+                    try:
+                        self.paned_window.sashpos(0, prefs.left_sidebar_width)
+                    except:
+                        pass
+                
+                # Rechte Sidebar
+                if prefs.right_sidebar_width > 0:
+                    try:
+                        # Position vom rechten Rand
+                        total_width = self.root.winfo_width()
+                        right_sash_pos = total_width - prefs.right_sidebar_width
+                        self.paned_window.sashpos(1, right_sash_pos)
+                    except:
+                        pass
+                
+                print(f"✅ Sidebar-Breiten wiederhergestellt: {prefs.left_sidebar_width}px / {prefs.right_sidebar_width}px")
+            
+            # Recent Files in Menü laden
+            recent_files = profile.workspace.recent_files
+            if recent_files and hasattr(self, 'menu_bar'):
+                self.menu_bar.update_recent_files(recent_files)
+                print(f"✅ {len(recent_files)} Recent Files wiederhergestellt")
+            
+            # Letzte Datei öffnen (optional, nur wenn --restore Flag)
+            if hasattr(self.args, 'restore') and self.args.restore:
+                last_file = profile.workspace.last_opened_file
+                if last_file and os.path.exists(last_file):
+                    self.root.after(200, lambda: self.event_bus.publish("ui:menu:file:open", {"file_path": last_file}))
+                    print(f"✅ Letzte Datei wird geöffnet: {last_file}")
+        
+        except Exception as e:
+            print(f"⚠️ Fehler beim Wiederherstellen des Benutzerprofils: {e}")
+    
+    def _save_user_profile(self):
+        """Speichert aktuelle Benutzereinstellungen im Profil."""
+        try:
+            profile = self.user_profile
+            
+            # Canvas-Ansicht speichern
+            if hasattr(self, 'canvas'):
+                canvas = self.canvas
+                view = profile.canvas_view
+                
+                view.zoom_level = float(canvas.view_scale)
+                view.pan_x = float(canvas.view_tx)
+                view.pan_y = float(canvas.view_ty)
+                view.grid_visible = bool(canvas.grid_visible)
+                view.snap_to_grid = bool(canvas.snap_to_grid)
+            
+            # Sidebar-Breiten speichern
+            if hasattr(self, 'paned_window'):
+                prefs = profile.ui_preferences
+                
+                try:
+                    # Linke Sidebar
+                    left_width = self.paned_window.sashpos(0)
+                    if left_width > 0:
+                        prefs.left_sidebar_width = left_width
+                    
+                    # Rechte Sidebar (berechne aus Gesamt-Breite)
+                    total_width = self.root.winfo_width()
+                    right_sash_pos = self.paned_window.sashpos(1)
+                    right_width = total_width - right_sash_pos
+                    if right_width > 0:
+                        prefs.right_sidebar_width = right_width
+                except:
+                    pass
+            
+            # Aktuell geöffnete Datei speichern
+            if hasattr(self, 'document_controller'):
+                current_file = self.document_controller.current_file_path
+                if current_file:
+                    self.user_profile_manager.add_recent_file(current_file)
+            
+            # Profil speichern
+            success = self.user_profile_manager.save(profile)
+            if success:
+                print("✅ Benutzerprofil gespeichert")
+            
+        except Exception as e:
+            print(f"⚠️ Fehler beim Speichern des Benutzerprofils: {e}")
 
 def parse_arguments():
     """Parst Command-Line Argumente."""
