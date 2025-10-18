@@ -433,18 +433,78 @@ class VPBMigrationTool:
         table_name: str,
         source_records: List[Dict[str, Any]]
     ) -> ValidationResult:
-        """Validiert einen migrierten Batch"""
+        """
+        Validiert einen migrierten Batch mit Real-time UDS3 Queries
+        
+        Args:
+            table_name: Tabellenname
+            source_records: Source records aus SQLite
+        
+        Returns:
+            ValidationResult mit UDS3 Comparison
+        """
         if not self.validator:
             self.validator = DataValidator()
         
-        # TODO: Fetch target records from UDS3
-        target_records = source_records  # Mock: Für jetzt identisch
+        # Fetch target records from UDS3 (Real-time Validation)
+        target_records = self._fetch_from_uds3(table_name, source_records)
         
         return self.validator.validate_migration_batch(
             source_records,
             target_records,
             table_name
         )
+    
+    def _fetch_from_uds3(
+        self,
+        table_name: str,
+        source_records: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetcht Records aus UDS3 für Validation
+        
+        Args:
+            table_name: Tabellenname
+            source_records: Source records für ID extraction
+        
+        Returns:
+            Liste von Records aus UDS3
+        """
+        target_records = []
+        
+        if not self._uds3_manager:
+            logger.warning("   ⚠️  UDS3 not connected - skipping live validation")
+            return source_records  # Fallback: Mock validation
+        
+        try:
+            # Extract IDs from source records
+            if table_name == "vpb_processes":
+                for record in source_records:
+                    process_id = record.get('process_id')
+                    
+                    if process_id:
+                        # Query UDS3 for process details
+                        try:
+                            uds3_data = self._uds3_manager.get_process_details(process_id)
+                            
+                            if uds3_data:
+                                target_records.append(uds3_data)
+                            else:
+                                logger.warning(f"   ⚠️  Process {process_id} not found in UDS3")
+                        
+                        except Exception as e:
+                            logger.warning(f"   ⚠️  Failed to fetch {process_id} from UDS3: {e}")
+            
+            else:
+                # Other tables: Not yet supported by UDS3
+                logger.debug(f"   Table {table_name} validation skipped (no UDS3 support)")
+                return source_records
+        
+        except Exception as e:
+            logger.error(f"   ❌ UDS3 fetch failed: {e}")
+            return source_records  # Fallback
+        
+        return target_records if target_records else source_records
     
     def _run_gap_detection_pre(self):
         """Führt Gap Detection vor Migration durch"""

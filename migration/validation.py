@@ -103,18 +103,24 @@ class DataValidator:
         
         details['id_match_rate'] = len(source_ids & target_ids) / len(source_ids) if source_ids else 0
         
-        # 3. Data Integrity Validation
+        # 3. Data Integrity Validation (with UDS3 field filtering)
+        checksum_mismatches = 0
         for source_rec in source_records:
             rec_id = source_rec.get('id') or source_rec.get('process_id')
             target_rec = next((r for r in target_records if (r.get('id') or r.get('process_id')) == rec_id), None)
             
             if target_rec:
-                # Checksum Validation
+                # Checksum Validation (filter UDS3-added fields)
                 source_checksum = self._calculate_checksum(source_rec)
-                target_checksum = self._calculate_checksum(target_rec)
+                target_checksum = self._calculate_checksum_filtered(target_rec)
                 
                 if source_checksum != target_checksum:
-                    warnings.append(f"Data checksum mismatch for record {rec_id}")
+                    checksum_mismatches += 1
+                    # Only warn if significant mismatch (not just UDS3 metadata)
+                    if self._is_significant_mismatch(source_rec, target_rec):
+                        warnings.append(f"Significant data mismatch for record {rec_id}")
+        
+        details['checksum_match_rate'] = 1.0 - (checksum_mismatches / len(source_records)) if source_records else 1.0
         
         is_valid = len(errors) == 0
         
@@ -261,6 +267,48 @@ class DataValidator:
         # Sortiert Keys für konsistente Checksums
         sorted_data = json.dumps(data, sort_keys=True)
         return hashlib.sha256(sorted_data.encode()).hexdigest()[:16]
+    
+    def _calculate_checksum_filtered(self, data: Dict[str, Any]) -> str:
+        """
+        Berechnet Checksum ohne UDS3-spezifische Felder
+        
+        Filtert Felder die UDS3 hinzufügt (migrated_from, migration_timestamp, etc.)
+        """
+        # UDS3-added fields to exclude from checksum
+        uds3_fields = {
+            'migrated_from',
+            'migration_timestamp',
+            'embedding_id',
+            'graph_id',
+            'created_at_uds3',
+            'updated_at_uds3'
+        }
+        
+        # Filter data
+        filtered_data = {k: v for k, v in data.items() if k not in uds3_fields}
+        
+        return self._calculate_checksum(filtered_data)
+    
+    def _is_significant_mismatch(
+        self,
+        source_rec: Dict[str, Any],
+        target_rec: Dict[str, Any]
+    ) -> bool:
+        """
+        Prüft ob Mismatch signifikant ist (nicht nur UDS3 Metadata)
+        
+        Returns:
+            True wenn signifikante Unterschiede existieren
+        """
+        # Core fields that must match
+        core_fields = ['process_id', 'name', 'description', 'process_data']
+        
+        for field in core_fields:
+            if field in source_rec and field in target_rec:
+                if source_rec[field] != target_rec[field]:
+                    return True  # Significant mismatch in core data
+        
+        return False  # Only metadata differences
     
     def generate_validation_report(self) -> Dict[str, Any]:
         """
