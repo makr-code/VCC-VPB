@@ -59,8 +59,8 @@ class UDS3Config:
         options={"collection_name": "vpb_processes"}
     ))
     
-    # Embedding Model
-    embedding_model: str = "deutsche-telekom/gbert-base"
+    # Embedding Model (v1.0.1: Changed to available multilingual model)
+    embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     
     # SAGA Settings
     enable_saga: bool = True
@@ -263,8 +263,12 @@ class ChromaDBAdapter:
             self.connected = False
             return False
     
-    def add_embedding(self, process_id: str, embedding_text: str, metadata: Dict) -> bool:
-        """Füge Embedding hinzu"""
+    def add(self, process_id: str, embedding_text: str, metadata: Dict) -> bool:
+        """
+        Füge Embedding hinzu (Standard ChromaDB API)
+        
+        FIXED v1.0.1: Renamed from add_embedding() to add() to match ChromaDB API
+        """
         if not self.connected:
             self.connect()
         
@@ -408,7 +412,7 @@ class UDS3PolyglotManager:
                 step_chroma = SagaStep(
                     backend_name="chromadb",
                     operation="save",
-                    execute=lambda: self.chromadb.add_embedding(process_id, embedding_text, metadata),
+                    execute=lambda: self.chromadb.add(process_id, embedding_text, metadata),
                     compensate=lambda: self.chromadb.delete_embedding(process_id)
                 )
                 transaction.add_step(step_chroma)
@@ -694,7 +698,7 @@ class UDS3PolyglotManager:
         if generate_embeddings:
             embedding_text = self._build_embedding_text(process_data)
             metadata = self._build_embedding_metadata(process_data, domain)
-            self.chromadb.add_embedding(process_id, embedding_text, metadata)
+            self.chromadb.add(process_id, embedding_text, metadata)
         
         return process_id
     
