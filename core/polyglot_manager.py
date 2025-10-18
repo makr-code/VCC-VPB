@@ -140,128 +140,527 @@ class SagaTransaction:
 
 
 # ============================================================================
-# Mock Backend Adapters (Production würde echte Backends nutzen)
+# Real Backend Adapters - Production Implementation
 # ============================================================================
 
+try:
+    import psycopg2
+    from psycopg2 import pool, extras
+    PSYCOPG2_AVAILABLE = True
+except ImportError:
+    PSYCOPG2_AVAILABLE = False
+    logger.warning("psycopg2 not available - PostgreSQL adapter will be disabled")
+
+
 class PostgreSQLAdapter:
-    """PostgreSQL Adapter für Relational Data"""
+    """PostgreSQL Adapter für Relational Data mit Connection Pooling"""
     
     def __init__(self, config: BackendConfig):
         self.config = config
+        self.connection_pool = None
         self.connected = False
-        logger.info("PostgreSQL Adapter initialized (mock mode)")
+        
+        if not PSYCOPG2_AVAILABLE:
+            logger.error("PostgreSQL Adapter: psycopg2 not installed")
+            return
+            
+        logger.info("PostgreSQL Adapter initialized (production mode)")
     
     def connect(self):
-        """Verbinde mit PostgreSQL"""
-        if not self.config.enabled:
+        """Verbinde mit PostgreSQL und erstelle Connection Pool"""
+        if not self.config.enabled or not PSYCOPG2_AVAILABLE:
             return False
+            
         try:
-            # TODO: Echte Connection mit psycopg2/asyncpg
-            logger.info(f"PostgreSQL connecting to {self.config.connection_string}")
+            pool_size = self.config.options.get('pool_size', 10)
+            
+            self.connection_pool = psycopg2.pool.ThreadedConnectionPool(
+                1, pool_size,
+                self.config.connection_string
+            )
+            
+            # Test connection
+            conn = self.connection_pool.getconn()
+            conn.cursor().execute("SELECT 1")
+            self.connection_pool.putconn(conn)
+            
             self.connected = True
+            logger.info(f"PostgreSQL connected to {self.config.connection_string}")
             return True
+            
         except Exception as e:
             logger.error(f"PostgreSQL connection failed: {e}")
             self.connected = False
             return False
     
-    def save_process(self, process_data: Dict[str, Any]) -> str:
-        """Speichere Process in PostgreSQL"""
+    def disconnect(self):
+        """Schließe alle Connections im Pool"""
+        if self.connection_pool:
+            self.connection_pool.closeall()
+            self.connected = False
+            logger.info("PostgreSQL disconnected")
+    
+    def _get_connection(self):
+        """Hole Connection aus Pool"""
         if not self.connected:
             self.connect()
-        
+        if self.connection_pool:
+            return self.connection_pool.getconn()
+        return None
+    
+    def _release_connection(self, conn):
+        """Gib Connection zurück an Pool"""
+        if self.connection_pool and conn:
+            self.connection_pool.putconn(conn)
+    
+    def save_process(self, process_data: Dict[str, Any]) -> str:
+        """Speichere Process in PostgreSQL"""
         process_id = process_data.get('process_id', str(uuid.uuid4()))
-        logger.info(f"PostgreSQL: Saving process {process_id}")
+        conn = None
         
-        # Mock: In production würde INSERT SQL ausgeführt
-        # INSERT INTO uds3_processes (process_id, name, description, ...) VALUES (...)
-        
-        return process_id
+        try:
+            conn = self._get_connection()
+            if not conn:
+                raise Exception("No database connection available")
+            
+            cursor = conn.cursor()
+            
+            # CREATE TABLE IF NOT EXISTS (idempotent)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS uds3_processes (
+                    process_id VARCHAR(255) PRIMARY KEY,
+                    name VARCHAR(512),
+                    description TEXT,
+                    process_data JSONB,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW(),
+                    deleted_at TIMESTAMP NULL
+                )
+            """)
+            
+            # INSERT Process
+            cursor.execute("""
+                INSERT INTO uds3_processes 
+                (process_id, name, description, process_data)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (process_id) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    description = EXCLUDED.description,
+                    process_data = EXCLUDED.process_data,
+                    updated_at = NOW()
+            """, (
+                process_id,
+                process_data.get('name', 'Unnamed Process'),
+                process_data.get('description', ''),
+                json.dumps(process_data)
+            ))
+            
+            conn.commit()
+            logger.info(f"PostgreSQL: Saved process {process_id}")
+            return process_id
+            
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            logger.error(f"PostgreSQL save failed: {e}")
+            raise
+        finally:
+            if conn:
+                self._release_connection(conn)
     
     def get_process(self, process_id: str) -> Optional[Dict[str, Any]]:
         """Lade Process aus PostgreSQL"""
-        logger.info(f"PostgreSQL: Loading process {process_id}")
-        # Mock: In production würde SELECT ausgeführt
-        return None
+        conn = None
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return None
+            
+            cursor = conn.cursor(cursor_factory=extras.RealDictCursor)
+            cursor.execute("""
+                SELECT process_id, name, description, process_data, 
+                       created_at, updated_at
+                FROM uds3_processes 
+                WHERE process_id = %s AND deleted_at IS NULL
+            """, (process_id,))
+            
+            row = cursor.fetchone()
+            if row:
+                logger.info(f"PostgreSQL: Loaded process {process_id}")
+                return dict(row)
+            return None
+            
+        except Exception as e:
+            logger.error(f"PostgreSQL get failed: {e}")
+            return None
+        finally:
+            if conn:
+                self._release_connection(conn)
     
     def update_process(self, process_id: str, updates: Dict[str, Any]) -> bool:
         """Update Process in PostgreSQL"""
-        logger.info(f"PostgreSQL: Updating process {process_id}")
-        # Mock: UPDATE uds3_processes SET ... WHERE process_id = ...
-        return True
+        conn = None
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE uds3_processes 
+                SET name = %s,
+                    description = %s,
+                    process_data = %s,
+                    updated_at = NOW()
+                WHERE process_id = %s AND deleted_at IS NULL
+            """, (
+                updates.get('name'),
+                updates.get('description'),
+                json.dumps(updates),
+                process_id
+            ))
+            
+            conn.commit()
+            logger.info(f"PostgreSQL: Updated process {process_id}")
+            return cursor.rowcount > 0
+            
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            logger.error(f"PostgreSQL update failed: {e}")
+            return False
+        finally:
+            if conn:
+                self._release_connection(conn)
     
     def delete_process(self, process_id: str, soft_delete: bool = True) -> bool:
         """Lösche Process aus PostgreSQL"""
-        logger.info(f"PostgreSQL: Deleting process {process_id} (soft={soft_delete})")
-        # Mock: UPDATE uds3_processes SET deleted_at = NOW() WHERE ...
-        return True
+        conn = None
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            
+            if soft_delete:
+                cursor.execute("""
+                    UPDATE uds3_processes 
+                    SET deleted_at = NOW()
+                    WHERE process_id = %s AND deleted_at IS NULL
+                """, (process_id,))
+            else:
+                cursor.execute("""
+                    DELETE FROM uds3_processes 
+                    WHERE process_id = %s
+                """, (process_id,))
+            
+            conn.commit()
+            logger.info(f"PostgreSQL: Deleted process {process_id} (soft={soft_delete})")
+            return cursor.rowcount > 0
+            
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            logger.error(f"PostgreSQL delete failed: {e}")
+            return False
+        finally:
+            if conn:
+                self._release_connection(conn)
+
+
+try:
+    from neo4j import GraphDatabase, Driver
+    NEO4J_AVAILABLE = True
+except ImportError:
+    NEO4J_AVAILABLE = False
+    logger.warning("neo4j driver not available - Neo4j adapter will be disabled")
 
 
 class Neo4jAdapter:
-    """Neo4j Adapter für Graph Data"""
+    """Neo4j Adapter für Graph Data mit Session Management"""
     
     def __init__(self, config: BackendConfig):
         self.config = config
+        self.driver: Optional[Driver] = None
         self.connected = False
-        logger.info("Neo4j Adapter initialized (mock mode)")
+        
+        if not NEO4J_AVAILABLE:
+            logger.error("Neo4j Adapter: neo4j driver not installed")
+            return
+            
+        logger.info("Neo4j Adapter initialized (production mode)")
     
     def connect(self):
-        """Verbinde mit Neo4j"""
-        if not self.config.enabled:
+        """Verbinde mit Neo4j Database"""
+        if not self.config.enabled or not NEO4J_AVAILABLE:
             return False
+            
         try:
-            # TODO: Echte Connection mit neo4j-driver
-            logger.info(f"Neo4j connecting to {self.config.connection_string}")
+            # Parse connection string: bolt://user:pass@localhost:7687
+            conn_str = self.config.connection_string
+            auth = None
+            
+            # Extract credentials if present
+            if '@' in conn_str:
+                prefix, host = conn_str.split('@')
+                if ':' in prefix:
+                    parts = prefix.split('://')
+                    if len(parts) == 2:
+                        protocol, creds = parts
+                        user, password = creds.split(':')
+                        auth = (user, password)
+                        conn_str = f"{protocol}://{host}"
+            
+            max_lifetime = self.config.options.get('max_connection_lifetime', 3600)
+            
+            self.driver = GraphDatabase.driver(
+                conn_str,
+                auth=auth,
+                max_connection_lifetime=max_lifetime
+            )
+            
+            # Test connection
+            self.driver.verify_connectivity()
+            
             self.connected = True
+            logger.info(f"Neo4j connected to {conn_str}")
             return True
+            
         except Exception as e:
             logger.error(f"Neo4j connection failed: {e}")
             self.connected = False
             return False
+    
+    def disconnect(self):
+        """Schließe Neo4j Driver"""
+        if self.driver:
+            self.driver.close()
+            self.connected = False
+            logger.info("Neo4j disconnected")
     
     def save_process_graph(self, process_data: Dict[str, Any]) -> bool:
         """Erstelle Process Graph in Neo4j"""
         if not self.connected:
             self.connect()
         
+        if not self.driver:
+            return False
+        
         process_id = process_data.get('process_id')
-        logger.info(f"Neo4j: Creating process graph for {process_id}")
         
-        # Mock: In production würde Cypher Query ausgeführt
-        # CREATE (p:Process {process_id: $process_id, name: $name})
-        # CREATE (e:Element {element_id: $element_id})
-        # CREATE (p)-[:HAS_ELEMENT]->(e)
+        try:
+            with self.driver.session() as session:
+                # Create Process Node
+                session.run("""
+                    MERGE (p:Process {process_id: $process_id})
+                    SET p.name = $name,
+                        p.description = $description,
+                        p.updated_at = datetime()
+                """, {
+                    'process_id': process_id,
+                    'name': process_data.get('name', 'Unnamed Process'),
+                    'description': process_data.get('description', '')
+                })
+                
+                # Create Element Nodes and Relationships
+                elements = process_data.get('elements', [])
+                for element in elements:
+                    element_id = element.get('id')
+                    element_type = element.get('type', 'Unknown')
+                    
+                    session.run("""
+                        MATCH (p:Process {process_id: $process_id})
+                        MERGE (e:Element {element_id: $element_id})
+                        SET e.type = $type,
+                            e.name = $name,
+                            e.properties = $properties
+                        MERGE (p)-[:HAS_ELEMENT]->(e)
+                    """, {
+                        'process_id': process_id,
+                        'element_id': element_id,
+                        'type': element_type,
+                        'name': element.get('name', ''),
+                        'properties': json.dumps(element)
+                    })
+                
+                # Create Relationships between Elements
+                connections = process_data.get('connections', [])
+                for conn in connections:
+                    session.run("""
+                        MATCH (from:Element {element_id: $from_id})
+                        MATCH (to:Element {element_id: $to_id})
+                        MERGE (from)-[r:CONNECTED_TO]->(to)
+                        SET r.type = $conn_type
+                    """, {
+                        'from_id': conn.get('from'),
+                        'to_id': conn.get('to'),
+                        'conn_type': conn.get('type', 'default')
+                    })
+            
+            logger.info(f"Neo4j: Created process graph for {process_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Neo4j save failed: {e}")
+            return False
+    
+    def get_process_graph(self, process_id: str) -> Optional[Dict[str, Any]]:
+        """Lade Process Graph aus Neo4j"""
+        if not self.connected or not self.driver:
+            return None
         
-        return True
+        try:
+            with self.driver.session() as session:
+                # Get Process and all connected Elements
+                result = session.run("""
+                    MATCH (p:Process {process_id: $process_id})
+                    OPTIONAL MATCH (p)-[:HAS_ELEMENT]->(e:Element)
+                    OPTIONAL MATCH (e)-[r:CONNECTED_TO]->(to:Element)
+                    RETURN p, collect(DISTINCT e) as elements, 
+                           collect({from: e.element_id, to: to.element_id, type: type(r)}) as connections
+                """, {'process_id': process_id})
+                
+                record = result.single()
+                if record:
+                    return {
+                        'process': dict(record['p']),
+                        'elements': [dict(e) for e in record['elements']],
+                        'connections': record['connections']
+                    }
+                return None
+                
+        except Exception as e:
+            logger.error(f"Neo4j get failed: {e}")
+            return None
     
     def delete_process_graph(self, process_id: str) -> bool:
         """Lösche Process Graph aus Neo4j"""
-        logger.info(f"Neo4j: Deleting process graph {process_id}")
-        # Mock: MATCH (p:Process {process_id: $id}) DETACH DELETE p
-        return True
+        if not self.connected or not self.driver:
+            return False
+        
+        try:
+            with self.driver.session() as session:
+                session.run("""
+                    MATCH (p:Process {process_id: $process_id})
+                    OPTIONAL MATCH (p)-[:HAS_ELEMENT]->(e:Element)
+                    DETACH DELETE p, e
+                """, {'process_id': process_id})
+            
+            logger.info(f"Neo4j: Deleted process graph {process_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Neo4j delete failed: {e}")
+            return False
+
+
+try:
+    import chromadb
+    from chromadb.config import Settings
+    CHROMADB_AVAILABLE = True
+except ImportError:
+    CHROMADB_AVAILABLE = False
+    logger.warning("chromadb not available - ChromaDB adapter will be disabled")
+
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    logger.warning("sentence-transformers not available - Embeddings will be disabled")
 
 
 class ChromaDBAdapter:
-    """ChromaDB Adapter für Vector Embeddings"""
+    """ChromaDB Adapter für Vector Embeddings mit BERT"""
     
     def __init__(self, config: BackendConfig):
         self.config = config
+        self.client = None
+        self.collection = None
+        self.embedding_model = None
         self.connected = False
-        logger.info("ChromaDB Adapter initialized (mock mode)")
+        
+        if not CHROMADB_AVAILABLE:
+            logger.error("ChromaDB Adapter: chromadb not installed")
+            return
+        
+        if not SENTENCE_TRANSFORMERS_AVAILABLE:
+            logger.error("ChromaDB Adapter: sentence-transformers not installed")
+            return
+            
+        logger.info("ChromaDB Adapter initialized (production mode)")
     
     def connect(self):
-        """Verbinde mit ChromaDB"""
-        if not self.config.enabled:
+        """Verbinde mit ChromaDB und lade Embedding Model"""
+        if not self.config.enabled or not CHROMADB_AVAILABLE:
             return False
+            
         try:
-            # TODO: Echte Connection mit chromadb.HttpClient
-            logger.info(f"ChromaDB connecting to {self.config.connection_string}")
+            # Initialize ChromaDB Client
+            conn_str = self.config.connection_string
+            
+            if conn_str.startswith('http'):
+                # HTTP Client for remote ChromaDB
+                host = conn_str.replace('http://', '').replace('https://', '').split(':')[0]
+                port = int(conn_str.split(':')[-1]) if ':' in conn_str.split('//')[-1] else 8000
+                
+                self.client = chromadb.HttpClient(
+                    host=host,
+                    port=port,
+                    settings=Settings(anonymized_telemetry=False)
+                )
+            else:
+                # Persistent Client for local ChromaDB
+                self.client = chromadb.PersistentClient(
+                    path=conn_str,
+                    settings=Settings(anonymized_telemetry=False)
+                )
+            
+            # Get or Create Collection
+            collection_name = self.config.options.get('collection_name', 'vpb_processes')
+            
+            try:
+                self.collection = self.client.get_collection(name=collection_name)
+            except:
+                self.collection = self.client.create_collection(
+                    name=collection_name,
+                    metadata={"description": "VPB Process Embeddings"}
+                )
+            
+            # Load Embedding Model
+            if SENTENCE_TRANSFORMERS_AVAILABLE:
+                model_name = self.config.options.get(
+                    'embedding_model',
+                    'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
+                )
+                self.embedding_model = SentenceTransformer(model_name)
+                logger.info(f"Loaded embedding model: {model_name}")
+            
             self.connected = True
+            logger.info(f"ChromaDB connected to {conn_str}")
             return True
+            
         except Exception as e:
             logger.error(f"ChromaDB connection failed: {e}")
             self.connected = False
             return False
+    
+    def disconnect(self):
+        """Schließe ChromaDB Client"""
+        self.client = None
+        self.collection = None
+        self.embedding_model = None
+        self.connected = False
+        logger.info("ChromaDB disconnected")
+    
+    def _generate_embedding(self, text: str) -> List[float]:
+        """Generiere Embedding für Text"""
+        if not self.embedding_model:
+            raise Exception("Embedding model not loaded")
+        
+        embedding = self.embedding_model.encode(text, convert_to_numpy=True)
+        return embedding.tolist()
     
     def add(self, process_id: str, embedding_text: str, metadata: Dict) -> bool:
         """
@@ -272,22 +671,93 @@ class ChromaDBAdapter:
         if not self.connected:
             self.connect()
         
-        logger.info(f"ChromaDB: Adding embedding for {process_id}")
+        if not self.collection:
+            return False
         
-        # Mock: In production würde collection.add() aufgerufen
-        # collection.add(
-        #     ids=[process_id],
-        #     documents=[embedding_text],
-        #     metadatas=[metadata]
-        # )
+        try:
+            # Generate embedding
+            embedding = self._generate_embedding(embedding_text)
+            
+            # Add to collection
+            self.collection.add(
+                ids=[process_id],
+                embeddings=[embedding],
+                documents=[embedding_text],
+                metadatas=[metadata]
+            )
+            
+            logger.info(f"ChromaDB: Added embedding for {process_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"ChromaDB add failed: {e}")
+            return False
+    
+    def query(self, query_text: str, n_results: int = 10) -> List[Dict[str, Any]]:
+        """Suche ähnliche Prozesse via Embedding"""
+        if not self.connected or not self.collection:
+            return []
         
-        return True
+        try:
+            query_embedding = self._generate_embedding(query_text)
+            
+            results = self.collection.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results
+            )
+            
+            # Format results
+            formatted = []
+            for i, doc_id in enumerate(results['ids'][0]):
+                formatted.append({
+                    'id': doc_id,
+                    'document': results['documents'][0][i],
+                    'metadata': results['metadatas'][0][i],
+                    'distance': results['distances'][0][i]
+                })
+            
+            logger.info(f"ChromaDB: Query returned {len(formatted)} results")
+            return formatted
+            
+        except Exception as e:
+            logger.error(f"ChromaDB query failed: {e}")
+            return []
+    
+    def update(self, process_id: str, embedding_text: str, metadata: Dict) -> bool:
+        """Update Embedding"""
+        if not self.connected or not self.collection:
+            return False
+        
+        try:
+            embedding = self._generate_embedding(embedding_text)
+            
+            self.collection.update(
+                ids=[process_id],
+                embeddings=[embedding],
+                documents=[embedding_text],
+                metadatas=[metadata]
+            )
+            
+            logger.info(f"ChromaDB: Updated embedding for {process_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"ChromaDB update failed: {e}")
+            return False
     
     def delete_embedding(self, process_id: str) -> bool:
         """Lösche Embedding"""
-        logger.info(f"ChromaDB: Deleting embedding for {process_id}")
-        # Mock: collection.delete(ids=[process_id])
-        return True
+        if not self.connected or not self.collection:
+            return False
+        
+        try:
+            self.collection.delete(ids=[process_id])
+            logger.info(f"ChromaDB: Deleted embedding for {process_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"ChromaDB delete failed: {e}")
+            return False
 
 
 # ============================================================================

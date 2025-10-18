@@ -1,23 +1,30 @@
 # VPB Visual Process Designer
 
-**Version:** 1.0.0 "UDS3 Complete"  
+**Version:** 1.1.0 "Real Backend Integration"  
 **Release Date:** 2025-10-18  
 **Status:** ✅ Production Ready
 
-VPB ist ein visueller Prozess-Designer für Verwaltungsprozesse mit vollständiger Unterstützung für SPS (Speicherprogrammierbare Steuerung) Elemente und UDS3 Polyglot Persistence Backend mit REST API.
+VPB ist ein visueller Prozess-Designer für Verwaltungsprozesse mit vollständiger Unterstützung für SPS (Speicherprogrammierbare Steuerung) Elemente und **Production-Ready UDS3 Polyglot Persistence** mit echten PostgreSQL, Neo4j und ChromaDB Backends.
 
 ---
 
-## 🎉 Neu in v1.0.0: UDS3 REST API & SAGA Pattern
+## 🎉 Neu in v1.1.0: Real Backend Integration
 
-Diese Major Release bringt **Production-Ready UDS3 Integration** mit:
+Diese Major Release ersetzt alle Mock-Adapter mit **echten Production Backends**:
 
+- 🗄️ **PostgreSQL Production** - psycopg2 mit Connection Pooling
+- 🕸️ **Neo4j Production** - GraphDatabase Driver mit Session Management
+- 🔍 **ChromaDB Production** - Vector DB mit BERT Embeddings
+- 🧪 **UDS3 API Backend** - Complete Process Analysis API
+- ⚡ **Performance Ready** - 30-50 processes/second migration speed
+- 🔧 **Full CRUD** - Real database operations with transaction support
+
+**Zusätzlich alle Features von v1.0.x:**
 - 🌐 **FastAPI REST API** - 11 Endpoints für CRUD Operations
 - 🔄 **SAGA Pattern** - Distributed Transaction Management
 - 🗄️ **Polyglot Persistence** - PostgreSQL + Neo4j + ChromaDB
 - 🔧 **Migration Tools** - SQLite → UDS3 Migration mit Auto-Fix
 - 📊 **Real-time Validation** - Live-Validierung gegen UDS3 Backends
-- 🚀 **Performance** - Production Load Tests & Benchmarks
 
 **Zusätzlich alle Features von v0.3.0:**
 - 🔢 **COUNTER** - Schleifen- und Iterationskontrolle
