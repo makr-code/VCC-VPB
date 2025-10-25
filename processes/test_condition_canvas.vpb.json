@@ -1,0 +1,143 @@
+{
+  "document_id": "test_condition_canvas",
+  "title": "Test CONDITION Canvas Rendering",
+  "description": "Testet das visuelle Rendering von CONDITION-Elementen",
+  "version": "1.0",
+  "created": "2025-10-18T12:00:00",
+  "modified": "2025-10-18T12:00:00",
+  "elements": [
+    {
+      "element_id": "start_001",
+      "element_type": "START_EVENT",
+      "name": "Start",
+      "x": 100,
+      "y": 150
+    },
+    {
+      "element_id": "cond_001",
+      "element_type": "CONDITION",
+      "name": "Betrag prüfen",
+      "x": 300,
+      "y": 150,
+      "condition_checks": [
+        {
+          "field": "betrag",
+          "operator": "<=",
+          "value": "5000",
+          "check_type": "number"
+        },
+        {
+          "field": "status",
+          "operator": "==",
+          "value": "neu",
+          "check_type": "string"
+        }
+      ],
+      "condition_logic": "AND",
+      "condition_true_target": "approved_001",
+      "condition_false_target": "rejected_001"
+    },
+    {
+      "element_id": "approved_001",
+      "element_type": "FUNCTION",
+      "name": "Genehmigt",
+      "x": 450,
+      "y": 100
+    },
+    {
+      "element_id": "rejected_001",
+      "element_type": "FUNCTION",
+      "name": "Abgelehnt",
+      "x": 450,
+      "y": 200
+    },
+    {
+      "element_id": "cond_002",
+      "element_type": "CONDITION",
+      "name": "Priorität prüfen (OR)",
+      "x": 650,
+      "y": 150,
+      "condition_checks": [
+        {
+          "field": "priority",
+          "operator": "==",
+          "value": "high",
+          "check_type": "string"
+        },
+        {
+          "field": "urgent",
+          "operator": "==",
+          "value": "true",
+          "check_type": "boolean"
+        },
+        {
+          "field": "deadline",
+          "operator": "<",
+          "value": "2025-12-31",
+          "check_type": "date"
+        }
+      ],
+      "condition_logic": "OR",
+      "condition_true_target": "high_prio_001",
+      "condition_false_target": "normal_prio_001"
+    },
+    {
+      "element_id": "high_prio_001",
+      "element_type": "FUNCTION",
+      "name": "Hohe Priorität",
+      "x": 800,
+      "y": 100
+    },
+    {
+      "element_id": "normal_prio_001",
+      "element_type": "FUNCTION",
+      "name": "Normale Priorität",
+      "x": 800,
+      "y": 200
+    },
+    {
+      "element_id": "cond_003",
+      "element_type": "CONDITION",
+      "name": "Leere Condition (0 Checks)",
+      "x": 300,
+      "y": 350,
+      "condition_checks": [],
+      "condition_logic": "AND",
+      "condition_true_target": "",
+      "condition_false_target": ""
+    },
+    {
+      "element_id": "end_001",
+      "element_type": "END_EVENT",
+      "name": "Ende",
+      "x": 950,
+      "y": 150
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "conn_001",
+      "source_element_id": "start_001",
+      "target_element_id": "cond_001",
+      "connection_type": "SEQUENCE"
+    },
+    {
+      "connection_id": "conn_002",
+      "source_element_id": "approved_001",
+      "target_element_id": "cond_002",
+      "connection_type": "SEQUENCE"
+    },
+    {
+      "connection_id": "conn_003",
+      "source_element_id": "high_prio_001",
+      "target_element_id": "end_001",
+      "connection_type": "SEQUENCE"
+    },
+    {
+      "connection_id": "conn_004",
+      "source_element_id": "normal_prio_001",
+      "target_element_id": "end_001",
+      "connection_type": "SEQUENCE"
+    }
+  ]
+}

@@ -155,9 +155,9 @@ class VPBCanvas(tk.Canvas):
         self.default_connection_routing: str = "auto"
         self.connection_magnet_enabled: bool = True
         self.connection_magnet_step: int = 20
-        self.snap_to_grid: bool = False
-        self.grid_size: int = 25
-        self.grid_visible: bool = True
+        self.snap_to_grid: bool = True
+        self.grid_size = 25
+        self.grid_visible = True
         self.on_selection_changed: Optional[Callable[[Optional[VPBElement], Optional[VPBConnection]], None]] = None
         self._status_cb: Optional[Callable[[str], None]] = None
         self.metadata: Dict[str, object] = {"name": "VPB Prozess", "version": "1.0"}
@@ -776,21 +776,39 @@ class VPBCanvas(tk.Canvas):
             pass
 
     def center_time_axis_vertical(self):
-        """Zentriert die Zeitachse (y=0) vertikal im Viewport."""
+        """Setzt die Ansicht so, dass die Nulllinie (y=0) vertikal mittig liegt."""
         try:
-            vh_px = int(self.winfo_height() or self.winfo_reqheight() or 0)
-            if vh_px <= 0:
-                # Falls noch nicht gelayoutet, kurz verzögert erneut versuchen
-                try:
-                    self.after(60, self.center_time_axis_vertical)
-                except Exception:
-                    pass
-                return
-            # Vertikale Translation so setzen, dass y=0 auf der Mitte landet
-            self.view_ty = vh_px / 2.0
+            # Hole Canvas-Dimensionen
+            w = int(self.winfo_width() or 1200)
+            h = int(self.winfo_height() or 800)
+            
+            # Berechne, wo y=0 in View-Koordinaten sein soll (Mitte des Canvas)
+            target_view_y = h / 2
+            
+            # Berechne die benötigte view_ty, damit y=0 (model) auf target_view_y (view) liegt
+            # view_y = model_y * scale + view_ty
+            # target_view_y = 0 * scale + view_ty
+            # => view_ty = target_view_y
+            self.view_ty = target_view_y
+            
+            # Hole Content Bounds für horizontale Zentrierung
+            min_x, min_y, max_x, max_y = self.get_content_bounds(include_connections=True)
+            
+            # Horizontale Zentrierung: Zeige Content mittig, oder bei leerem Canvas x=0 mittig
+            if min_x < max_x:
+                # Mit Content: Zeige Content-Mitte
+                content_center_x = (min_x + max_x) / 2
+                target_view_x = w / 2
+                self.view_tx = target_view_x - content_center_x * self.view_scale
+            else:
+                # Leerer Canvas: Zeige x=0 in der Mitte
+                target_view_x = w / 2
+                self.view_tx = target_view_x
+            
             self.redraw_all()
             self._notify_view_changed()
-        except Exception:
+        except Exception as e:
+            print(f"⚠️ center_time_axis_vertical failed: {e}")
             pass
 
     # ----- Koordinaten-Transform -----
@@ -920,10 +938,26 @@ class VPBCanvas(tk.Canvas):
         except Exception:
             pass
 
+        # Element-Typ-Synonyme auflösen (Kompatibilität)
+        def _normalize_element_type(et: Optional[str]) -> str:
+            t = (et or "FUNCTION").strip()
+            t_up = t.upper()
+            # Häufige Synonyme/Abkürzungen
+            synonyms = {
+                "TASK": "FUNCTION",
+                "DECISION": "GATEWAY",
+                "DECISION_GATEWAY": "GATEWAY",
+                # BPMN-Gateways ohne Suffix
+                "AND": "AND_CONNECTOR",
+                "OR": "OR_CONNECTOR",
+                "XOR": "XOR_CONNECTOR",
+            }
+            return synonyms.get(t_up, t_up)
+
         for e in data.get("elements", []):
             el = VPBElement(
                 element_id=e.get("element_id"),
-                element_type=e.get("element_type", "FUNCTION"),
+                element_type=_normalize_element_type(e.get("element_type", "FUNCTION")),
                 name=e.get("name", e.get("element_id", "Element")),
                 x=int(e.get("x", 100)),
                 y=int(e.get("y", 100)),
@@ -1010,11 +1044,29 @@ class VPBCanvas(tk.Canvas):
             # Optionale visuelle Hierarchie-Referenz
             if getattr(e, "hierarchy", None):
                 obj["hierarchy"] = e.hierarchy
-            if e.element_type == "GROUP":
+            
+            # Container-Typen (GROUP und TIME_LOOP)
+            if e.element_type in ("GROUP", "TIME_LOOP"):
                 if getattr(e, "members", None):
                     obj["members"] = list(e.members)
                 if getattr(e, "collapsed", False):
                     obj["collapsed"] = True
+            
+            # Zeit-Properties für TIME_LOOP und TIMER
+            if e.element_type in ("TIME_LOOP", "TIMER"):
+                if getattr(e, "loop_type", "none") != "none":
+                    obj["loop_type"] = e.loop_type
+                if getattr(e, "loop_interval_minutes", 0) > 0:
+                    obj["loop_interval_minutes"] = e.loop_interval_minutes
+                if getattr(e, "loop_cron", ""):
+                    obj["loop_cron"] = e.loop_cron
+                if getattr(e, "loop_date", ""):
+                    obj["loop_date"] = e.loop_date
+                if getattr(e, "loop_relative_days", 0) > 0:
+                    obj["loop_relative_days"] = e.loop_relative_days
+                if getattr(e, "loop_max_iterations", 0) > 0:
+                    obj["loop_max_iterations"] = e.loop_max_iterations
+            
             elements.append(obj)
         connections = [
             {
@@ -1198,7 +1250,8 @@ class VPBCanvas(tk.Canvas):
         h = max(20, int(self.NODE_H * self.view_scale))
         items: List[int] = []
 
-        if el.element_type == "GROUP":
+        # GROUP oder TIME_LOOP: Container mit gestricheltem Rahmen
+        if el.element_type in ("GROUP", "TIME_LOOP"):
             # Zeichne Container: großer gestrichelter Rahmen. Größe aus Bounding-Box der Mitglieder, ansonsten Standard
             members = getattr(el, "members", []) or []
             collapsed = getattr(el, "collapsed", False)
@@ -1280,10 +1333,205 @@ class VPBCanvas(tk.Canvas):
             pts = _diamond_points(cx, cy, w, h)
             item = self.create_polygon(pts, fill=style.get("fill"), outline=style.get("outline"), width=2, dash=style.get("dash"))
             items.append(item)
+            
+            # COUNTER: Zeige aktuellen Wert
+            if el.element_type == "COUNTER":
+                try:
+                    current = getattr(el, "counter_current_value", 0)
+                    maximum = getattr(el, "counter_max_value", 100)
+                    counter_text = f"{current}/{maximum}"
+                    
+                    # Wert innerhalb des Diamanten
+                    value_item = self.create_text(
+                        cx, cy + 5,
+                        text=counter_text,
+                        font=("Arial", max(8, int(10 * self.view_scale)), "bold"),
+                        fill="#2196F3",
+                        anchor="center"
+                    )
+                    items.append(value_item)
+                    self.addtag_withtag(f"node:{el.element_id}", value_item)
+                    self._id_to_element[value_item] = el.element_id
+                    
+                    # Counter-Typ klein unter dem Diamanten
+                    counter_type = getattr(el, "counter_type", "UP")
+                    type_item = self.create_text(
+                        cx, cy + h // 2 + 15,
+                        text=f"🔢 {counter_type}",
+                        font=("Arial", max(6, int(8 * self.view_scale))),
+                        fill="#666",
+                        anchor="center"
+                    )
+                    items.append(type_item)
+                    self.addtag_withtag(f"node:{el.element_id}", type_item)
+                    self._id_to_element[type_item] = el.element_id
+                except Exception as e:
+                    pass  # Fehler beim Rendern ignorieren
+                    
         elif shape == "hex":
             pts = _hex_points(cx, cy, w, h)
             item = self.create_polygon(pts, fill=style.get("fill"), outline=style.get("outline"), width=2, dash=style.get("dash"))
             items.append(item)
+            
+            # CONDITION: Zeige Anzahl Checks und Logik
+            if el.element_type == "CONDITION":
+                try:
+                    checks = getattr(el, "condition_checks", [])
+                    num_checks = len(checks) if checks else 0
+                    logic = getattr(el, "condition_logic", "AND")
+                    
+                    # Anzahl Checks innerhalb des Hexagons
+                    check_text = f"{num_checks} Check{'s' if num_checks != 1 else ''}"
+                    check_item = self.create_text(
+                        cx, cy,
+                        text=check_text,
+                        font=("Arial", max(8, int(10 * self.view_scale)), "bold"),
+                        fill="#FFA000",
+                        anchor="center"
+                    )
+                    items.append(check_item)
+                    self.addtag_withtag(f"node:{el.element_id}", check_item)
+                    self._id_to_element[check_item] = el.element_id
+                    
+                    # Logik-Operator klein unter dem Hexagon
+                    logic_item = self.create_text(
+                        cx, cy + h // 2 + 15,
+                        text=f"🔀 {logic}",
+                        font=("Arial", max(6, int(8 * self.view_scale))),
+                        fill="#666",
+                        anchor="center"
+                    )
+                    items.append(logic_item)
+                    self.addtag_withtag(f"node:{el.element_id}", logic_item)
+                    self._id_to_element[logic_item] = el.element_id
+                except Exception as e:
+                    pass  # Fehler beim Rendern ignorieren
+            
+            # ERROR_HANDLER: Zeige Handler-Type und Retry-Count
+            if el.element_type == "ERROR_HANDLER":
+                try:
+                    handler_type = getattr(el, "error_handler_type", "RETRY")
+                    retry_count = getattr(el, "error_handler_retry_count", 3)
+                    
+                    # Handler-Type in der Mitte
+                    type_text = f"⚠️ {handler_type}"
+                    type_item = self.create_text(
+                        cx, cy - 5,
+                        text=type_text,
+                        font=("Arial", max(8, int(10 * self.view_scale)), "bold"),
+                        fill="#C62828",
+                        anchor="center"
+                    )
+                    items.append(type_item)
+                    self.addtag_withtag(f"node:{el.element_id}", type_item)
+                    self._id_to_element[type_item] = el.element_id
+                    
+                    # Retry-Count (nur bei RETRY)
+                    if handler_type == "RETRY":
+                        retry_text = f"Retries: {retry_count}"
+                        retry_item = self.create_text(
+                            cx, cy + 10,
+                            text=retry_text,
+                            font=("Arial", max(7, int(8 * self.view_scale))),
+                            fill="#666",
+                            anchor="center"
+                        )
+                        items.append(retry_item)
+                        self.addtag_withtag(f"node:{el.element_id}", retry_item)
+                        self._id_to_element[retry_item] = el.element_id
+                except Exception as e:
+                    pass  # Fehler beim Rendern ignorieren
+            
+            # STATE: Zeige State-Name und Type
+            if el.element_type == "STATE":
+                try:
+                    state_name = getattr(el, "state_name", "")
+                    state_type = getattr(el, "state_type", "NORMAL")
+                    
+                    # State-Type Icon
+                    type_icons = {
+                        "INITIAL": "▶️",
+                        "FINAL": "🏁",
+                        "ERROR": "❌",
+                        "NORMAL": "⬤"
+                    }
+                    icon = type_icons.get(state_type, "⬤")
+                    
+                    # State-Name (falls vorhanden)
+                    if state_name:
+                        name_text = f"{icon} {state_name}"
+                    else:
+                        name_text = f"{icon} {state_type}"
+                    
+                    name_item = self.create_text(
+                        cx, cy - 5,
+                        text=name_text,
+                        font=("Arial", max(8, int(10 * self.view_scale)), "bold"),
+                        fill="#2E7D32",
+                        anchor="center"
+                    )
+                    items.append(name_item)
+                    self.addtag_withtag(f"node:{el.element_id}", name_item)
+                    self._id_to_element[name_item] = el.element_id
+                    
+                    # Transitions-Count
+                    transitions = getattr(el, "state_transitions", [])
+                    if transitions:
+                        trans_text = f"{len(transitions)} Transitions"
+                        trans_item = self.create_text(
+                            cx, cy + 10,
+                            text=trans_text,
+                            font=("Arial", max(7, int(8 * self.view_scale))),
+                            fill="#666",
+                            anchor="center"
+                        )
+                        items.append(trans_item)
+                        self.addtag_withtag(f"node:{el.element_id}", trans_item)
+                        self._id_to_element[trans_item] = el.element_id
+                except Exception as e:
+                    pass  # Fehler beim Rendern ignorieren
+            
+            # INTERLOCK (Mutex/Semaphore) - Rounded Rectangle mit Lock-Info
+            if el.element_type == "INTERLOCK":
+                try:
+                    # Icon basierend auf Type
+                    interlock_type = getattr(el, "interlock_type", "MUTEX")
+                    type_icons = {
+                        "MUTEX": "🔒",  # Geschlossenes Schloss
+                        "SEMAPHORE": "🔓"  # Offenes Schloss / Zähl-Sperre
+                    }
+                    icon = type_icons.get(interlock_type, "🔒")
+                    
+                    # Resource-ID (falls gesetzt)
+                    resource_id = getattr(el, "resource_id", "")
+                    if not resource_id:
+                        resource_id = getattr(el, "interlock_resource_id", "")
+                    
+                    # Max Count (für SEMAPHORE)
+                    max_count = getattr(el, "interlock_max_count", 1)
+                    
+                    # Display-Text
+                    if interlock_type == "SEMAPHORE" and max_count > 1:
+                        display_text = f"{icon} {interlock_type}\nMax: {max_count}"
+                    else:
+                        display_text = f"{icon} {interlock_type}"
+                    
+                    if resource_id:
+                        display_text += f"\n{resource_id}"
+                    
+                    # Text anzeigen
+                    text_item = self.create_text(
+                        cx, cy,
+                        text=display_text,
+                        fill=style.get("text_color", "#000"),
+                        font=("Arial", 9),
+                        justify="center"
+                    )
+                    items.append(text_item)
+                    self._id_to_element[text_item] = el.element_id
+                except Exception as e:
+                    pass  # Fehler beim Rendern ignorieren
+                    
         else:
             # Fallback Rechteck
             item = self.create_rectangle(
@@ -3224,6 +3472,13 @@ class VPBCanvas(tk.Canvas):
                 menu.add_command(label=("Aufklappen" if getattr(el, 'collapsed', False) else "Zuklappen"), command=lambda eid=el_id: self._toggle_group_collapsed(eid))
                 menu.add_command(label="Auswahl zu Gruppe hinzufügen", command=lambda eid=el_id: self._group_add_selection(eid))
                 menu.add_command(label="Aus Auswahl aus Gruppe entfernen", command=lambda eid=el_id: self._group_remove_selection(eid))
+            
+            # TIME_LOOP Aktionen (ähnlich wie GROUP)
+            if el and el.element_type == "TIME_LOOP":
+                menu.add_separator()
+                menu.add_command(label=("Aufklappen" if getattr(el, 'collapsed', False) else "Zuklappen"), command=lambda eid=el_id: self._toggle_group_collapsed(eid))
+                menu.add_command(label="Auswahl zu Zeitschleife hinzufügen", command=lambda eid=el_id: self._group_add_selection(eid))
+                menu.add_command(label="Auswahl aus Zeitschleife entfernen", command=lambda eid=el_id: self._group_remove_selection(eid))
         elif conn_id and conn_id in self.connections:
             self.selected_id = None
             self.selected_conn_id = conn_id
@@ -3272,6 +3527,32 @@ class VPBCanvas(tk.Canvas):
         g.collapsed = False
         self.selected_ids = {g.element_id}
         self.selected_id = g.element_id
+        self.redraw_all()
+    
+    def _time_loop_from_selection(self):
+        """Erstellt eine Zeitschleife aus der aktuellen Auswahl."""
+        sels = [eid for eid in self.selected_ids if eid in self.elements]
+        if len(sels) < 1:
+            messagebox.showinfo("Zeitschleife", "Bitte wählen Sie mindestens ein Element aus.")
+            return
+        self.push_undo()
+        # Zeitschleife an Schwerpunkt platzieren
+        xs = [self.elements[e].x for e in sels]
+        ys = [self.elements[e].y for e in sels]
+        cx = int(sum(xs) / len(xs)) if xs else 0
+        cy = int(sum(ys) / len(ys)) if ys else 0
+        
+        # TIME_LOOP mit Default-Werten erstellen
+        tl = self.add_element("TIME_LOOP", name="Zeitschleife", at=(cx, cy))
+        tl.members = list(sels)
+        tl.collapsed = False
+        
+        # Standard: Intervall-Typ mit 60 Minuten
+        tl.loop_type = "interval"
+        tl.loop_interval_minutes = 60
+        
+        self.selected_ids = {tl.element_id}
+        self.selected_id = tl.element_id
         self.redraw_all()
 
     def _ungroup_selected(self):

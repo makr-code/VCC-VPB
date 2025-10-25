@@ -63,12 +63,12 @@ class ToolbarView:
         self.toolbar.pack(side=tk.TOP, fill=tk.X)
         
         # Komponenten erstellen
-        self._create_vpb_branding()
-        self._add_separator()
         self._create_file_buttons()
         self._create_edit_buttons()
         self._add_separator()
         self._create_arrange_menus()
+        self._add_separator()
+        self._create_canvas_controls()
         self._add_separator()
         self._create_vpb_logo_right()  # VPB-Schriftzug rechts
     
@@ -131,6 +131,24 @@ class ToolbarView:
         ]
         
         for text, action, padx in edit_buttons:
+            btn = tk.Button(
+                self.toolbar, 
+                text=text, 
+                command=lambda a=action: self._publish_action(a)
+            )
+            btn.pack(side=tk.LEFT, padx=padx, pady=4)
+        
+        # Separator
+        self._add_separator()
+        
+        # Gruppierungs-Buttons
+        group_buttons = [
+            ("⬜ Gruppe bilden", "edit.group", 4),
+            ("⟳ Zeitschleife bilden", "edit.time_loop", 4),
+            ("◻ Gruppe auflösen", "edit.ungroup", 8),
+        ]
+        
+        for text, action, padx in group_buttons:
             btn = tk.Button(
                 self.toolbar, 
                 text=text, 
@@ -201,6 +219,75 @@ class ToolbarView:
         
         formations_menu.pack(side=tk.LEFT, padx=2, pady=2)
     
+    def _create_canvas_controls(self) -> None:
+        """Erstellt Canvas-Kontroll-Elemente (Zoom, Pan, Fit)."""
+        # Zoom Out Button
+        zoom_out_btn = tk.Button(
+            self.toolbar,
+            text="🔍−",
+            width=3,
+            command=lambda: self._publish_action("canvas.zoom", {"direction": "out"})
+        )
+        zoom_out_btn.pack(side=tk.LEFT, padx=2, pady=4)
+        self._create_tooltip(zoom_out_btn, "Zoom Out (Ctrl + Scroll ↓)")
+        
+        # Zoom-Level Anzeige/Reset
+        self.zoom_label = tk.Label(
+            self.toolbar,
+            text="100%",
+            font=("Segoe UI", 9),
+            bg="#f2f2f2",
+            fg="#2c3e50",
+            width=6,
+            cursor="hand2",
+            relief=tk.SUNKEN,
+            borderwidth=1
+        )
+        self.zoom_label.pack(side=tk.LEFT, padx=2, pady=4)
+        self.zoom_label.bind("<Button-1>", lambda e: self._publish_action("canvas.zoom_reset"))
+        self._create_tooltip(self.zoom_label, "Zoom Reset (Klick oder Ctrl+0)")
+        
+        # Zoom In Button
+        zoom_in_btn = tk.Button(
+            self.toolbar,
+            text="🔍+",
+            width=3,
+            command=lambda: self._publish_action("canvas.zoom", {"direction": "in"})
+        )
+        zoom_in_btn.pack(side=tk.LEFT, padx=2, pady=4)
+        self._create_tooltip(zoom_in_btn, "Zoom In (Ctrl + Scroll ↑)")
+        
+        # Fit to Window Button
+        fit_btn = tk.Button(
+            self.toolbar,
+            text="⊡",
+            width=3,
+            command=lambda: self._publish_action("canvas.fit_to_window")
+        )
+        fit_btn.pack(side=tk.LEFT, padx=4, pady=4)
+        self._create_tooltip(fit_btn, "Fit to Window (Ctrl+Shift+F)")
+        
+        # Zoom to Selection Button
+        zoom_sel_btn = tk.Button(
+            self.toolbar,
+            text="⊙",
+            width=3,
+            command=lambda: self._publish_action("canvas.zoom_to_selection")
+        )
+        zoom_sel_btn.pack(side=tk.LEFT, padx=2, pady=4)
+        self._create_tooltip(zoom_sel_btn, "Zoom to Selection (Ctrl+Shift+Z)")
+        
+        # Grid Toggle Button
+        self.grid_btn = tk.Button(
+            self.toolbar,
+            text="⊞",
+            width=3,
+            relief=tk.RAISED,
+            command=lambda: self._publish_action("canvas.toggle_grid")
+        )
+        self.grid_btn.pack(side=tk.LEFT, padx=4, pady=4)
+        self._create_tooltip(self.grid_btn, "Toggle Grid (Ctrl+G)")
+    
     def _add_separator(self) -> None:
         """Fügt einen visuellen Separator hinzu."""
         separator = tk.Frame(self.toolbar, width=2, bg="#d0d0d0")
@@ -254,6 +341,27 @@ class ToolbarView:
     
     # Public API
     # ----------
+    
+    def update_zoom_level(self, zoom: float) -> None:
+        """
+        Aktualisiert die Zoom-Level-Anzeige.
+        
+        Args:
+            zoom: Zoom-Faktor (1.0 = 100%)
+        """
+        if hasattr(self, 'zoom_label'):
+            percentage = int(zoom * 100)
+            self.zoom_label.config(text=f"{percentage}%")
+    
+    def set_grid_active(self, active: bool) -> None:
+        """
+        Setzt den Grid-Button-Status.
+        
+        Args:
+            active: True wenn Grid aktiv
+        """
+        if hasattr(self, 'grid_btn'):
+            self.grid_btn.config(relief=tk.SUNKEN if active else tk.RAISED)
     
     def hide(self) -> None:
         """Versteckt die Toolbar."""

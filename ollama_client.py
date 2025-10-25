@@ -234,50 +234,82 @@ class OllamaClient:
         if not isinstance(text, str):
             raise ValueError("Text ist nicht vom Typ str")
         s = text.strip()
+        
+        # Debug: Zeige ersten Teil des Inputs
+        preview = s[:200] + "..." if len(s) > 200 else s
+        print(f"🔍 JSON-Extraktion aus Text ({len(s)} Zeichen): {preview}")
+        
         # Codefence ```json ... ``` oder ``` ... ```
         fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", s, re.IGNORECASE)
         if fence:
             candidate = fence.group(1).strip()
+            print(f"📝 JSON-Block in Code-Fence gefunden ({len(candidate)} Zeichen)")
             parsed, errors = OllamaClient._try_parse_with_fallbacks(candidate)
             if parsed is not None:
+                print(f"✅ JSON erfolgreich extrahiert (Code-Fence)")
                 return OllamaClient._sanitize_vpb_structure(parsed)
+            print(f"⚠️ Code-Fence JSON konnte nicht geparst werden")
+        
         # Ersten { bis letzten } nehmen (rudimentär)
         start = s.find("{")
         end = s.rfind("}")
         if start != -1 and end != -1 and end > start:
             candidate = s[start:end + 1]
+            print(f"📝 JSON-Block gefunden: Position {start} bis {end} ({len(candidate)} Zeichen)")
             parsed, errors = OllamaClient._try_parse_with_fallbacks(candidate)
             if parsed is not None:
+                print(f"✅ JSON erfolgreich extrahiert (roher Block)")
                 return OllamaClient._sanitize_vpb_structure(parsed)
             message = errors[-1] if errors else "Unbekannter Fehler"
+            print(f"❌ JSON-Parsing fehlgeschlagen: {message}")
             raise ValueError(f"JSON konnte nicht geparst werden: {message}")
+        
+        print(f"❌ Kein JSON-Block im Text gefunden")
         raise ValueError("Kein JSON im Text gefunden")
 
     @staticmethod
     def _try_parse_with_fallbacks(candidate: str) -> Tuple[Any | None, List[str]]:
-        parsers: List[Callable[[str], Any]] = [json.loads]
+        parsers: List[Tuple[str, Callable[[str], Any]]] = [
+            ("json.loads", json.loads)
+        ]
+        
         # Trailing commas entfernen als schnelle Heuristik
         def _strip_trailing_commas(payload: str) -> Any:
             cleaned = re.sub(r",\s*([}\]])", r"\1", payload)
             return json.loads(cleaned)
 
-        parsers.append(_strip_trailing_commas)
+        parsers.append(("strip_trailing_commas", _strip_trailing_commas))
 
         if dirtyjson is not None:
-            parsers.append(dirtyjson.loads)  # type: ignore[arg-type]
+            parsers.append(("dirtyjson.loads", dirtyjson.loads))  # type: ignore[arg-type]
+        else:
+            print("⚠️ dirtyjson nicht verfügbar - AI-generiertes JSON könnte fehlschlagen")
 
         errors: List[str] = []
-        for parser in parsers:
+        for parser_name, parser in parsers:
             try:
-                return parser(candidate), errors
+                result = parser(candidate)
+                if parser_name != "json.loads":
+                    print(f"✅ JSON erfolgreich geparst mit: {parser_name}")
+                return result, errors
             except Exception as exc:  # noqa: BLE001
-                errors.append(str(exc))
+                error_msg = f"{parser_name}: {str(exc)}"
+                errors.append(error_msg)
+                if parser_name == parsers[-1][0]:  # Letzter Parser
+                    print(f"❌ JSON-Parsing fehlgeschlagen mit allen Parsern:")
+                    for err in errors:
+                        print(f"   - {err}")
         return None, errors
 
     @staticmethod
     def _sanitize_vpb_structure(data: Any) -> Any:
         if not isinstance(data, dict):
             return data
+
+        # Debug: Zeige Struktur
+        elem_count = len(data.get("elements", [])) if isinstance(data.get("elements"), list) else 0
+        conn_count = len(data.get("connections", [])) if isinstance(data.get("connections"), list) else 0
+        print(f"🔧 Sanitize VPB: {elem_count} Elemente, {conn_count} Verbindungen")
 
         def _sanitize_element(elem: Any) -> Any:
             if not isinstance(elem, dict):

@@ -57,7 +57,9 @@ class DocumentController:
     def __init__(
         self,
         event_bus: EventBus,
-        document_service: DocumentService
+        document_service: DocumentService,
+        recent_files_service=None,
+        backup_service=None
     ):
         """
         Initialisiert den DocumentController.
@@ -65,9 +67,13 @@ class DocumentController:
         Args:
             event_bus: Event-Bus für Kommunikation
             document_service: Service für Document-Operationen
+            recent_files_service: Service für Recent Files (optional)
+            backup_service: Service für Backups (optional)
         """
         self.event_bus = event_bus
         self.document_service = document_service
+        self.recent_files_service = recent_files_service
+        self.backup_service = backup_service
         
         self.current_document: Optional[DocumentModel] = None
         self.current_file_path: Optional[str] = None
@@ -118,8 +124,9 @@ class DocumentController:
         Args:
             data: Event-Daten
         """
-        # Check for unsaved changes
-        if self.is_modified and not self._confirm_discard_changes():
+        # Check for unsaved changes OR non-empty canvas
+        has_unsaved_changes = self.is_modified or self._has_canvas_content()
+        if has_unsaved_changes and not self._confirm_discard_changes():
             return
         
         # Legacy: Canvas direkt clearen
@@ -149,20 +156,31 @@ class DocumentController:
         Args:
             data: Event-Daten (kann 'file_path' enthalten)
         """
-        # Check for unsaved changes
-        if self.is_modified and not self._confirm_discard_changes():
+        # Erstelle Backup des aktuellen Projekts, falls vorhanden und geändert
+        if self.current_file_path and (self.is_modified or self._has_canvas_content()):
+            self._create_backup_before_open()
+        
+        # Check for unsaved changes OR non-empty canvas
+        has_unsaved_changes = self.is_modified or self._has_canvas_content()
+        if has_unsaved_changes and not self._confirm_discard_changes():
             return
-            
+
         # Get file path
         file_path = data.get("file_path")
-        
+
+        # Verhindere mehrfachen Dialog: Nur wenn kein file_path und kein Dialog bereits offen
         if not file_path:
-            # Request file path via dialog
+            if getattr(self, '_open_dialog_active', False):
+                return
+            self._open_dialog_active = True
             self.event_bus.publish("ui:request:file_path", {
                 "mode": "open",
                 "callback": "document:open_file_selected"
             })
             return
+        
+        # Dialog wurde beantwortet, Flag zurücksetzen
+        self._open_dialog_active = False
         
         # Legacy: Direkt in Canvas laden
         if self._canvas and hasattr(self._canvas, 'load_from_dict'):
@@ -189,6 +207,12 @@ class DocumentController:
                 
                 # Add to recent files
                 self._add_to_recent_files(file_path)
+                
+                # Validiere geladenes Projekt
+                self._validate_loaded_document(data_dict)
+                
+                # Update window title
+                self._update_window_title()
                 
             except Exception as e:
                 self.event_bus.publish("ui:error", {
@@ -250,6 +274,9 @@ class DocumentController:
                     "message": f"Gespeichert: {self.current_file_path}",
                     "level": "success"
                 })
+                
+                # Update window title
+                self._update_window_title()
                 
             except Exception as e:
                 self.event_bus.publish("ui:error", {
@@ -407,14 +434,188 @@ class DocumentController:
     
     def _confirm_discard_changes(self) -> bool:
         """
-        Fragt Benutzer ob ungespeicherte Änderungen verworfen werden sollen.
-        
+        Fragt Benutzer, ob ungespeicherte Änderungen gespeichert werden sollen.
         Returns:
             True wenn Änderungen verworfen werden sollen, False sonst
         """
-        # Request confirmation via dialog
-        # For now, return True (later: implement dialog)
-        return True
+        try:
+            from tkinter import messagebox
+            result = messagebox.askyesnocancel(
+                "Ungespeicherte Änderungen",
+                "Das aktuelle Projekt wurde geändert. Möchten Sie die Änderungen speichern?"
+            )
+            if result is None:
+                # Cancel - reset dialog flag
+                self._open_dialog_active = False
+                return False
+            elif result:
+                # Ja: Speichern
+                self.event_bus.publish("ui:menu:file:save", {})
+                return True
+            else:
+                # Nein: Verwerfen
+                return True
+        except Exception as e:
+            print(f"⚠️ Fehler beim Anzeigen des Speichern-Dialogs: {e}")
+            return True
+    
+    def _has_canvas_content(self) -> bool:
+        """
+        Prüft, ob das Canvas Inhalte hat (Elemente oder Verbindungen).
+        Returns:
+            True wenn Canvas nicht leer ist, False sonst
+        """
+        if not self._canvas:
+            return False
+        
+        # Prüfe ob Canvas Elemente oder Verbindungen hat
+        has_elements = (
+            hasattr(self._canvas, 'elements') and 
+            len(self._canvas.elements) > 0
+        )
+        has_connections = (
+            hasattr(self._canvas, 'connections') and 
+            len(self._canvas.connections) > 0
+        )
+        
+        return has_elements or has_connections
+    
+    def _create_backup_before_open(self) -> None:
+        """
+        Erstellt ein Backup des aktuellen Projekts vor dem Öffnen eines neuen.
+        """
+        if not self.backup_service:
+            return
+        
+        try:
+            if self.current_file_path:
+                # Backup der gespeicherten Datei
+                self.backup_service.create_backup(self.current_file_path)
+            elif self._canvas and hasattr(self._canvas, 'to_dict'):
+                # Auto-Backup von ungespeicherten Änderungen
+                canvas_data = self._canvas.to_dict()
+                self.backup_service.create_auto_backup(None, canvas_data)
+        except Exception as e:
+            print(f"⚠️ Fehler beim Erstellen des Backups: {e}")
+    
+    def _validate_loaded_document(self, data_dict: dict) -> None:
+        """
+        Validiert ein geladenes Projekt und zeigt Warnungen/Fehler an.
+        
+        Args:
+            data_dict: Geladene Projekt-Daten als Dictionary
+        """
+        try:
+            issues = []
+            
+            # Prüfe ob erforderliche Felder vorhanden sind
+            if "metadata" not in data_dict:
+                issues.append("⚠️ Warnung: Keine Metadaten gefunden")
+            
+            if "elements" not in data_dict:
+                issues.append("❌ Fehler: Keine Elemente gefunden")
+            
+            if "connections" not in data_dict:
+                issues.append("⚠️ Warnung: Keine Verbindungen gefunden")
+            
+            # Prüfe Elementstruktur
+            elements = data_dict.get("elements", [])
+            if elements:
+                for i, elem in enumerate(elements):
+                    if not isinstance(elem, dict):
+                        issues.append(f"❌ Fehler: Element {i} ist kein Dictionary")
+                        continue
+                    
+                    # Prüfe erforderliche Element-Felder
+                    required_fields = ["id", "type", "label"]
+                    for field in required_fields:
+                        if field not in elem:
+                            issues.append(f"⚠️ Warnung: Element {i} fehlt Feld '{field}'")
+            
+            # Prüfe Verbindungsstruktur
+            connections = data_dict.get("connections", [])
+            if connections:
+                element_ids = {elem.get("id") for elem in elements if isinstance(elem, dict)}
+                for i, conn in enumerate(connections):
+                    if not isinstance(conn, dict):
+                        issues.append(f"❌ Fehler: Verbindung {i} ist kein Dictionary")
+                        continue
+                    
+                    # Prüfe Verbindungs-Referenzen
+                    from_id = conn.get("from")
+                    to_id = conn.get("to")
+                    
+                    if from_id and from_id not in element_ids:
+                        issues.append(f"⚠️ Warnung: Verbindung {i} referenziert unbekanntes Element '{from_id}'")
+                    
+                    if to_id and to_id not in element_ids:
+                        issues.append(f"⚠️ Warnung: Verbindung {i} referenziert unbekanntes Element '{to_id}'")
+            
+            # Zeige Validierungsergebnisse
+            if issues:
+                self._show_validation_results(issues)
+            else:
+                print("✅ Projekt-Validierung: Keine Probleme gefunden")
+                
+        except Exception as e:
+            print(f"⚠️ Fehler bei der Projekt-Validierung: {e}")
+    
+    def _show_validation_results(self, issues: list) -> None:
+        """
+        Zeigt Validierungsergebnisse in einem Dialog an.
+        
+        Args:
+            issues: Liste der gefundenen Probleme
+        """
+        try:
+            from tkinter import messagebox
+            
+            # Zähle Fehler und Warnungen
+            errors = [issue for issue in issues if issue.startswith("❌")]
+            warnings = [issue for issue in issues if issue.startswith("⚠️")]
+            
+            message = f"Projekt geladen, aber es wurden {len(issues)} Problem(e) gefunden:\n\n"
+            
+            if errors:
+                message += f"Fehler ({len(errors)}):\n"
+                for error in errors[:5]:  # Max 5 Fehler anzeigen
+                    message += f"  • {error}\n"
+                if len(errors) > 5:
+                    message += f"  ... und {len(errors) - 5} weitere\n"
+                message += "\n"
+            
+            if warnings:
+                message += f"Warnungen ({len(warnings)}):\n"
+                for warning in warnings[:5]:  # Max 5 Warnungen anzeigen
+                    message += f"  • {warning}\n"
+                if len(warnings) > 5:
+                    message += f"  ... und {len(warnings) - 5} weitere\n"
+            
+            # Zeige Dialog
+            if errors:
+                messagebox.showwarning("Projekt-Validierung", message)
+            else:
+                messagebox.showinfo("Projekt-Validierung", message)
+                
+        except Exception as e:
+            print(f"⚠️ Fehler beim Anzeigen der Validierungsergebnisse: {e}")
+    
+    def _update_window_title(self) -> None:
+        """
+        Aktualisiert den Fenstertitel mit dem aktuellen Dateinamen.
+        """
+        import os
+        
+        if self.current_file_path:
+            filename = os.path.basename(self.current_file_path)
+            modified_marker = " *" if self.is_modified else ""
+            title = f"{filename}{modified_marker} - VPB Process Designer"
+        else:
+            modified_marker = " *" if self.is_modified else ""
+            title = f"Unbenannt{modified_marker} - VPB Process Designer"
+        
+        # Publish event to update window title
+        self.event_bus.publish("ui:window:title", {"title": title})
         
     def _add_to_recent_files(self, file_path: str):
         """
@@ -423,8 +624,12 @@ class DocumentController:
         Args:
             file_path: Pfad zur Datei
         """
-        self.event_bus.publish("document:add_to_recent", {
-            "file_path": file_path
+        if self.recent_files_service:
+            self.recent_files_service.add_file(file_path)
+            
+        # Publish event für UI-Update
+        self.event_bus.publish("document:recent_files_changed", {
+            "recent_files": self.recent_files_service.get_recent_files() if self.recent_files_service else []
         })
         
     # ===== Public API =====

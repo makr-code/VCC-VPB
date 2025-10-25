@@ -56,13 +56,24 @@ class ConnectionController:
         """
         self.event_bus = event_bus
         self.current_document = current_document
+        self.canvas = None  # Referenz zum Canvas (wird später gesetzt)
         
         # State für Connection-Creation
         self.connection_start_element_id: Optional[str] = None
         self.selected_connection_id: Optional[str] = None
+        self.selected_connection_type: Optional[str] = None  # Für Palette-Selection
         
         # Subscribe to Events
         self._subscribe_to_events()
+    
+    def set_canvas(self, canvas) -> None:
+        """
+        Setzt Canvas-Referenz.
+        
+        Args:
+            canvas: Canvas-Instanz
+        """
+        self.canvas = canvas
         
     def _subscribe_to_events(self) -> None:
         """Subscribe zu relevanten Events."""
@@ -71,6 +82,9 @@ class ConnectionController:
         self.event_bus.subscribe("ui:canvas:connection_end", self._on_connection_end)
         self.event_bus.subscribe("ui:canvas:delete_key", self._on_delete_key)
         self.event_bus.subscribe("ui:canvas:connection_selected", self._on_connection_selected)
+        
+        # Palette Events (NEU)
+        self.event_bus.subscribe("ui:palette:connection_picked", self._on_palette_connection_picked)
         
         # Properties Events
         self.event_bus.subscribe("ui:properties:connection_changed", self._on_connection_properties_changed)
@@ -82,6 +96,37 @@ class ConnectionController:
         self.event_bus.subscribe("document:created", self._on_document_changed)
         self.event_bus.subscribe("document:loaded", self._on_document_changed)
         self.event_bus.subscribe("document:closed", self._on_document_closed)
+        
+    # ===== Event Handlers: Palette Connection Selection =====
+    
+    def _on_palette_connection_picked(self, data: Dict[str, Any]) -> None:
+        """
+        User wählt Verbindungstyp aus Palette.
+        Aktiviert Connection-Mode im Canvas.
+        
+        Args:
+            data: {"connection_data": {...}}
+        """
+        connection_data = data.get("connection_data", {})
+        connection_type = connection_data.get("type", "SEQUENCE")
+        connection_name = connection_data.get("name", "Verbindung")
+        arrow_style = connection_data.get("arrow_style", "single")
+        
+        # Speichere ausgewählten Verbindungstyp
+        self.selected_connection_type = connection_type
+        
+        # Aktiviere Link-Mode im Canvas
+        if self.canvas and hasattr(self.canvas, 'start_link_mode'):
+            try:
+                self.canvas.start_link_mode(connection_type, arrow_style=arrow_style)
+            except Exception as e:
+                print(f"⚠️ Fehler beim Aktivieren des Link-Modus: {e}")
+        
+        # Status-Feedback
+        self.event_bus.publish("ui:statusbar:message", {
+            "text": f"{connection_name} ausgewählt - Klicken Sie 2 Elemente an, um sie zu verbinden",
+            "timeout": 5000
+        })
         
     # ===== Event Handlers: Connection Creation =====
     
@@ -125,10 +170,13 @@ class ConnectionController:
             self.connection_start_element_id = None
             return
             
-        # Create Connection
+        # Create Connection mit ausgewähltem Typ (falls vorhanden)
+        connection_type = self.selected_connection_type or "SEQUENCE"
+        
         connection = ConnectionFactory.create(
             source_element=self.connection_start_element_id,
-            target_element=end_element_id
+            target_element=end_element_id,
+            connection_type=connection_type
         )
         
         self.current_document.add_connection(connection)
@@ -144,6 +192,7 @@ class ConnectionController:
         
         # Reset state
         self.connection_start_element_id = None
+        self.selected_connection_type = None
         
     # ===== Event Handlers: Connection Deletion =====
     

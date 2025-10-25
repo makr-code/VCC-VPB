@@ -1,0 +1,90 @@
+{
+  "version": "0.2.0",
+  "metadata": {
+    "title": "INTERLOCK Canvas Test",
+    "description": "Test-Prozess für INTERLOCK-Elemente mit verschiedenen Types",
+    "author": "VPB Test Suite",
+    "created": "2025-10-18"
+  },
+  "elements": [
+    {
+      "element_id": "interlock_mutex_1",
+      "element_type": "INTERLOCK",
+      "name": "DB Connection Mutex",
+      "x": 100,
+      "y": 100,
+      "interlock_type": "MUTEX",
+      "interlock_resource_id": "db_conn",
+      "interlock_max_count": 1,
+      "interlock_timeout": 30,
+      "interlock_auto_release": true
+    },
+    {
+      "element_id": "interlock_semaphore_1",
+      "element_type": "INTERLOCK",
+      "name": "API Rate Limit",
+      "x": 300,
+      "y": 100,
+      "interlock_type": "SEMAPHORE",
+      "interlock_resource_id": "api_calls",
+      "interlock_max_count": 10,
+      "interlock_timeout": 0,
+      "interlock_auto_release": true
+    },
+    {
+      "element_id": "interlock_mutex_2",
+      "element_type": "INTERLOCK",
+      "name": "File Access",
+      "x": 500,
+      "y": 100,
+      "interlock_type": "MUTEX",
+      "interlock_resource_id": "logfile",
+      "interlock_max_count": 1,
+      "interlock_timeout": 60,
+      "interlock_on_locked_target": "error_state",
+      "interlock_auto_release": false
+    },
+    {
+      "element_id": "interlock_semaphore_2",
+      "element_type": "INTERLOCK",
+      "name": "Thread Pool",
+      "x": 100,
+      "y": 250,
+      "interlock_type": "SEMAPHORE",
+      "interlock_resource_id": "worker_threads",
+      "interlock_max_count": 5,
+      "interlock_timeout": 0,
+      "interlock_auto_release": true
+    },
+    {
+      "element_id": "interlock_semaphore_3",
+      "element_type": "INTERLOCK",
+      "name": "DB Pool",
+      "x": 300,
+      "y": 250,
+      "interlock_type": "SEMAPHORE",
+      "interlock_resource_id": "db_pool",
+      "interlock_max_count": 20,
+      "interlock_timeout": 15,
+      "interlock_on_locked_target": "wait_state",
+      "interlock_auto_release": true
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "conn1",
+      "source_element": "interlock_mutex_1",
+      "target_element": "interlock_semaphore_1"
+    },
+    {
+      "connection_id": "conn2",
+      "source_element": "interlock_semaphore_1",
+      "target_element": "interlock_mutex_2"
+    },
+    {
+      "connection_id": "conn3",
+      "source_element": "interlock_mutex_2",
+      "target_element": "interlock_semaphore_3"
+    }
+  ]
+}

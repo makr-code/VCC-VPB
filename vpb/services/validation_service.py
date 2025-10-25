@@ -303,6 +303,9 @@ class ValidationService:
         if self.check_completeness:
             self._validate_completeness(doc, result)
         
+        # Validate special elements (COUNTER, etc.)
+        self._validate_special_elements(doc, result)
+        
         logger.info(
             f"Validation complete: {len(result.errors)} errors, "
             f"{len(result.warnings)} warnings, {len(result.info)} info"
@@ -655,9 +658,653 @@ class ValidationService:
         
         return counts
     
+    def _validate_special_elements(self, doc: DocumentModel, result: ValidationResult) -> None:
+        """
+        Validate special elements (COUNTER, CONDITION, ERROR_HANDLER, STATE, INTERLOCK, etc.).
+        
+        Args:
+            doc: Document to validate
+            result: Result object to add issues to
+        """
+        counter_validator = CounterValidator()
+        condition_validator = ConditionValidator()
+        error_handler_validator = ErrorHandlerValidator()
+        state_validator = StateValidator()
+        interlock_validator = InterlockValidator()
+        
+        for element in doc.get_all_elements():
+            # Validate COUNTER elements
+            if element.element_type == "COUNTER":
+                counter_validator.validate_counter(element, doc, result)
+            
+            # Validate CONDITION elements
+            elif element.element_type == "CONDITION":
+                condition_validator.validate_condition(element, doc, result)
+            
+            # Validate ERROR_HANDLER elements
+            elif element.element_type == "ERROR_HANDLER":
+                error_handler_validator.validate_error_handler(element, doc, result)
+            
+            # Validate STATE elements
+            elif element.element_type == "STATE":
+                state_validator.validate_state(element, doc, result)
+            
+            # Validate INTERLOCK elements
+            elif element.element_type == "INTERLOCK":
+                interlock_validator.validate_interlock(element, doc, result)
+    
     def __repr__(self) -> str:
         """String representation."""
         return (
             f"ValidationService(naming={self.check_naming}, "
             f"flow={self.check_flow}, completeness={self.check_completeness})"
         )
+
+
+class CounterValidator:
+    """
+    Validator for COUNTER elements.
+    
+    Validates:
+    1. counter_max_value > counter_start_value
+    2. counter_current_value in range [start, max]
+    3. counter_on_max_reached is valid element ID
+    4. Counter has at least 1 incoming connection
+    5. Counter has outgoing connection (unless on_max_reached is set)
+    """
+    
+    def validate_counter(
+        self,
+        element: VPBElement,
+        doc: DocumentModel,
+        result: ValidationResult
+    ) -> None:
+        """
+        Validate COUNTER element.
+        
+        Args:
+            element: Counter element to validate
+            doc: Document containing the element
+            result: Validation result to add issues to
+        """
+        if element.element_type != "COUNTER":
+            return
+        
+        # Rule 1: Maximum > Start
+        start_value = getattr(element, "counter_start_value", 0)
+        max_value = getattr(element, "counter_max_value", 100)
+        
+        if max_value <= start_value:
+            result.add_error(
+                category="counter",
+                message=f"Counter maximum ({max_value}) must be greater than start ({start_value})",
+                element_id=element.element_id,
+                suggestion=f"Set counter_max_value > {start_value}"
+            )
+        
+        # Rule 2: Current value in range
+        current_value = getattr(element, "counter_current_value", 0)
+        counter_type = getattr(element, "counter_type", "UP")
+        
+        if counter_type == "UP":
+            if not (start_value <= current_value <= max_value):
+                result.add_warning(
+                    category="counter",
+                    message=f"Current value ({current_value}) is outside valid range [{start_value}, {max_value}]",
+                    element_id=element.element_id,
+                    suggestion=f"Set counter_current_value between {start_value} and {max_value}"
+                )
+        elif counter_type == "DOWN":
+            if not (0 <= current_value <= start_value):
+                result.add_warning(
+                    category="counter",
+                    message=f"Current value ({current_value}) is outside valid range [0, {start_value}]",
+                    element_id=element.element_id,
+                    suggestion=f"Set counter_current_value between 0 and {start_value}"
+                )
+        
+        # Rule 3: On-Max element exists
+        on_max_reached = getattr(element, "counter_on_max_reached", "")
+        if on_max_reached:
+            # Check if element exists
+            target_element = doc.get_element(on_max_reached)
+            if not target_element:
+                result.add_error(
+                    category="counter",
+                    message=f"Target element '{on_max_reached}' for on_max_reached does not exist",
+                    element_id=element.element_id,
+                    suggestion="Specify valid element ID or leave empty"
+                )
+        
+        # Rule 4: Counter has at least 1 incoming connection
+        incoming = doc.get_incoming_connections(element.element_id)
+        if len(incoming) == 0:
+            result.add_warning(
+                category="counter",
+                message="Counter has no incoming connections (will never be incremented)",
+                element_id=element.element_id,
+                suggestion="Connect at least one element to this counter"
+            )
+        
+        # Rule 5: Counter has outgoing connection (unless on_max_reached is set)
+        outgoing = doc.get_outgoing_connections(element.element_id)
+        if len(outgoing) == 0 and not on_max_reached:
+            result.add_warning(
+                category="counter",
+                message="Counter has no outgoing connections and no on_max_reached target",
+                element_id=element.element_id,
+                suggestion="Connect counter to next element or set on_max_reached"
+            )
+        
+        # Additional check: Counter type validity
+        valid_types = ["UP", "DOWN", "UP_DOWN"]
+        if counter_type not in valid_types:
+            result.add_error(
+                category="counter",
+                message=f"Invalid counter_type '{counter_type}'. Must be one of: {', '.join(valid_types)}",
+                element_id=element.element_id,
+                suggestion=f"Set counter_type to UP, DOWN, or UP_DOWN"
+            )
+        
+        # Info: Suggest using reset if counter is in a loop
+        if len(incoming) > 1 or any(conn.source_element.element_id == element.element_id for conn in outgoing):
+            reset_on_max = getattr(element, "counter_reset_on_max", False)
+            if not reset_on_max:
+                result.add_info(
+                    category="counter",
+                    message="Counter appears to be in a loop but reset_on_max is disabled",
+                    element_id=element.element_id,
+                    suggestion="Consider enabling 'reset_on_max' for looping counters"
+                )
+
+
+class ConditionValidator:
+    """Validiert CONDITION-Elemente."""
+    
+    VALID_OPERATORS = ["==", "!=", "<", ">", "<=", ">=", "contains", "regex"]
+    
+    def validate_condition(self, element, doc, result):
+        """
+        Validiert ein CONDITION-Element.
+        
+        Args:
+            element: Das zu validierende Element
+            doc: Das VPBDocument
+            result: ValidationResult zum Hinzufügen von Fehlern/Warnungen
+        """
+        # Regel 1: Mindestens 1 Check erforderlich [ERROR]
+        condition_checks = getattr(element, "condition_checks", [])
+        if not condition_checks or len(condition_checks) == 0:
+            result.add_error(
+                category="condition",
+                message="CONDITION must have at least 1 check",
+                element_id=element.element_id,
+                suggestion="Add at least one condition check using the Properties Panel"
+            )
+            return  # Keine weiteren Validierungen wenn keine Checks vorhanden
+        
+        # Regel 2: Alle Operatoren müssen gültig sein [ERROR]
+        for idx, check in enumerate(condition_checks):
+            operator = check.get("operator", "")
+            if operator not in self.VALID_OPERATORS:
+                result.add_error(
+                    category="condition",
+                    message=f"Invalid operator '{operator}' in check #{idx+1}",
+                    element_id=element.element_id,
+                    suggestion=f"Use one of: {', '.join(self.VALID_OPERATORS)}"
+                )
+            
+            # Zusätzliche Validierung: Field und Value sollten nicht leer sein
+            field = check.get("field", "").strip()
+            value = check.get("value", "").strip()
+            if not field:
+                result.add_error(
+                    category="condition",
+                    message=f"Empty field name in check #{idx+1}",
+                    element_id=element.element_id,
+                    suggestion="Specify a field name to check"
+                )
+            if not value:
+                result.add_error(
+                    category="condition",
+                    message=f"Empty value in check #{idx+1}",
+                    element_id=element.element_id,
+                    suggestion="Specify a value to compare against"
+                )
+        
+        # Regel 3: TRUE-Target muss existieren wenn gesetzt [ERROR]
+        condition_true_target = getattr(element, "condition_true_target", "")
+        if condition_true_target:
+            target_element = doc.get_element(condition_true_target)
+            if not target_element:
+                result.add_error(
+                    category="condition",
+                    message=f"TRUE target element '{condition_true_target}' does not exist",
+                    element_id=element.element_id,
+                    suggestion="Select an existing element as TRUE target or leave empty"
+                )
+        else:
+            result.add_warning(
+                category="condition",
+                message="CONDITION has no TRUE target defined",
+                element_id=element.element_id,
+                suggestion="Define where to go when condition is TRUE"
+            )
+        
+        # Regel 4: FALSE-Target muss existieren wenn gesetzt [ERROR]
+        condition_false_target = getattr(element, "condition_false_target", "")
+        if condition_false_target:
+            target_element = doc.get_element(condition_false_target)
+            if not target_element:
+                result.add_error(
+                    category="condition",
+                    message=f"FALSE target element '{condition_false_target}' does not exist",
+                    element_id=element.element_id,
+                    suggestion="Select an existing element as FALSE target or leave empty"
+                )
+        else:
+            result.add_warning(
+                category="condition",
+                message="CONDITION has no FALSE target defined",
+                element_id=element.element_id,
+                suggestion="Define where to go when condition is FALSE"
+            )
+        
+        # Regel 5: Sollte eingehende Verbindungen haben [WARNING]
+        incoming = doc.get_incoming_connections(element.element_id)
+        if not incoming:
+            result.add_warning(
+                category="condition",
+                message="CONDITION has no incoming connections",
+                element_id=element.element_id,
+                suggestion="Connect an element to this CONDITION to activate it"
+            )
+
+
+class ErrorHandlerValidator:
+    """Validiert ERROR_HANDLER-Elemente."""
+    
+    VALID_HANDLER_TYPES = ["RETRY", "FALLBACK", "NOTIFY", "ABORT"]
+    
+    def validate_error_handler(self, element, doc, result):
+        """
+        Validiert ein ERROR_HANDLER-Element.
+        
+        Args:
+            element: Das zu validierende Element
+            doc: Das VPBDocument
+            result: ValidationResult zum Hinzufügen von Fehlern/Warnungen
+        """
+        # Regel 1: Handler-Type muss gültig sein [ERROR]
+        handler_type = getattr(element, "error_handler_type", "RETRY")
+        if handler_type not in self.VALID_HANDLER_TYPES:
+            result.add_error(
+                category="error_handler",
+                message=f"Invalid handler type '{handler_type}'",
+                element_id=element.element_id,
+                suggestion=f"Use one of: {', '.join(self.VALID_HANDLER_TYPES)}"
+            )
+        
+        # Regel 2: Retry-Count muss >= 0 sein [ERROR]
+        retry_count = getattr(element, "error_handler_retry_count", 3)
+        if retry_count < 0:
+            result.add_error(
+                category="error_handler",
+                message=f"Retry count cannot be negative (current: {retry_count})",
+                element_id=element.element_id,
+                suggestion="Set retry count to 0 or higher"
+            )
+        
+        # Regel 3: Delay muss > 0 sein wenn retry_count > 0 [ERROR]
+        retry_delay = getattr(element, "error_handler_retry_delay", 60)
+        if handler_type == "RETRY" and retry_count > 0 and retry_delay <= 0:
+            result.add_error(
+                category="error_handler",
+                message=f"Retry delay must be positive when retry count > 0 (current: {retry_delay})",
+                element_id=element.element_id,
+                suggestion="Set retry delay to a positive value (e.g., 60 seconds)"
+            )
+        
+        # Regel 4: Timeout >= 0, Warnung wenn 0 [WARNING]
+        timeout = getattr(element, "error_handler_timeout", 300)
+        if timeout < 0:
+            result.add_error(
+                category="error_handler",
+                message=f"Timeout cannot be negative (current: {timeout})",
+                element_id=element.element_id,
+                suggestion="Set timeout to 0 (no timeout) or a positive value"
+            )
+        elif timeout == 0:
+            result.add_warning(
+                category="error_handler",
+                message="Timeout is disabled (0 = no timeout)",
+                element_id=element.element_id,
+                suggestion="Consider setting a timeout to prevent indefinite waits"
+            )
+        
+        # Regel 5: Error-Target muss existieren wenn gesetzt [ERROR]
+        error_target = getattr(element, "error_handler_on_error_target", "")
+        if error_target:
+            target_element = doc.get_element(error_target)
+            if not target_element:
+                result.add_error(
+                    category="error_handler",
+                    message=f"Error target element '{error_target}' does not exist",
+                    element_id=element.element_id,
+                    suggestion="Select an existing element as error target or leave empty"
+                )
+        elif handler_type in ["FALLBACK", "RETRY"]:
+            result.add_warning(
+                category="error_handler",
+                message=f"ERROR_HANDLER ({handler_type}) has no error target defined",
+                element_id=element.element_id,
+                suggestion="Define where to go when error handling fails"
+            )
+        
+        # Regel 6: Success-Target muss existieren wenn gesetzt [WARNING]
+        success_target = getattr(element, "error_handler_on_success_target", "")
+        if success_target:
+            target_element = doc.get_element(success_target)
+            if not target_element:
+                result.add_warning(
+                    category="error_handler",
+                    message=f"Success target element '{success_target}' does not exist",
+                    element_id=element.element_id,
+                    suggestion="Select an existing element as success target or leave empty"
+                )
+        
+        # Regel 7: Sollte eingehende Verbindungen haben [WARNING]
+        incoming = doc.get_incoming_connections(element.element_id)
+        if not incoming:
+            result.add_warning(
+                category="error_handler",
+                message="ERROR_HANDLER has no incoming connections",
+                element_id=element.element_id,
+                suggestion="Connect an element to this ERROR_HANDLER to activate it"
+            )
+
+
+class StateValidator:
+    """Validiert STATE-Elemente (Zustandsautomaten)."""
+    
+    VALID_STATE_TYPES = ["NORMAL", "INITIAL", "FINAL", "ERROR"]
+    
+    def validate_state(self, element, doc, result):
+        """
+        Validiert ein STATE-Element.
+        
+        Args:
+            element: Das zu validierende Element
+            doc: Das VPBDocument
+            result: ValidationResult zum Hinzufügen von Fehlern/Warnungen
+        """
+        # Regel 1: State-Name darf nicht leer sein [ERROR]
+        state_name = getattr(element, "state_name", "").strip()
+        if not state_name:
+            result.add_error(
+                category="state",
+                message="STATE element must have a name",
+                element_id=element.element_id,
+                suggestion="Enter a descriptive state name (e.g., 'Eingereicht', 'In Bearbeitung')"
+            )
+        
+        # Regel 2: State-Type muss gültig sein [ERROR]
+        state_type = getattr(element, "state_type", "NORMAL")
+        if state_type not in self.VALID_STATE_TYPES:
+            result.add_error(
+                category="state",
+                message=f"Invalid state type '{state_type}'",
+                element_id=element.element_id,
+                suggestion=f"Use one of: {', '.join(self.VALID_STATE_TYPES)}"
+            )
+        
+        # Regel 3: Nur ein INITIAL-State im gesamten Dokument [ERROR]
+        if state_type == "INITIAL":
+            initial_states = [
+                el for el in doc.get_all_elements()
+                if el.element_type == "STATE" and getattr(el, "state_type", "NORMAL") == "INITIAL"
+            ]
+            if len(initial_states) > 1:
+                result.add_error(
+                    category="state",
+                    message=f"Multiple INITIAL states found ({len(initial_states)} total)",
+                    element_id=element.element_id,
+                    suggestion="A state machine can only have one INITIAL state. Change other states to NORMAL."
+                )
+        
+        # Regel 4: Transitions müssen gültige Ziele haben [WARNING]
+        transitions = getattr(element, "state_transitions", [])
+        for i, trans in enumerate(transitions):
+            target = trans.get("target", "")
+            if target:
+                target_element = doc.get_element(target)
+                if not target_element:
+                    result.add_warning(
+                        category="state",
+                        message=f"Transition #{i+1} target '{target}' does not exist",
+                        element_id=element.element_id,
+                        suggestion="Select an existing STATE element as transition target"
+                    )
+                elif target_element.element_type != "STATE":
+                    result.add_warning(
+                        category="state",
+                        message=f"Transition #{i+1} target '{target}' is not a STATE element",
+                        element_id=element.element_id,
+                        suggestion="Transitions should target other STATE elements"
+                    )
+        
+        # Regel 5: Entry/Exit Actions sollten gültig sein [INFO]
+        entry_action = getattr(element, "state_entry_action", "").strip()
+        if entry_action:
+            # Prüfe ob es ein Element-ID ist
+            action_element = doc.get_element(entry_action)
+            if action_element:
+                result.add_info(
+                    category="state",
+                    message=f"Entry action references element '{entry_action}' ({action_element.element_type})",
+                    element_id=element.element_id
+                )
+            else:
+                # Annahme: Es ist ein Script/Expression
+                result.add_info(
+                    category="state",
+                    message=f"Entry action uses script/expression: '{entry_action[:50]}{'...' if len(entry_action) > 50 else ''}'",
+                    element_id=element.element_id
+                )
+        
+        exit_action = getattr(element, "state_exit_action", "").strip()
+        if exit_action:
+            action_element = doc.get_element(exit_action)
+            if action_element:
+                result.add_info(
+                    category="state",
+                    message=f"Exit action references element '{exit_action}' ({action_element.element_type})",
+                    element_id=element.element_id
+                )
+            else:
+                result.add_info(
+                    category="state",
+                    message=f"Exit action uses script/expression: '{exit_action[:50]}{'...' if len(exit_action) > 50 else ''}'",
+                    element_id=element.element_id
+                )
+        
+        # Regel 6: Timeout-Target muss existieren wenn Timeout > 0 [WARNING]
+        timeout = getattr(element, "state_timeout", 0)
+        timeout_target = getattr(element, "state_timeout_target", "").strip()
+        if timeout > 0:
+            if not timeout_target:
+                result.add_warning(
+                    category="state",
+                    message=f"Timeout is set ({timeout}s) but no timeout target defined",
+                    element_id=element.element_id,
+                    suggestion="Define a timeout target STATE or set timeout to 0"
+                )
+            else:
+                target_element = doc.get_element(timeout_target)
+                if not target_element:
+                    result.add_warning(
+                        category="state",
+                        message=f"Timeout target '{timeout_target}' does not exist",
+                        element_id=element.element_id,
+                        suggestion="Select an existing STATE element as timeout target"
+                    )
+                elif target_element.element_type != "STATE":
+                    result.add_warning(
+                        category="state",
+                        message=f"Timeout target '{timeout_target}' is not a STATE element",
+                        element_id=element.element_id,
+                        suggestion="Timeout should target a STATE element"
+                    )
+        
+        # Regel 7: INITIAL-State sollte keine eingehenden Verbindungen haben [WARNING]
+        if state_type == "INITIAL":
+            incoming = doc.get_incoming_connections(element.element_id)
+            if incoming:
+                result.add_warning(
+                    category="state",
+                    message=f"INITIAL state has {len(incoming)} incoming connection(s)",
+                    element_id=element.element_id,
+                    suggestion="INITIAL states typically don't have incoming connections (entry point)"
+                )
+        
+        # Regel 8: FINAL-State sollte keine ausgehenden Verbindungen haben [WARNING]
+        if state_type == "FINAL":
+            outgoing = doc.get_outgoing_connections(element.element_id)
+            if outgoing:
+                result.add_warning(
+                    category="state",
+                    message=f"FINAL state has {len(outgoing)} outgoing connection(s)",
+                    element_id=element.element_id,
+                    suggestion="FINAL states typically don't have outgoing connections (end point)"
+                )
+        
+        # Regel 9: NORMAL/ERROR-States sollten Transitions haben [INFO]
+        if state_type in ["NORMAL", "ERROR"] and not transitions:
+            result.add_info(
+                category="state",
+                message=f"{state_type} state has no transitions defined",
+                element_id=element.element_id,
+                suggestion="Consider adding transitions to define state flow"
+            )
+
+
+class InterlockValidator:
+    """Validiert INTERLOCK-Elemente (Mutex/Semaphore)."""
+    
+    VALID_TYPES = ["MUTEX", "SEMAPHORE"]
+    
+    def validate_interlock(self, element, doc, result):
+        """
+        Validiert ein INTERLOCK-Element.
+        
+        Args:
+            element: Das zu validierende Element
+            doc: Das VPBDocument
+            result: ValidationResult zum Hinzufügen von Fehlern/Warnungen
+        """
+        # Regel 1: Resource-ID darf nicht leer sein [ERROR]
+        resource_id = getattr(element, "interlock_resource_id", "").strip()
+        if not resource_id:
+            result.add_error(
+                category="interlock",
+                message="INTERLOCK element must have a resource ID",
+                element_id=element.element_id,
+                suggestion="Enter a unique resource identifier (e.g., 'db_conn', 'api_rate_limit', 'logfile')"
+            )
+        
+        # Regel 2: Interlock-Type muss gültig sein [ERROR]
+        interlock_type = getattr(element, "interlock_type", "MUTEX")
+        if interlock_type not in self.VALID_TYPES:
+            result.add_error(
+                category="interlock",
+                message=f"Invalid interlock type '{interlock_type}'",
+                element_id=element.element_id,
+                suggestion=f"Use one of: {', '.join(self.VALID_TYPES)}"
+            )
+        
+        # Regel 3: Max-Count muss > 0 sein, besonders für SEMAPHORE [ERROR]
+        max_count = getattr(element, "interlock_max_count", 1)
+        if max_count <= 0:
+            result.add_error(
+                category="interlock",
+                message=f"Max count must be > 0 (current: {max_count})",
+                element_id=element.element_id,
+                suggestion="MUTEX should have max_count=1, SEMAPHORE should have max_count>1"
+            )
+        
+        # Regel 3b: SEMAPHORE sollte max_count > 1 haben [WARNING]
+        if interlock_type == "SEMAPHORE" and max_count == 1:
+            result.add_warning(
+                category="interlock",
+                message="SEMAPHORE with max_count=1 behaves like MUTEX",
+                element_id=element.element_id,
+                suggestion="Consider using MUTEX type or increase max_count for concurrent access"
+            )
+        
+        # Regel 4: Timeout muss >= 0 sein [ERROR]
+        timeout = getattr(element, "interlock_timeout", 0)
+        if timeout < 0:
+            result.add_error(
+                category="interlock",
+                message=f"Timeout cannot be negative (current: {timeout})",
+                element_id=element.element_id,
+                suggestion="Use 0 for indefinite wait, or a positive value for timeout in seconds"
+            )
+        
+        # Regel 5: Locked-Target muss existieren wenn gesetzt [WARNING]
+        locked_target = getattr(element, "interlock_on_locked_target", "").strip()
+        if locked_target:
+            target_element = doc.get_element(locked_target)
+            if not target_element:
+                result.add_warning(
+                    category="interlock",
+                    message=f"On-locked target '{locked_target}' does not exist",
+                    element_id=element.element_id,
+                    suggestion="Select an existing element as fallback when lock is unavailable"
+                )
+        
+        # Regel 6: Resource-ID-Duplikate warnen [WARNING]
+        if resource_id:
+            interlocks_with_same_resource = [
+                el for el in doc.get_all_elements()
+                if el.element_type == "INTERLOCK" 
+                and getattr(el, "interlock_resource_id", "") == resource_id
+            ]
+            if len(interlocks_with_same_resource) > 1:
+                result.add_warning(
+                    category="interlock",
+                    message=f"Resource ID '{resource_id}' is used by {len(interlocks_with_same_resource)} INTERLOCK elements",
+                    element_id=element.element_id,
+                    suggestion="Multiple INTERLOCK elements with same resource ID can coordinate access"
+                )
+        
+        # Regel 7: Timeout ohne Locked-Target ist problematisch [WARNING]
+        if timeout > 0 and not locked_target:
+            result.add_warning(
+                category="interlock",
+                message=f"Timeout is set ({timeout}s) but no fallback target defined",
+                element_id=element.element_id,
+                suggestion="Define an 'on-locked' target to handle timeout gracefully"
+            )
+        
+        # Regel 8: Auto-Release ist Standard [INFO]
+        auto_release = getattr(element, "interlock_auto_release", True)
+        if not auto_release:
+            result.add_info(
+                category="interlock",
+                message="Auto-release is disabled - manual release required",
+                element_id=element.element_id,
+                suggestion="Ensure explicit release logic exists to prevent deadlocks"
+            )
+        
+        # Regel 9: MUTEX-Spezifische Prüfungen [INFO]
+        if interlock_type == "MUTEX":
+            if max_count != 1:
+                result.add_info(
+                    category="interlock",
+                    message=f"MUTEX has max_count={max_count} (typically 1 for exclusive access)",
+                    element_id=element.element_id,
+                    suggestion="MUTEX is designed for max_count=1 (exclusive lock)"
+                )
+
+

@@ -75,10 +75,14 @@ class PaletteView(tk.Frame):
         element_type = item.get("type", "")
         label = item.get("label", "")
         
+        # Wichtig: item_data muss alle Palette-Daten enthalten
         self.event_bus.publish("ui:palette:element_picked", {
-            "type": element_type,
-            "label": label,
-            "item": item
+            "item_data": {
+                "type": element_type,
+                "name": label,  # Name für ElementFactory
+                "label": label,
+                **item  # Alle anderen Properties aus der Palette
+            }
         })
         
     def _on_reload_requested(self):

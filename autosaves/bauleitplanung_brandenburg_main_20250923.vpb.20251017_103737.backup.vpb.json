@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "name": "Bauleitplanung Brandenburg – Bebauungsplan (Showcase)",
+    "version": "1.0",
+    "author": "VPB Demo",
+    "created": "2025-09-23",
+    "domain": "Bauleitplanung"
+  },
+  "hierarchy_categories": [
+    {"name": "Land", "y0": -900, "y1": -500, "color": "#eef3ff"},
+    {"name": "Kreis", "y0": -500, "y1": -200, "color": "#eefaf2"},
+    {"name": "Gemeinde", "y0": -200, "y1": 200, "color": "#fff7e6"},
+    {"name": "TÖB", "y0": 200, "y1": 500, "color": "#f3f3ff"},
+    {"name": "Bürger", "y0": 500, "y1": 900, "color": "#fff0f0"}
+  ],
+  "elements": [
+  {"element_id": "S_START", "element_type": "START_EVENT", "name": "Verfahren starten", "x": 100, "y": -20, "hierarchy": "Gemeinde"},
+
+  {"element_id": "TASK_INIT", "element_type": "FUNCTION", "name": "Aufstellungsbeschluss vorbereiten", "x": 300, "y": 0, "hierarchy": "Gemeinde", "responsible_authority": "Bauamt"},
+  {"element_id": "OU_GEM", "element_type": "ORGANIZATION_UNIT", "name": "Gemeindevertretung", "x": 300, "y": -80, "hierarchy": "Gemeinde"},
+  {"element_id": "GW_INIT", "element_type": "GATEWAY", "name": "Beschluss?", "x": 520, "y": 0, "hierarchy": "Gemeinde"},
+  {"element_id": "TASK_VORBEREITUNG", "element_type": "FUNCTION", "name": "Planentwurf erstellen", "x": 740, "y": 0, "hierarchy": "Gemeinde"},
+
+  {"element_id": "LC_RECHT", "element_type": "LEGAL_CHECKPOINT", "name": "Rechtsgrundlagen prüfen", "x": 960, "y": -60, "hierarchy": "Gemeinde", "legal_basis": "BauGB, BbgKVerf"},
+  {"element_id": "CC_ZUSTAENDIG", "element_type": "COMPETENCY_CHECK", "name": "Zuständigkeiten abstimmen", "x": 960, "y": -350, "hierarchy": "Kreis"},
+  {"element_id": "GEO_KON", "element_type": "GEO_CONTEXT", "name": "Geodaten/Abgrenzung", "x": 740, "y": 80, "hierarchy": "Gemeinde", "geo_reference": "DE-BB"},
+
+  {"element_id": "AND_PARALLEL1", "element_type": "AND_CONNECTOR", "name": "Parallel", "x": 1180, "y": 0, "hierarchy": "Gemeinde"},
+  {"element_id": "SP_UV", "element_type": "SUBPROCESS", "name": "Umweltprüfung/Scoping", "x": 1400, "y": -350, "hierarchy": "Kreis", "ref_file": "processes/bauleitplanung_umweltpruefung_20250923.vpb.json"},
+  {"element_id": "SP_TOEB", "element_type": "SUBPROCESS", "name": "Beteiligung TÖB", "x": 1400, "y": 350, "hierarchy": "TÖB", "ref_file": "processes/bauleitplanung_toeb_beteiligung_20250923.vpb.json"},
+  {"element_id": "SP_OFFEN", "element_type": "SUBPROCESS", "name": "Frühzeitige Öffentlichkeitsbeteiligung", "x": 1400, "y": 700, "hierarchy": "Bürger", "ref_file": "processes/bauleitplanung_offenlage_20250923.vpb.json"},
+
+  {"element_id": "DEADL_AUSLEGUNG", "element_type": "DEADLINE", "name": "Frist Auslegung 1 Monat", "x": 1620, "y": 720, "hierarchy": "Bürger", "deadline_days": 30},
+  {"element_id": "OR_VARIANTEN", "element_type": "OR_CONNECTOR", "name": "Variante wählen", "x": 1660, "y": 0, "hierarchy": "Gemeinde"},
+  {"element_id": "TASK_ABWAEGUNG", "element_type": "FUNCTION", "name": "Abwägung Stellungnahmen", "x": 1860, "y": 0, "hierarchy": "Gemeinde"},
+
+  {"element_id": "XOR_SATZUNG", "element_type": "XOR_CONNECTOR", "name": "Satzung/Beschluss?", "x": 2060, "y": 0, "hierarchy": "Gemeinde"},
+  {"element_id": "TASK_SATZUNG", "element_type": "FUNCTION", "name": "Satzungsbeschluss fassen", "x": 2260, "y": -20, "hierarchy": "Gemeinde"},
+  {"element_id": "TASK_NEU_AUFLAGE", "element_type": "FUNCTION", "name": "Überarbeitung/Neuauflage", "x": 2260, "y": 20, "hierarchy": "Gemeinde"},
+
+  {"element_id": "DOC_SATZUNG", "element_type": "INFORMATION_OBJECT", "name": "Satzung/Pläne", "x": 2460, "y": -20, "hierarchy": "Gemeinde"},
+  {"element_id": "OU_KREIS", "element_type": "ORGANIZATION_UNIT", "name": "Untere Bauaufsicht (Kreis)", "x": 2460, "y": -350, "hierarchy": "Kreis"},
+  {"element_id": "OU_LAND", "element_type": "ORGANIZATION_UNIT", "name": "Landesplanungsbehörde", "x": 1860, "y": -700, "hierarchy": "Land"},
+
+  {"element_id": "END_ERLASS", "element_type": "END_EVENT", "name": "Bebauungsplan erlassen", "x": 2660, "y": -20, "hierarchy": "Gemeinde"},
+  {"element_id": "END_NEU", "element_type": "END_EVENT", "name": "Neuauflage erforderlich", "x": 2460, "y": 20, "hierarchy": "Gemeinde"},
+
+  {"element_id": "EV_NACHREICHUNG", "element_type": "EVENT", "name": "Stellungnahmen eingegangen", "x": 1660, "y": 360, "hierarchy": "TÖB"},
+
+    {"element_id": "GRP_PHASE1", "element_type": "GROUP", "name": "Verfahrenseinleitung", "x": 520, "y": -40, "members": ["TASK_INIT", "OU_GEM", "GW_INIT", "TASK_VORBEREITUNG"], "collapsed": false},
+    {"element_id": "GRP_PARALLEL", "element_type": "GROUP", "name": "Parallele Prüf-/Beteiligungsphase", "x": 1400, "y": 40, "members": ["LC_RECHT", "CC_ZUSTAENDIG", "GEO_KON", "AND_PARALLEL1", "SP_UV", "SP_TOEB", "SP_OFFEN", "DEADL_AUSLEGUNG", "EV_NACHREICHUNG"], "collapsed": false},
+    {"element_id": "GRP_ABWAEGUNG", "element_type": "GROUP", "name": "Abwägung & Satzung", "x": 2160, "y": -40, "members": ["OR_VARIANTEN", "TASK_ABWAEGUNG", "XOR_SATZUNG", "TASK_SATZUNG", "TASK_NEU_AUFLAGE", "DOC_SATZUNG", "OU_KREIS", "OU_LAND", "END_ERLASS", "END_NEU"], "collapsed": true}
+  ],
+  "connections": [
+    {"connection_id": "C001", "source_element": "S_START", "target_element": "TASK_INIT", "connection_type": "SEQUENCE", "description": "Start → Vorbereitung"},
+    {"connection_id": "C002", "source_element": "OU_GEM", "target_element": "GW_INIT", "connection_type": "ASSOCIATION", "arrow_style": "none", "description": "Beschlussfassung"},
+    {"connection_id": "C003", "source_element": "TASK_INIT", "target_element": "GW_INIT", "connection_type": "SEQUENCE"},
+    {"connection_id": "C004", "source_element": "GW_INIT", "target_element": "TASK_VORBEREITUNG", "connection_type": "APPROVAL", "arrow_style": "double", "description": "Beschluss gefasst"},
+    {"connection_id": "C005", "source_element": "GW_INIT", "target_element": "S_START", "connection_type": "REJECTION", "description": "Kein Beschluss – neu starten"},
+
+    {"connection_id": "C006", "source_element": "TASK_VORBEREITUNG", "target_element": "LC_RECHT", "connection_type": "LEGAL", "description": "Rechtsprüfung"},
+    {"connection_id": "C007", "source_element": "TASK_VORBEREITUNG", "target_element": "CC_ZUSTAENDIG", "connection_type": "MESSAGE", "description": "Zuständigkeit klären"},
+    {"connection_id": "C008", "source_element": "TASK_VORBEREITUNG", "target_element": "GEO_KON", "connection_type": "GEO_REF", "description": "Geobezug herstellen"},
+
+    {"connection_id": "C009", "source_element": "LC_RECHT", "target_element": "AND_PARALLEL1", "connection_type": "SEQUENCE"},
+    {"connection_id": "C010", "source_element": "CC_ZUSTAENDIG", "target_element": "AND_PARALLEL1", "connection_type": "SEQUENCE"},
+    {"connection_id": "C011", "source_element": "GEO_KON", "target_element": "AND_PARALLEL1", "connection_type": "SEQUENCE"},
+
+    {"connection_id": "C012", "source_element": "AND_PARALLEL1", "target_element": "SP_UV", "connection_type": "SEQUENCE"},
+    {"connection_id": "C013", "source_element": "AND_PARALLEL1", "target_element": "SP_TOEB", "connection_type": "SEQUENCE"},
+    {"connection_id": "C014", "source_element": "AND_PARALLEL1", "target_element": "SP_OFFEN", "connection_type": "SEQUENCE"},
+
+    {"connection_id": "C015", "source_element": "SP_OFFEN", "target_element": "DEADL_AUSLEGUNG", "connection_type": "NOTIFICATION", "description": "Auslegung veröffentlicht"},
+    {"connection_id": "C016", "source_element": "DEADL_AUSLEGUNG", "target_element": "OR_VARIANTEN", "connection_type": "DEADLINE", "description": "Frist verstrichen"},
+
+    {"connection_id": "C017", "source_element": "SP_UV", "target_element": "OR_VARIANTEN", "connection_type": "SEQUENCE"},
+    {"connection_id": "C018", "source_element": "SP_TOEB", "target_element": "OR_VARIANTEN", "connection_type": "MESSAGE", "description": "Stellungnahmen liegen vor"},
+    {"connection_id": "C019", "source_element": "EV_NACHREICHUNG", "target_element": "TASK_ABWAEGUNG", "connection_type": "MESSAGE", "description": "Zusätzliche Hinweise"},
+
+    {"connection_id": "C020", "source_element": "OR_VARIANTEN", "target_element": "TASK_ABWAEGUNG", "connection_type": "SEQUENCE"},
+    {"connection_id": "C021", "source_element": "TASK_ABWAEGUNG", "target_element": "XOR_SATZUNG", "connection_type": "SEQUENCE"},
+
+    {"connection_id": "C022", "source_element": "XOR_SATZUNG", "target_element": "TASK_SATZUNG", "connection_type": "APPROVAL", "arrow_style": "double", "description": "Abwägung positiv"},
+    {"connection_id": "C023", "source_element": "XOR_SATZUNG", "target_element": "TASK_NEU_AUFLAGE", "connection_type": "REJECTION", "description": "Wesentliche Änderungen nötig"},
+
+    {"connection_id": "C024", "source_element": "TASK_SATZUNG", "target_element": "DOC_SATZUNG", "connection_type": "DOCUMENT"},
+    {"connection_id": "C025", "source_element": "DOC_SATZUNG", "target_element": "END_ERLASS", "connection_type": "SEQUENCE"},
+    {"connection_id": "C026", "source_element": "TASK_NEU_AUFLAGE", "target_element": "END_NEU", "connection_type": "SEQUENCE"},
+
+    {"connection_id": "C027", "source_element": "OU_LAND", "target_element": "TASK_ABWAEGUNG", "connection_type": "ASSOCIATION", "arrow_style": "none", "description": "Landesplanungshinweise"},
+    {"connection_id": "C028", "source_element": "OU_KREIS", "target_element": "TASK_SATZUNG", "connection_type": "ASSOCIATION", "arrow_style": "none", "description": "Bauaufsicht informiert"}
+  ]
+}

@@ -47,9 +47,13 @@ def add_diagram_tab(notebook: ttk.Notebook) -> Tuple[
 
     x_scroll = tk.Scrollbar(canvas_wrap, orient=tk.HORIZONTAL)
     x_scroll.grid(row=2, column=2, sticky="we")
+    x_scroll.configure(troughcolor="#e0e0e0")
+    x_scroll.grid_remove = lambda: None  # Scrollbar nie ausblenden
 
     y_scroll = tk.Scrollbar(canvas_wrap, orient=tk.VERTICAL)
     y_scroll.grid(row=1, column=3, sticky="ns")
+    y_scroll.configure(troughcolor="#e0e0e0")
+    y_scroll.grid_remove = lambda: None  # Scrollbar nie ausblenden
 
     canvas_wrap.rowconfigure(1, weight=1)
     canvas_wrap.columnconfigure(0, weight=0, minsize=90)

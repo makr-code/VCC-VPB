@@ -1,0 +1,566 @@
+{
+  "metadata": {
+    "version": "0.3.0",
+    "created": "2025-10-18",
+    "title": "SPS Elements Showcase - Complete Integration",
+    "description": "Comprehensive demonstration of all 5 SPS elements working together in a complex workflow: COUNTER, CONDITION, ERROR_HANDLER, STATE, and INTERLOCK. This process simulates a real-world application processing system with retries, state tracking, and resource coordination.",
+    "author": "VPB Development Team",
+    "tags": ["showcase", "sps", "counter", "condition", "error_handler", "state", "interlock", "integration"]
+  },
+  "elements": [
+    {
+      "element_id": "start",
+      "element_type": "VorProzess",
+      "name": "Application Processing Start",
+      "x": 50,
+      "y": 100,
+      "description": "Entry point for batch application processing"
+    },
+    {
+      "element_id": "counter_batch",
+      "element_type": "COUNTER",
+      "name": "Batch Counter (100 Applications)",
+      "x": 250,
+      "y": 100,
+      "description": "Processes 100 applications in batch",
+      "counter_start_value": 1,
+      "counter_current_value": 1,
+      "counter_max_value": 100,
+      "counter_on_max_reached": "batch_complete"
+    },
+    {
+      "element_id": "interlock_db_pool",
+      "element_type": "INTERLOCK",
+      "name": "Database Connection Pool",
+      "x": 450,
+      "y": 100,
+      "description": "Limits concurrent DB connections to 5",
+      "interlock_type": "SEMAPHORE",
+      "interlock_resource_id": "db_connection_pool",
+      "interlock_max_count": 5,
+      "interlock_timeout": 30,
+      "interlock_on_locked_target": "db_busy_handler",
+      "interlock_auto_release": true
+    },
+    {
+      "element_id": "state_initial",
+      "element_type": "STATE",
+      "name": "New Application",
+      "x": 650,
+      "y": 100,
+      "description": "Initial state for new applications",
+      "state_name": "new",
+      "state_type": "INITIAL",
+      "state_transitions": [
+        {
+          "condition": "validation_ok == true",
+          "target": "state_processing",
+          "label": "Validation Passed"
+        },
+        {
+          "condition": "validation_ok == false",
+          "target": "state_rejected",
+          "label": "Validation Failed"
+        }
+      ],
+      "state_entry_action": "log_new_application",
+      "state_exit_action": "",
+      "state_timeout": 0,
+      "state_timeout_target": ""
+    },
+    {
+      "element_id": "validate_application",
+      "element_type": "Prozess",
+      "name": "Validate Application Data",
+      "x": 850,
+      "y": 100,
+      "description": "Validates application completeness and business rules"
+    },
+    {
+      "element_id": "error_validation",
+      "element_type": "ERROR_HANDLER",
+      "name": "Validation Error Handler",
+      "x": 1050,
+      "y": 100,
+      "description": "Handles validation errors with retry logic",
+      "error_type": "ValidationError",
+      "error_message": "Application validation failed",
+      "error_retry_count": 3,
+      "error_on_retry_target": "validate_application",
+      "error_on_fatal_target": "state_error"
+    },
+    {
+      "element_id": "condition_validation_result",
+      "element_type": "CONDITION",
+      "name": "Check Validation Result",
+      "x": 1250,
+      "y": 100,
+      "description": "Routes based on validation outcome",
+      "condition_expression": "validation_status == 'passed'",
+      "condition_on_true_target": "state_processing",
+      "condition_on_false_target": "state_rejected"
+    },
+    {
+      "element_id": "state_processing",
+      "element_type": "STATE",
+      "name": "Processing",
+      "x": 650,
+      "y": 300,
+      "description": "Application is being processed",
+      "state_name": "processing",
+      "state_type": "NORMAL",
+      "state_transitions": [
+        {
+          "condition": "processing_complete == true",
+          "target": "state_review",
+          "label": "Processing Complete"
+        },
+        {
+          "condition": "processing_failed == true",
+          "target": "state_error",
+          "label": "Processing Failed"
+        }
+      ],
+      "state_entry_action": "start_processing",
+      "state_exit_action": "cleanup_processing",
+      "state_timeout": 300,
+      "state_timeout_target": "state_error"
+    },
+    {
+      "element_id": "interlock_api_rate",
+      "element_type": "INTERLOCK",
+      "name": "External API Rate Limit",
+      "x": 850,
+      "y": 300,
+      "description": "Limits API calls to 10 concurrent requests",
+      "interlock_type": "SEMAPHORE",
+      "interlock_resource_id": "external_api",
+      "interlock_max_count": 10,
+      "interlock_timeout": 60,
+      "interlock_on_locked_target": "api_throttled",
+      "interlock_auto_release": true
+    },
+    {
+      "element_id": "call_external_api",
+      "element_type": "Prozess",
+      "name": "Call External Verification API",
+      "x": 1050,
+      "y": 300,
+      "description": "Calls external API for verification"
+    },
+    {
+      "element_id": "error_api",
+      "element_type": "ERROR_HANDLER",
+      "name": "API Error Handler",
+      "x": 1250,
+      "y": 300,
+      "description": "Handles API errors with retry",
+      "error_type": "NetworkError",
+      "error_message": "External API call failed",
+      "error_retry_count": 5,
+      "error_on_retry_target": "call_external_api",
+      "error_on_fatal_target": "state_error"
+    },
+    {
+      "element_id": "condition_api_result",
+      "element_type": "CONDITION",
+      "name": "Check API Result",
+      "x": 1450,
+      "y": 300,
+      "description": "Routes based on API verification result",
+      "condition_expression": "api_verified == true",
+      "condition_on_true_target": "state_review",
+      "condition_on_false_target": "state_rejected"
+    },
+    {
+      "element_id": "state_review",
+      "element_type": "STATE",
+      "name": "Under Review",
+      "x": 650,
+      "y": 500,
+      "description": "Application is under manual review",
+      "state_name": "review",
+      "state_type": "NORMAL",
+      "state_transitions": [
+        {
+          "condition": "review_decision == 'approve'",
+          "target": "state_approved",
+          "label": "Approved"
+        },
+        {
+          "condition": "review_decision == 'reject'",
+          "target": "state_rejected",
+          "label": "Rejected"
+        },
+        {
+          "condition": "review_decision == 'request_info'",
+          "target": "state_pending",
+          "label": "More Info Needed"
+        }
+      ],
+      "state_entry_action": "assign_reviewer",
+      "state_exit_action": "log_review_decision",
+      "state_timeout": 86400,
+      "state_timeout_target": "state_pending"
+    },
+    {
+      "element_id": "interlock_file_write",
+      "element_type": "INTERLOCK",
+      "name": "Decision File Lock",
+      "x": 850,
+      "y": 500,
+      "description": "Exclusive lock for writing decision to file",
+      "interlock_type": "MUTEX",
+      "interlock_resource_id": "decision_log_file",
+      "interlock_max_count": 1,
+      "interlock_timeout": 10,
+      "interlock_on_locked_target": "file_busy_wait",
+      "interlock_auto_release": true
+    },
+    {
+      "element_id": "write_decision",
+      "element_type": "Prozess",
+      "name": "Write Decision to Log",
+      "x": 1050,
+      "y": 500,
+      "description": "Writes review decision to audit log"
+    },
+    {
+      "element_id": "condition_final_decision",
+      "element_type": "CONDITION",
+      "name": "Route by Final Decision",
+      "x": 1250,
+      "y": 500,
+      "description": "Routes to final state based on decision",
+      "condition_expression": "final_decision == 'approved'",
+      "condition_on_true_target": "state_approved",
+      "condition_on_false_target": "state_rejected"
+    },
+    {
+      "element_id": "state_approved",
+      "element_type": "STATE",
+      "name": "Approved",
+      "x": 450,
+      "y": 700,
+      "description": "Application approved",
+      "state_name": "approved",
+      "state_type": "FINAL",
+      "state_transitions": [],
+      "state_entry_action": "send_approval_notification",
+      "state_exit_action": "",
+      "state_timeout": 0,
+      "state_timeout_target": ""
+    },
+    {
+      "element_id": "state_rejected",
+      "element_type": "STATE",
+      "name": "Rejected",
+      "x": 750,
+      "y": 700,
+      "description": "Application rejected",
+      "state_name": "rejected",
+      "state_type": "FINAL",
+      "state_transitions": [],
+      "state_entry_action": "send_rejection_notification",
+      "state_exit_action": "",
+      "state_timeout": 0,
+      "state_timeout_target": ""
+    },
+    {
+      "element_id": "state_pending",
+      "element_type": "STATE",
+      "name": "Pending Info",
+      "x": 1050,
+      "y": 700,
+      "description": "Waiting for additional information",
+      "state_name": "pending",
+      "state_type": "NORMAL",
+      "state_transitions": [
+        {
+          "condition": "info_received == true",
+          "target": "state_review",
+          "label": "Info Received"
+        }
+      ],
+      "state_entry_action": "request_additional_info",
+      "state_exit_action": "",
+      "state_timeout": 604800,
+      "state_timeout_target": "state_rejected"
+    },
+    {
+      "element_id": "state_error",
+      "element_type": "STATE",
+      "name": "Error State",
+      "x": 1350,
+      "y": 700,
+      "description": "Fatal error occurred",
+      "state_name": "error",
+      "state_type": "ERROR",
+      "state_transitions": [],
+      "state_entry_action": "log_error_details",
+      "state_exit_action": "",
+      "state_timeout": 0,
+      "state_timeout_target": ""
+    },
+    {
+      "element_id": "counter_retry",
+      "element_type": "COUNTER",
+      "name": "Retry Counter",
+      "x": 1550,
+      "y": 300,
+      "description": "Tracks retry attempts (max 3)",
+      "counter_start_value": 0,
+      "counter_current_value": 0,
+      "counter_max_value": 3,
+      "counter_on_max_reached": "state_error"
+    },
+    {
+      "element_id": "db_busy_handler",
+      "element_type": "Prozess",
+      "name": "Database Busy Handler",
+      "x": 450,
+      "y": 250,
+      "description": "Handles database pool saturation"
+    },
+    {
+      "element_id": "api_throttled",
+      "element_type": "Prozess",
+      "name": "API Throttled Handler",
+      "x": 850,
+      "y": 450,
+      "description": "Handles API rate limiting"
+    },
+    {
+      "element_id": "file_busy_wait",
+      "element_type": "Prozess",
+      "name": "File Lock Wait",
+      "x": 850,
+      "y": 650,
+      "description": "Waits for file lock to become available"
+    },
+    {
+      "element_id": "batch_complete",
+      "element_type": "NachProzess",
+      "name": "Batch Processing Complete",
+      "x": 250,
+      "y": 900,
+      "description": "All 100 applications processed"
+    },
+    {
+      "element_id": "generate_report",
+      "element_type": "Prozess",
+      "name": "Generate Processing Report",
+      "x": 450,
+      "y": 900,
+      "description": "Generates summary report of batch processing"
+    },
+    {
+      "element_id": "notify_admin",
+      "element_type": "Prozess",
+      "name": "Notify Administrator",
+      "x": 650,
+      "y": 900,
+      "description": "Sends completion notification to admin"
+    },
+    {
+      "element_id": "end",
+      "element_type": "NachProzess",
+      "name": "Process End",
+      "x": 850,
+      "y": 900,
+      "description": "End of showcase process"
+    }
+  ],
+  "connections": [
+    {
+      "from": "start",
+      "to": "counter_batch",
+      "label": "Start Batch"
+    },
+    {
+      "from": "counter_batch",
+      "to": "interlock_db_pool",
+      "label": "Next Application"
+    },
+    {
+      "from": "interlock_db_pool",
+      "to": "state_initial",
+      "label": "DB Connection Acquired"
+    },
+    {
+      "from": "state_initial",
+      "to": "validate_application",
+      "label": "Begin Validation"
+    },
+    {
+      "from": "validate_application",
+      "to": "error_validation",
+      "label": "On Error"
+    },
+    {
+      "from": "validate_application",
+      "to": "condition_validation_result",
+      "label": "On Success"
+    },
+    {
+      "from": "error_validation",
+      "to": "validate_application",
+      "label": "Retry"
+    },
+    {
+      "from": "error_validation",
+      "to": "state_error",
+      "label": "Fatal"
+    },
+    {
+      "from": "condition_validation_result",
+      "to": "state_processing",
+      "label": "Valid"
+    },
+    {
+      "from": "condition_validation_result",
+      "to": "state_rejected",
+      "label": "Invalid"
+    },
+    {
+      "from": "state_processing",
+      "to": "interlock_api_rate",
+      "label": "Call API"
+    },
+    {
+      "from": "interlock_api_rate",
+      "to": "call_external_api",
+      "label": "API Slot Available"
+    },
+    {
+      "from": "interlock_api_rate",
+      "to": "api_throttled",
+      "label": "Throttled"
+    },
+    {
+      "from": "api_throttled",
+      "to": "counter_retry",
+      "label": "Track Retry"
+    },
+    {
+      "from": "counter_retry",
+      "to": "interlock_api_rate",
+      "label": "Retry API"
+    },
+    {
+      "from": "counter_retry",
+      "to": "state_error",
+      "label": "Max Retries"
+    },
+    {
+      "from": "call_external_api",
+      "to": "error_api",
+      "label": "On Error"
+    },
+    {
+      "from": "call_external_api",
+      "to": "condition_api_result",
+      "label": "On Success"
+    },
+    {
+      "from": "error_api",
+      "to": "call_external_api",
+      "label": "Retry"
+    },
+    {
+      "from": "error_api",
+      "to": "state_error",
+      "label": "Fatal"
+    },
+    {
+      "from": "condition_api_result",
+      "to": "state_review",
+      "label": "Verified"
+    },
+    {
+      "from": "condition_api_result",
+      "to": "state_rejected",
+      "label": "Not Verified"
+    },
+    {
+      "from": "state_review",
+      "to": "interlock_file_write",
+      "label": "Decision Made"
+    },
+    {
+      "from": "interlock_file_write",
+      "to": "write_decision",
+      "label": "File Lock Acquired"
+    },
+    {
+      "from": "interlock_file_write",
+      "to": "file_busy_wait",
+      "label": "File Locked"
+    },
+    {
+      "from": "file_busy_wait",
+      "to": "interlock_file_write",
+      "label": "Retry"
+    },
+    {
+      "from": "write_decision",
+      "to": "condition_final_decision",
+      "label": "Decision Logged"
+    },
+    {
+      "from": "condition_final_decision",
+      "to": "state_approved",
+      "label": "Approve"
+    },
+    {
+      "from": "condition_final_decision",
+      "to": "state_rejected",
+      "label": "Reject"
+    },
+    {
+      "from": "state_approved",
+      "to": "counter_batch",
+      "label": "Next"
+    },
+    {
+      "from": "state_rejected",
+      "to": "counter_batch",
+      "label": "Next"
+    },
+    {
+      "from": "state_pending",
+      "to": "state_review",
+      "label": "Info Received"
+    },
+    {
+      "from": "state_pending",
+      "to": "state_rejected",
+      "label": "Timeout"
+    },
+    {
+      "from": "state_error",
+      "to": "counter_batch",
+      "label": "Skip & Continue"
+    },
+    {
+      "from": "counter_batch",
+      "to": "batch_complete",
+      "label": "Max Reached"
+    },
+    {
+      "from": "batch_complete",
+      "to": "generate_report",
+      "label": "Generate Report"
+    },
+    {
+      "from": "generate_report",
+      "to": "notify_admin",
+      "label": "Send Notification"
+    },
+    {
+      "from": "notify_admin",
+      "to": "end",
+      "label": "Complete"
+    }
+  ]
+}

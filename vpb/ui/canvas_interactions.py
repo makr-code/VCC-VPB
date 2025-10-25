@@ -35,6 +35,11 @@ def configure_canvas_interactions(
             fy1 = max(fy0, min(1.0, fy0 + fy_len))
             x_scroll.set(fx0, fx1)
             y_scroll.set(fy0, fy1)
+            # Scrollbars immer sichtbar lassen
+            if hasattr(x_scroll, 'grid_remove'):
+                pass  # grid_remove ist überschrieben, Scrollbar bleibt sichtbar
+            if hasattr(y_scroll, 'grid_remove'):
+                pass
         except Exception:
             try:
                 x_scroll.set(0.0, 1.0)

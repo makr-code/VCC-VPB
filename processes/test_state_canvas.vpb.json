@@ -1,0 +1,110 @@
+{
+  "metadata": {
+    "title": "STATE Canvas Test",
+    "description": "Test process for STATE element rendering",
+    "author": "VPB Test Suite",
+    "version": "1.0",
+    "created": "2025-10-18T12:00:00",
+    "modified": "2025-10-18T12:00:00",
+    "tags": ["test", "state", "canvas"]
+  },
+  "elements": [
+    {
+      "element_id": "state_initial",
+      "element_type": "STATE",
+      "name": "Eingereicht",
+      "x": 100,
+      "y": 100,
+      "state_name": "Eingereicht",
+      "state_type": "INITIAL",
+      "state_entry_action": "log_entry",
+      "state_exit_action": "",
+      "state_transitions": [
+        {"event": "submit", "target": "state_review"}
+      ],
+      "state_timeout": 0
+    },
+    {
+      "element_id": "state_review",
+      "element_type": "STATE",
+      "name": "In Prüfung",
+      "x": 300,
+      "y": 100,
+      "state_name": "In Prüfung",
+      "state_type": "NORMAL",
+      "state_entry_action": "start_timer",
+      "state_exit_action": "stop_timer",
+      "state_transitions": [
+        {"event": "approve", "target": "state_approved"},
+        {"event": "reject", "target": "state_rejected"}
+      ],
+      "state_timeout": 300,
+      "state_timeout_target": "state_error"
+    },
+    {
+      "element_id": "state_approved",
+      "element_type": "STATE",
+      "name": "Genehmigt",
+      "x": 500,
+      "y": 50,
+      "state_name": "Genehmigt",
+      "state_type": "FINAL",
+      "state_entry_action": "notify_success",
+      "state_exit_action": "",
+      "state_transitions": [],
+      "state_timeout": 0
+    },
+    {
+      "element_id": "state_rejected",
+      "element_type": "STATE",
+      "name": "Abgelehnt",
+      "x": 500,
+      "y": 150,
+      "state_name": "Abgelehnt",
+      "state_type": "FINAL",
+      "state_entry_action": "notify_rejection",
+      "state_exit_action": "",
+      "state_transitions": [],
+      "state_timeout": 0
+    },
+    {
+      "element_id": "state_error",
+      "element_type": "STATE",
+      "name": "Timeout-Fehler",
+      "x": 300,
+      "y": 250,
+      "state_name": "Timeout-Fehler",
+      "state_type": "ERROR",
+      "state_entry_action": "log_error",
+      "state_exit_action": "",
+      "state_transitions": [],
+      "state_timeout": 0
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "conn1",
+      "source_element": "state_initial",
+      "target_element": "state_review",
+      "connection_type": "SEQUENCE"
+    },
+    {
+      "connection_id": "conn2",
+      "source_element": "state_review",
+      "target_element": "state_approved",
+      "connection_type": "SEQUENCE"
+    },
+    {
+      "connection_id": "conn3",
+      "source_element": "state_review",
+      "target_element": "state_rejected",
+      "connection_type": "SEQUENCE"
+    },
+    {
+      "connection_id": "conn4",
+      "source_element": "state_review",
+      "target_element": "state_error",
+      "connection_type": "SEQUENCE"
+    }
+  ]
+}

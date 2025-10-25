@@ -32,6 +32,12 @@ CONNECTION_TYPES = {
     'INFORMATION': 'Informationsfluss',
     'DATA': 'Datenfluss',
     'ASSOCIATION': 'Assoziation',
+    # Erweiterungen gemäß UI/Styles und Beispieldateien
+    'DOCUMENT': 'Dokument-Bezug',
+    'NOTIFICATION': 'Benachrichtigung',
+    'DEADLINE': 'Fristenbezug',
+    'APPROVAL': 'Freigabe',
+    'REJECTION': 'Ablehnung',
 }
 
 # Arrow style constants

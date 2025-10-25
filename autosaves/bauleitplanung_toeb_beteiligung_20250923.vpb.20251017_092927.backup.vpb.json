@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "name": "Bauleitplanung – Beteiligung TÖB",
+    "version": "1.0",
+    "author": "VPB Demo",
+    "created": "2025-09-23",
+    "domain": "Bauleitplanung"
+  },
+  "hierarchy_categories": [
+    {"name": "Land", "y0": -900, "y1": -500, "color": "#eef3ff"},
+    {"name": "Kreis", "y0": -500, "y1": -200, "color": "#eefaf2"},
+    {"name": "Gemeinde", "y0": -200, "y1": 200, "color": "#fff7e6"},
+    {"name": "TÖB", "y0": 200, "y1": 500, "color": "#f3f3ff"},
+    {"name": "Bürger", "y0": 500, "y1": 900, "color": "#fff0f0"}
+  ],
+  "elements": [
+    {"element_id": "SP_START", "element_type": "START_EVENT", "name": "Beginn Beteiligung", "x": 100, "y": 260, "hierarchy": "TÖB"},
+    {"element_id": "TASK_ANSCHREIBEN", "element_type": "FUNCTION", "name": "Anschreiben versenden", "x": 320, "y": 260, "hierarchy": "Gemeinde"},
+    {"element_id": "DOC_UNTERLAGEN", "element_type": "INFORMATION_OBJECT", "name": "Entwurfsunterlagen", "x": 320, "y": 340, "hierarchy": "Gemeinde"},
+    {"element_id": "OU_TOB1", "element_type": "ORGANIZATION_UNIT", "name": "Wasserbehörde", "x": 560, "y": 260, "hierarchy": "TÖB"},
+    {"element_id": "OU_TOB2", "element_type": "ORGANIZATION_UNIT", "name": "Naturschutzbehörde", "x": 560, "y": 340, "hierarchy": "TÖB"},
+    {"element_id": "OU_TOB3", "element_type": "ORGANIZATION_UNIT", "name": "Straßenbaulastträger", "x": 560, "y": 420, "hierarchy": "TÖB"},
+    {"element_id": "DL_FRIST4W", "element_type": "DEADLINE", "name": "Frist: 4 Wochen", "x": 780, "y": 340, "hierarchy": "TÖB", "deadline_days": 28},
+    {"element_id": "EV_STELLUNGNAHMEN", "element_type": "EVENT", "name": "Stellungnahmen eingegangen", "x": 1000, "y": 340, "hierarchy": "TÖB"},
+    {"element_id": "XOR_NACHFASSEN", "element_type": "XOR_CONNECTOR", "name": "Nachfassen nötig?", "x": 1220, "y": 340, "hierarchy": "Gemeinde"},
+    {"element_id": "TASK_NACHFASSEN", "element_type": "FUNCTION", "name": "Nachfassen/Erinnern", "x": 1420, "y": 420, "hierarchy": "Gemeinde"},
+    {"element_id": "TASK_AUSWERTUNG", "element_type": "FUNCTION", "name": "Auswertung & Zusammenfassung", "x": 1420, "y": 260, "hierarchy": "Gemeinde"},
+    {"element_id": "END_TOEB", "element_type": "END_EVENT", "name": "Beteiligung abgeschlossen", "x": 1640, "y": 260, "hierarchy": "Gemeinde"},
+
+    {"element_id": "GRP_TOEB", "element_type": "GROUP", "name": "Beteiligung TÖB (intern/extern)", "x": 900, "y": 340, "members": ["TASK_ANSCHREIBEN", "DOC_UNTERLAGEN", "OU_TOB1", "OU_TOB2", "OU_TOB3", "DL_FRIST4W", "EV_STELLUNGNAHMEN", "XOR_NACHFASSEN", "TASK_NACHFASSEN", "TASK_AUSWERTUNG"], "collapsed": false}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "SP_START", "target_element": "TASK_ANSCHREIBEN", "connection_type": "SEQUENCE"},
+    {"connection_id": "C2", "source_element": "TASK_ANSCHREIBEN", "target_element": "DOC_UNTERLAGEN", "connection_type": "DOCUMENT"},
+    {"connection_id": "C3", "source_element": "TASK_ANSCHREIBEN", "target_element": "OU_TOB1", "connection_type": "MESSAGE"},
+    {"connection_id": "C4", "source_element": "TASK_ANSCHREIBEN", "target_element": "OU_TOB2", "connection_type": "MESSAGE"},
+    {"connection_id": "C5", "source_element": "TASK_ANSCHREIBEN", "target_element": "OU_TOB3", "connection_type": "MESSAGE"},
+    {"connection_id": "C6", "source_element": "OU_TOB1", "target_element": "DL_FRIST4W", "connection_type": "ASSOCIATION", "arrow_style": "none", "description": "Eingangsfrist"},
+    {"connection_id": "C7", "source_element": "OU_TOB2", "target_element": "DL_FRIST4W", "connection_type": "ASSOCIATION", "arrow_style": "none"},
+    {"connection_id": "C8", "source_element": "OU_TOB3", "target_element": "DL_FRIST4W", "connection_type": "ASSOCIATION", "arrow_style": "none"},
+    {"connection_id": "C9", "source_element": "DL_FRIST4W", "target_element": "EV_STELLUNGNAHMEN", "connection_type": "DEADLINE", "description": "Frist erreicht"},
+    {"connection_id": "C10", "source_element": "EV_STELLUNGNAHMEN", "target_element": "XOR_NACHFASSEN", "connection_type": "SEQUENCE"},
+    {"connection_id": "C11", "source_element": "XOR_NACHFASSEN", "target_element": "TASK_AUSWERTUNG", "connection_type": "APPROVAL", "arrow_style": "double", "description": "Vollständig"},
+    {"connection_id": "C12", "source_element": "XOR_NACHFASSEN", "target_element": "TASK_NACHFASSEN", "connection_type": "REJECTION", "description": "Unvollständig"},
+    {"connection_id": "C13", "source_element": "TASK_NACHFASSEN", "target_element": "TASK_AUSWERTUNG", "connection_type": "SEQUENCE"},
+    {"connection_id": "C14", "source_element": "TASK_AUSWERTUNG", "target_element": "END_TOEB", "connection_type": "SEQUENCE"}
+  ]
+}

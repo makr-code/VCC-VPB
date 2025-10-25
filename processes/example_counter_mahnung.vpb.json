@@ -1,0 +1,142 @@
+{
+  "metadata": {
+    "name": "Mahnprozess mit Counter",
+    "description": "Beispielprozess: Mahnung mit automatischer Eskalation nach 3 Versuchen",
+    "version": "1.0",
+    "created": "2025-10-18"
+  },
+  "elements": [
+    {
+      "element_id": "start_001",
+      "element_type": "START_EVENT",
+      "name": "Zahlungsfrist abgelaufen",
+      "x": 100,
+      "y": 100,
+      "description": "Fälligkeit einer Rechnung ist überschritten"
+    },
+    {
+      "element_id": "counter_001",
+      "element_type": "COUNTER",
+      "name": "Mahnungs-Zähler",
+      "x": 250,
+      "y": 100,
+      "description": "Zählt die Anzahl der versendeten Mahnungen",
+      "counter_type": "UP",
+      "counter_start_value": 0,
+      "counter_max_value": 3,
+      "counter_current_value": 0,
+      "counter_reset_on_max": false,
+      "counter_on_max_reached": "escalate_001"
+    },
+    {
+      "element_id": "func_mahnung",
+      "element_type": "FUNCTION",
+      "name": "Mahnung versenden",
+      "x": 400,
+      "y": 100,
+      "description": "Mahnung per E-Mail und Brief versenden",
+      "responsible_authority": "Finanzbuchhaltung"
+    },
+    {
+      "element_id": "timer_001",
+      "element_type": "TIMER",
+      "name": "14 Tage Wartezeit",
+      "x": 550,
+      "y": 100,
+      "description": "Wartezeit bis zur nächsten Mahnung",
+      "loop_type": "relative",
+      "loop_relative_days": 14
+    },
+    {
+      "element_id": "gateway_001",
+      "element_type": "GATEWAY",
+      "name": "Zahlung eingegangen?",
+      "x": 700,
+      "y": 100,
+      "description": "Prüfung ob Zahlung eingegangen ist"
+    },
+    {
+      "element_id": "end_success",
+      "element_type": "END_EVENT",
+      "name": "Zahlung erhalten",
+      "x": 850,
+      "y": 50,
+      "description": "Prozess erfolgreich abgeschlossen"
+    },
+    {
+      "element_id": "escalate_001",
+      "element_type": "FUNCTION",
+      "name": "Inkasso beauftragen",
+      "x": 550,
+      "y": 200,
+      "description": "Nach 3 erfolglosen Mahnungen: Inkasso-Verfahren einleiten",
+      "responsible_authority": "Rechtabteilung"
+    },
+    {
+      "element_id": "end_escalate",
+      "element_type": "END_EVENT",
+      "name": "Inkasso-Verfahren",
+      "x": 700,
+      "y": 200,
+      "description": "Übergabe an Inkasso"
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "conn_001",
+      "source_element": "start_001",
+      "target_element": "counter_001",
+      "connection_type": "SEQUENCE",
+      "description": "Start des Mahnprozesses"
+    },
+    {
+      "connection_id": "conn_002",
+      "source_element": "counter_001",
+      "target_element": "func_mahnung",
+      "connection_type": "SEQUENCE",
+      "description": "Counter inkrementieren → Mahnung"
+    },
+    {
+      "connection_id": "conn_003",
+      "source_element": "func_mahnung",
+      "target_element": "timer_001",
+      "connection_type": "SEQUENCE",
+      "description": "Mahnung gesendet → Warten"
+    },
+    {
+      "connection_id": "conn_004",
+      "source_element": "timer_001",
+      "target_element": "gateway_001",
+      "connection_type": "SEQUENCE",
+      "description": "Wartezeit abgelaufen → Prüfen"
+    },
+    {
+      "connection_id": "conn_005",
+      "source_element": "gateway_001",
+      "target_element": "end_success",
+      "connection_type": "SEQUENCE",
+      "description": "Zahlung eingegangen → Ende"
+    },
+    {
+      "connection_id": "conn_006",
+      "source_element": "gateway_001",
+      "target_element": "counter_001",
+      "connection_type": "SEQUENCE",
+      "description": "Keine Zahlung → Erneut mahnen (Loop)"
+    },
+    {
+      "connection_id": "conn_007",
+      "source_element": "counter_001",
+      "target_element": "escalate_001",
+      "connection_type": "ESCALATION",
+      "description": "Maximum erreicht (3 Mahnungen) → Eskalation"
+    },
+    {
+      "connection_id": "conn_008",
+      "source_element": "escalate_001",
+      "target_element": "end_escalate",
+      "connection_type": "SEQUENCE",
+      "description": "Inkasso → Ende"
+    }
+  ]
+}

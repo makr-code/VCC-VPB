@@ -1,0 +1,34 @@
+{
+  "metadata": {"name": "Baugenehmigung (High)", "description": "Eingang, Vollständigkeit, Nachforderung, Fachbeteiligungen, Entscheidung, Bescheid/Ablehnung"},
+  "elements": [
+    {"element_id": "S1", "element_type": "START_EVENT", "name": "Start", "x": 50, "y": 450, "description": "", "responsible_authority": "Bauamt", "legal_basis": "BauO", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F1", "element_type": "FUNCTION", "name": "Eingang prüfen", "x": 200, "y": 450, "description": "", "responsible_authority": "Geschäftsstelle", "legal_basis": "", "deadline_days": 3, "geo_reference": ""},
+    {"element_id": "F2", "element_type": "FUNCTION", "name": "Vollständigkeit prüfen", "x": 350, "y": 450, "description": "Unterlagen / Bauvorlagen", "responsible_authority": "Sachbearbeitung", "legal_basis": "", "deadline_days": 10, "geo_reference": ""},
+    {"element_id": "G1", "element_type": "GATEWAY", "name": "Vollständig?", "x": 500, "y": 450, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F3", "element_type": "FUNCTION", "name": "Nachforderung setzen", "x": 650, "y": 400, "description": "Frist, fehlende Unterlagen", "responsible_authority": "Sachbearbeitung", "legal_basis": "BauVfV", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F4", "element_type": "FUNCTION", "name": "Fachprüfung Statik", "x": 650, "y": 300, "description": "Fachbeteiligung", "responsible_authority": "Prüfstatik", "legal_basis": "", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "F5", "element_type": "FUNCTION", "name": "Fachprüfung Brandschutz", "x": 650, "y": 500, "description": "Fachbeteiligung", "responsible_authority": "Brandschutzdienststelle", "legal_basis": "", "deadline_days": 14, "geo_reference": ""},
+    {"element_id": "G2", "element_type": "GATEWAY", "name": "Fachprüfungen ok?", "x": 800, "y": 450, "description": "Join/Entscheidung", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "G3", "element_type": "GATEWAY", "name": "Entscheidung", "x": 950, "y": 450, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "F6", "element_type": "FUNCTION", "name": "Genehmigungsbescheid", "x": 1100, "y": 400, "description": "Mit Auflagen ggf.", "responsible_authority": "Bauamt", "legal_basis": "BauO", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "F7", "element_type": "FUNCTION", "name": "Ablehnungsbescheid", "x": 1100, "y": 500, "description": "Begründung, Rechtsbehelf", "responsible_authority": "Bauamt", "legal_basis": "VwGO", "deadline_days": 7, "geo_reference": ""},
+    {"element_id": "E1", "element_type": "END_EVENT", "name": "Ende (genehmigt)", "x": 1250, "y": 400, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""},
+    {"element_id": "E2", "element_type": "END_EVENT", "name": "Ende (abgelehnt)", "x": 1250, "y": 500, "description": "", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": ""}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S1", "target_element": "F1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C2", "source_element": "F1", "target_element": "F2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C3", "source_element": "F2", "target_element": "G1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C4", "source_element": "G1", "target_element": "F3", "connection_type": "SEQUENCE", "description": "Nein"},
+    {"connection_id": "C5", "source_element": "F3", "target_element": "F2", "connection_type": "SEQUENCE", "description": "Rücksprung"},
+    {"connection_id": "C6", "source_element": "G1", "target_element": "F4", "connection_type": "SEQUENCE", "description": "Ja"},
+    {"connection_id": "C7", "source_element": "G1", "target_element": "F5", "connection_type": "SEQUENCE", "description": "Ja"},
+    {"connection_id": "C8", "source_element": "F4", "target_element": "G2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C9", "source_element": "F5", "target_element": "G2", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C10", "source_element": "G2", "target_element": "G3", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C11", "source_element": "G3", "target_element": "F6", "connection_type": "SEQUENCE", "description": "Genehmigen"},
+    {"connection_id": "C12", "source_element": "G3", "target_element": "F7", "connection_type": "SEQUENCE", "description": "Ablehnen"},
+    {"connection_id": "C13", "source_element": "F6", "target_element": "E1", "connection_type": "SEQUENCE", "description": ""},
+    {"connection_id": "C14", "source_element": "F7", "target_element": "E2", "connection_type": "SEQUENCE", "description": ""}
+  ]
+}

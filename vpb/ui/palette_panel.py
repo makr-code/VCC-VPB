@@ -61,9 +61,9 @@ class PalettePanel(tk.Frame):
         self._on_pick = on_pick
         self._on_reload = on_reload
         self._cats: List[Dict[str, object]] = []
-        self._default_columns = 3
-        self._min_column_width = 70
-        self._button_wraplength = 130
+        self._default_columns = 4
+        self._min_column_width = 60  # Reduziert von 70 auf 60 für mehr Flexibilität
+        self._button_wraplength = 80  # Wird dynamisch angepasst
         self._category_spacing = (0, 6)
         self._tooltip = _Tooltip(self)
 
@@ -85,15 +85,36 @@ class PalettePanel(tk.Frame):
         body.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self._canvas = tk.Canvas(body, bg="#ffffff", highlightthickness=0)
         yscroll = tk.Scrollbar(body, orient=tk.VERTICAL, command=self._canvas.yview)
-        self._inner = tk.Frame(self._canvas)
+        self._inner = tk.Frame(self._canvas, bg="#ffffff")
+        
+        # Configure-Event für scrollregion und Breite
         self._inner.bind("<Configure>", lambda _event: self._canvas.configure(scrollregion=self._canvas.bbox("all")))
-        self._canvas.create_window((0, 0), window=self._inner, anchor="nw")
+        
+        # Canvas-Window erstellen und ID speichern
+        self._canvas_window = self._canvas.create_window((0, 0), window=self._inner, anchor="nw")
+        
         self._canvas.configure(yscrollcommand=yscroll.set)
         self._canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         yscroll.pack(side=tk.RIGHT, fill=tk.Y)
 
         self._data: Dict[str, List[dict]] = {"categories": []}
-        self._canvas.bind("<Configure>", lambda _event: self._reflow())
+        
+        # Canvas-Resize-Event: Breite des Inner-Frames anpassen
+        self._canvas.bind("<Configure>", self._on_canvas_configure)
+
+    def _on_canvas_configure(self, event):
+        """
+        Wird aufgerufen, wenn der Canvas seine Größe ändert.
+        Passt die Breite des Inner-Frames an die Canvas-Breite an.
+        """
+        # Canvas-Breite ermitteln (abzüglich Scrollbar-Breite)
+        canvas_width = event.width
+        
+        # Inner-Frame-Breite an Canvas anpassen
+        self._canvas.itemconfig(self._canvas_window, width=canvas_width)
+        
+        # Reflow triggern für dynamische Button-Anpassung
+        self._reflow()
 
     def render(self, categories: List[dict]) -> None:
         self._tooltip.hide()
@@ -120,7 +141,7 @@ class PalettePanel(tk.Frame):
             expanded = bool(expanded_raw) if expanded_raw is not None else True
 
             container = tk.Frame(self._inner, bg="#ffffff")
-            container.pack(fill=tk.X, padx=2, pady=(6, 0))
+            container.pack(fill=tk.BOTH, expand=True, padx=0, pady=(6, 0))
 
             header = tk.Frame(container, bg="#e8e8e8")
             header.pack(fill=tk.X)
@@ -129,7 +150,7 @@ class PalettePanel(tk.Frame):
             title_label = tk.Label(header, text=title, anchor="w", bg="#e8e8e8", font=("Segoe UI", 9, "bold"))
             title_label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2, pady=4)
 
-            pack_opts = {"fill": tk.X, "padx": 6, "pady": self._category_spacing}
+            pack_opts = {"fill": tk.BOTH, "expand": True, "padx": 4, "pady": self._category_spacing}
             grid = tk.Frame(container, bg="#ffffff")
             grid.pack(**pack_opts)
 
@@ -169,10 +190,7 @@ class PalettePanel(tk.Frame):
                     justify="left",
                     anchor="w",
                 )
-                try:
-                    button.configure(width=16)
-                except Exception:
-                    pass
+                # Button-Breite wird dynamisch im _reflow() gesetzt
                 fill = item.get("fill")
                 if isinstance(fill, str) and fill:
                     try:
@@ -212,7 +230,7 @@ class PalettePanel(tk.Frame):
                 self._set_category_expanded(entry, True)
                 frame = entry.get("frame")
                 if isinstance(frame, tk.Frame):
-                    frame.pack(**(entry.get("pack_opts") or {"fill": tk.X, "padx": 6, "pady": self._category_spacing}))
+                    frame.pack(**(entry.get("pack_opts") or {"fill": tk.BOTH, "expand": True, "padx": 4, "pady": self._category_spacing}))
                 any_change = True
         if any_change:
             self._reflow()
@@ -254,6 +272,8 @@ class PalettePanel(tk.Frame):
             "COMPETENCY_CHECK": "🏛",
             "GEO_CONTEXT": "📍",
             "GROUP": "▢",
+            "TIME_LOOP": "⟳",  # NEU: Kreispfeil für Wiederholung
+            "TIMER": "⏰",      # NEU: Wecker/Uhr-Symbol
             "SEQUENCE": "➝",
             "MESSAGE": "✉",
             "ASSOCIATION": "－",
@@ -331,9 +351,9 @@ class PalettePanel(tk.Frame):
         if isinstance(frame, tk.Frame):
             if not frame.winfo_manager():
                 try:
-                    frame.pack(**(opts or {"fill": tk.X, "padx": 6, "pady": self._category_spacing}))
+                    frame.pack(**(opts or {"fill": tk.BOTH, "expand": True, "padx": 4, "pady": self._category_spacing}))
                 except Exception:
-                    frame.pack(fill=tk.X, padx=6, pady=self._category_spacing)
+                    frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=self._category_spacing)
 
     def _is_frame_packed(self, entry: Dict[str, object]) -> bool:
         frame = entry.get("frame")
@@ -346,6 +366,7 @@ class PalettePanel(tk.Frame):
             available = max(1, int(self._canvas.winfo_width() or 220))
         except Exception:
             available = 220
+        
         for cat in self._cats:
             frame = cat.get("frame")
             if not isinstance(frame, tk.Frame):
@@ -355,24 +376,42 @@ class PalettePanel(tk.Frame):
                 widget = info.get("widget") if isinstance(info, dict) else None
                 if hasattr(widget, "grid_forget"):
                     widget.grid_forget()
+            
             try:
                 preferred_columns = int(cat.get("columns", self._default_columns))
             except Exception:
                 preferred_columns = self._default_columns
             preferred_columns = max(1, preferred_columns)
-            max_columns = max(1, available // self._min_column_width)
+            
+            # Dynamische Spaltenberechnung basierend auf verfügbarer Breite
+            # Abzüglich Padding und Scrollbar
+            effective_width = available - 20  # 20px für Scrollbar und Padding
+            max_columns = max(1, effective_width // self._min_column_width)
             columns = max(1, min(preferred_columns, max_columns))
+            
+            # Dynamische Button-Breite und wraplength basierend auf Spaltenanzahl
+            button_width = (effective_width // columns) - 10  # 10px für padx
+            wraplength = max(50, button_width - 10)  # wraplength etwas kleiner als Button-Breite
+            
             visible_buttons = [b for b in buttons if isinstance(b, dict) and b.get("visible", True)]
             for index, info in enumerate(visible_buttons):
                 widget = info.get("widget") if isinstance(info, dict) else None
                 if not hasattr(widget, "grid"):
                     continue
+                
+                # Aktualisiere Button-Eigenschaften dynamisch
+                try:
+                    widget.configure(wraplength=wraplength)
+                except Exception:
+                    pass
+                
                 row = index // columns
                 column = index % columns
-                widget.grid(row=row, column=column, padx=3, pady=3, sticky="nsew")
+                widget.grid(row=row, column=column, padx=2, pady=2, sticky="nsew")
+            
             for column_index in range(columns):
                 try:
-                    frame.columnconfigure(column_index, weight=1)
+                    frame.columnconfigure(column_index, weight=1, uniform="button")
                 except Exception:
                     pass
 

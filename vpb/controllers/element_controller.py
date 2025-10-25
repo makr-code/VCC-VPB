@@ -117,7 +117,21 @@ class ElementController:
         element_type = item_data.get("type", "FUNCTION")
         element_name = item_data.get("name", "Neues Element")
         
-        # Start add mode on canvas
+        # Check if this is a connection type (not an element)
+        connection_types = [
+            "SEQUENCE", "MESSAGE", "ASSOCIATION", "LEGAL", "APPROVAL", 
+            "REJECTION", "DEADLINE", "ESCALATION", "DOCUMENT", 
+            "NOTIFICATION", "GEO_REF"
+        ]
+        
+        if element_type.upper() in connection_types:
+            # This is a connection - delegate to ConnectionController
+            self.event_bus.publish("ui:palette:connection_picked", {
+                "connection_data": item_data
+            })
+            return
+        
+        # This is a regular element - start add mode on canvas
         from vpb.ui.canvas import VPBCanvas
         canvas = self._get_canvas()
         if canvas and isinstance(canvas, VPBCanvas):
@@ -239,13 +253,31 @@ class ElementController:
         if not element or not self.current_document:
             return
             
-        # Update element properties
+        # Update element properties (alle Felder)
         if "name" in values:
             element.name = values["name"]
         if "description" in values:
             element.description = values["description"]
         if "element_type" in values:
             element.element_type = values["element_type"]
+        if "responsible_authority" in values:
+            element.responsible_authority = values["responsible_authority"]
+        if "legal_basis" in values:
+            element.legal_basis = values["legal_basis"]
+        if "deadline_days" in values:
+            try:
+                element.deadline_days = int(values["deadline_days"])
+            except (ValueError, TypeError):
+                element.deadline_days = 0
+        if "geo_reference" in values:
+            element.geo_reference = values["geo_reference"]
+        if "hierarchy" in values:
+            element.hierarchy = values["hierarchy"]
+        
+        # GROUP-spezifische Properties
+        if element.element_type == "GROUP":
+            if "collapsed" in values:
+                element.collapsed = bool(values["collapsed"])
             
         # Publish modified event
         self.event_bus.publish("element:modified", {

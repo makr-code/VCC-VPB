@@ -56,6 +56,69 @@
         { "type": "COMPETENCY_CHECK", "name": "Zuständigkeit", "shape": "rect", "fill": "#DDA0DD", "outline": "#9932CC" },
         { "type": "GEO_CONTEXT", "name": "Geo-Kontext", "shape": "rect", "fill": "#87CEEB", "outline": "#4682B4" }
       ]
+    },
+    {
+      "id": "time-elements",
+      "title": "Elemente – Zeit",
+      "items": [
+        { 
+          "type": "TIMER", 
+          "name": "Timer/Zeitgeber", 
+          "shape": "circle", 
+          "fill": "#FFF4E6", 
+          "outline": "#FF8C00",
+          "description": "Zeitpunkt für einmalige oder wiederkehrende Ereignisse"
+        }
+      ]
+    },
+    {
+      "id": "logic-elements",
+      "title": "Elemente – Logik",
+      "items": [
+        { 
+          "type": "COUNTER", 
+          "name": "Zähler (Counter)", 
+          "shape": "diamond", 
+          "fill": "#E8F4F8", 
+          "outline": "#2196F3",
+          "description": "Zählt Durchläufe oder Ereignisse (z.B. max. 3 Mahnungen)"
+        },
+        {
+          "type": "CONDITION",
+          "name": "Bedingung (Condition)",
+          "shape": "hexagon",
+          "fill": "#FFF9E6",
+          "outline": "#FFC107",
+          "description": "Prüft Bedingungen und verzweigt (TRUE/FALSE)"
+        },
+        {
+          "type": "ERROR_HANDLER",
+          "name": "Fehlerbehandlung (Error Handler)",
+          "shape": "octagon",
+          "fill": "#FFEBEE",
+          "outline": "#D32F2F",
+          "description": "Behandelt Fehler mit Retry, Fallback oder Benachrichtigung"
+        },
+        {
+          "type": "STATE",
+          "name": "Zustand (State)",
+          "shape": "house",
+          "fill": "#E8F5E9",
+          "outline": "#4CAF50",
+          "description": "Zustandsautomat mit Entry/Exit-Actions und Transitions"
+        },
+        {
+          "id": "interlock",
+          "name": "INTERLOCK",
+          "type": "INTERLOCK",
+          "category": "Elemente – Logik",
+          "shape": "rounded",
+          "fill": "#FFF3E0",
+          "outline": "#FF9800",
+          "description": "Ressourcensperre (Mutex/Semaphore) für exklusiven oder begrenzten Zugriff"
+        }
+      ]
     }
   ]
 }
+

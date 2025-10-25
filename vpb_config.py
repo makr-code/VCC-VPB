@@ -26,6 +26,12 @@ from enum import Enum
 from dataclasses import dataclass
 import logging
 
+# === VPB APPLICATION VERSION ===
+
+VPB_VERSION = "0.3.0"
+VPB_VERSION_NAME = "SPS Complete"
+VPB_RELEASE_DATE = "2025-10-18"
+
 # === PFAD-KONFIGURATIONEN ===
 
 # Basis-Verzeichnisse

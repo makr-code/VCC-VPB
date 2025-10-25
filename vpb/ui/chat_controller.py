@@ -180,6 +180,19 @@ class ChatController:
             self._assistant_buffer += chunk
             self.chat.append_assistant(chunk)
             return True
+        if kind == "stream_end":
+            # Stream vollständig abgeschlossen
+            self.handle_task_result(success=True, error=None, cancelled=False)
+            return True
+        if kind == "error":
+            # Fehler während des Streams
+            error_msg = str(data) if data else "Unbekannter Fehler"
+            self.handle_task_result(success=False, error=error_msg, cancelled=False)
+            return True
+        if kind == "cancelled":
+            # Stream wurde abgebrochen
+            self.handle_task_result(success=False, error="Abgebrochen", cancelled=True)
+            return True
         return False
 
     def handle_task_result(self, success: bool, error: Optional[str], cancelled: bool) -> None:

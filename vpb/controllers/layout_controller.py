@@ -41,20 +41,25 @@ class LayoutController:
     def __init__(
         self,
         event_bus: EventBus,
-        current_document: Optional[DocumentModel] = None
+        layout_service: Optional[Any] = None
     ):
         """
         Initialisiert LayoutController.
         
         Args:
             event_bus: Event-Bus für Kommunikation
-            current_document: Aktuelles Dokument (optional)
+            layout_service: Layout-Service (optional, derzeit nicht verwendet)
         """
         self.event_bus = event_bus
-        self.current_document = current_document
+        self.layout_service = layout_service
+        self.canvas = None  # Wird über set_canvas gesetzt
         
         # Subscribe to Events
         self._subscribe_to_events()
+    
+    def set_canvas(self, canvas) -> None:
+        """Setzt die Canvas-Referenz für Layout-Operationen."""
+        self.canvas = canvas
         
     def _subscribe_to_events(self) -> None:
         """Subscribe zu relevanten Events."""
@@ -83,6 +88,176 @@ class LayoutController:
         self.event_bus.subscribe("document:loaded", self._on_document_changed)
         self.event_bus.subscribe("document:closed", self._on_document_closed)
         
+        # Canvas Control Events (Zoom, Pan, etc.)
+        self.event_bus.subscribe("ui:action:canvas.zoom", self._on_canvas_zoom)
+        self.event_bus.subscribe("ui:action:canvas.zoom_reset", self._on_canvas_zoom_reset)
+        self.event_bus.subscribe("ui:action:canvas.fit_to_window", self._on_canvas_fit_to_window)
+        self.event_bus.subscribe("ui:action:canvas.zoom_to_selection", self._on_canvas_zoom_to_selection)
+        self.event_bus.subscribe("ui:action:canvas.toggle_grid", self._on_canvas_toggle_grid)
+        
+    # ===== Canvas Controls =====
+    
+    def _on_canvas_zoom(self, data: Dict[str, Any]) -> None:
+        """Zoom In/Out."""
+        if not self.canvas:
+            return
+        
+        direction = data.get("direction", "in")
+        factor = 1.2 if direction == "in" else 1 / 1.2
+        
+        try:
+            # Zoom am Mittelpunkt
+            self.canvas.zoom_at_view(factor)
+            
+            # Update Toolbar
+            self._update_toolbar_zoom()
+            
+            self.event_bus.publish("canvas:zoom_changed", {
+                "zoom": self.canvas.view_scale
+            })
+        except Exception as e:
+            self.event_bus.publish("ui:statusbar:update", {
+                "text": f"Zoom fehlgeschlagen: {e}"
+            })
+    
+    def _on_canvas_zoom_reset(self, data: Dict[str, Any]) -> None:
+        """Setzt Zoom auf 100% zurück."""
+        if not self.canvas:
+            return
+        
+        try:
+            # Setze Scale auf 1.0
+            self.canvas.view_scale = 1.0
+            self.canvas.redraw_all()
+            
+            # Update Toolbar
+            self._update_toolbar_zoom()
+            
+            self.event_bus.publish("canvas:zoom_changed", {
+                "zoom": 1.0
+            })
+            self.event_bus.publish("ui:statusbar:update", {
+                "text": "Zoom auf 100% zurückgesetzt"
+            })
+        except Exception as e:
+            self.event_bus.publish("ui:statusbar:update", {
+                "text": f"Zoom Reset fehlgeschlagen: {e}"
+            })
+    
+    def _on_canvas_fit_to_window(self, data: Dict[str, Any]) -> None:
+        """Passt Ansicht an Fenster an (Fit to Window)."""
+        if not self.canvas:
+            return
+        
+        try:
+            # Hole Content Bounds
+            min_x, min_y, max_x, max_y = self.canvas.get_content_bounds(include_connections=True)
+            
+            if min_x >= max_x or min_y >= max_y:
+                self.event_bus.publish("ui:statusbar:update", {
+                    "text": "Keine Elemente zum Anpassen"
+                })
+                return
+            
+            # Berechne benötigten Zoom
+            content_w = max_x - min_x
+            content_h = max_y - min_y
+            canvas_w = self.canvas.winfo_width() or 800
+            canvas_h = self.canvas.winfo_height() or 600
+            
+            # Padding (20% auf jeder Seite)
+            padding = 0.8
+            scale_x = (canvas_w * padding) / content_w
+            scale_y = (canvas_h * padding) / content_h
+            new_scale = min(scale_x, scale_y)
+            
+            # Clamp to min/max zoom
+            new_scale = max(self.canvas._min_zoom, min(self.canvas._max_zoom, new_scale))
+            
+            # Setze Zoom und Position
+            self.canvas.view_scale = new_scale
+            
+            # Zentriere Content
+            center_x = (min_x + max_x) / 2
+            center_y = (min_y + max_y) / 2
+            self.canvas.view_tx = canvas_w / 2 - center_x * new_scale
+            self.canvas.view_ty = canvas_h / 2 - center_y * new_scale
+            
+            self.canvas.redraw_all()
+            
+            # Update Toolbar
+            self._update_toolbar_zoom()
+            
+            self.event_bus.publish("canvas:zoom_changed", {
+                "zoom": new_scale
+            })
+            self.event_bus.publish("ui:statusbar:update", {
+                "text": f"Fit to Window: {int(new_scale * 100)}%"
+            })
+        except Exception as e:
+            self.event_bus.publish("ui:statusbar:update", {
+                "text": f"Fit to Window fehlgeschlagen: {e}"
+            })
+    
+    def _on_canvas_zoom_to_selection(self, data: Dict[str, Any]) -> None:
+        """Zoomt auf die Selektion."""
+        if not self.canvas:
+            return
+        
+        try:
+            success = self.canvas.zoom_to_selection(padding=40.0)
+            
+            if success:
+                # Update Toolbar
+                self._update_toolbar_zoom()
+                
+                self.event_bus.publish("canvas:zoom_changed", {
+                    "zoom": self.canvas.view_scale
+                })
+                self.event_bus.publish("ui:statusbar:update", {
+                    "text": "Zoom to Selection"
+                })
+            else:
+                self.event_bus.publish("ui:statusbar:update", {
+                    "text": "Keine Elemente ausgewählt"
+                })
+        except Exception as e:
+            self.event_bus.publish("ui:statusbar:update", {
+                "text": f"Zoom to Selection fehlgeschlagen: {e}"
+            })
+    
+    def _on_canvas_toggle_grid(self, data: Dict[str, Any]) -> None:
+        """Schaltet Grid ein/aus."""
+        if not self.canvas:
+            return
+        
+        try:
+            # Toggle Grid
+            current_state = getattr(self.canvas, 'show_grid', False)
+            new_state = not current_state
+            self.canvas.show_grid = new_state
+            self.canvas.redraw_all()
+            
+            # Update Toolbar Grid-Button
+            self.event_bus.publish("toolbar:grid_state_changed", {
+                "active": new_state
+            })
+            
+            self.event_bus.publish("ui:statusbar:update", {
+                "text": f"Grid {'aktiviert' if new_state else 'deaktiviert'}"
+            })
+        except Exception as e:
+            self.event_bus.publish("ui:statusbar:update", {
+                "text": f"Grid Toggle fehlgeschlagen: {e}"
+            })
+    
+    def _update_toolbar_zoom(self) -> None:
+        """Aktualisiert die Zoom-Anzeige in der Toolbar."""
+        if self.canvas:
+            self.event_bus.publish("toolbar:zoom_changed", {
+                "zoom": self.canvas.view_scale
+            })
+        
     # ===== Auto Layout =====
     
     def _on_auto_layout(self, data: Dict[str, Any]) -> None:
@@ -92,11 +267,11 @@ class LayoutController:
         Args:
             data: {"algorithm": str} (optional, default: "hierarchical")
         """
-        if not self.current_document:
+        if not self.canvas:
             return
-            
+        
         algorithm = data.get("algorithm", "hierarchical")
-        elements = self.current_document.get_all_elements()
+        elements = list(self.canvas.elements.values())
         
         if not elements:
             return
@@ -104,6 +279,9 @@ class LayoutController:
         # Simple hierarchical layout (top to bottom)
         if algorithm == "hierarchical":
             self._apply_hierarchical_layout(elements)
+        
+        # Canvas neu zeichnen
+        self.canvas.redraw_all()
         
         # Publish Event
         element_ids = [elem.element_id for elem in elements]
@@ -167,15 +345,20 @@ class LayoutController:
             data: {"element_ids": List[str]}
             align_type: Art der Ausrichtung
         """
-        if not self.current_document:
+        if not self.canvas:
             return
             
         element_ids = data.get("element_ids", [])
         
         if len(element_ids) < 2:
+            # Keine Element-IDs übergeben, nutze Selektion
+            if hasattr(self.canvas, 'selected_ids'):
+                element_ids = list(self.canvas.selected_ids)
+        
+        if len(element_ids) < 2:
             return
             
-        elements = [self.current_document.get_element(eid) for eid in element_ids]
+        elements = [self.canvas.elements.get(eid) for eid in element_ids]
         elements = [e for e in elements if e is not None]
         
         if len(elements) < 2:
@@ -211,6 +394,9 @@ class LayoutController:
             for elem in elements:
                 elem.y = ref - default_height / 2
         
+        # Canvas neu zeichnen
+        self.canvas.redraw_all()
+        
         # Publish Event
         self.event_bus.publish("layout:applied", {
             "layout_type": f"align_{align_type}",
@@ -241,15 +427,20 @@ class LayoutController:
             data: {"element_ids": List[str]}
             direction: "horizontal" oder "vertical"
         """
-        if not self.current_document:
+        if not self.canvas:
             return
             
         element_ids = data.get("element_ids", [])
         
         if len(element_ids) < 3:
+            # Keine Element-IDs übergeben, nutze Selektion
+            if hasattr(self.canvas, 'selected_ids'):
+                element_ids = list(self.canvas.selected_ids)
+        
+        if len(element_ids) < 3:
             return
             
-        elements = [self.current_document.get_element(eid) for eid in element_ids]
+        elements = [self.canvas.elements.get(eid) for eid in element_ids]
         elements = [e for e in elements if e is not None]
         
         if len(elements) < 3:
@@ -282,6 +473,9 @@ class LayoutController:
             for elem in elements:
                 elem.y = current_y
                 current_y += default_height + spacing
+        
+        # Canvas neu zeichnen
+        self.canvas.redraw_all()
         
         # Publish Event
         self.event_bus.publish("layout:applied", {
@@ -317,15 +511,20 @@ class LayoutController:
             data: {"element_ids": List[str]}
             formation_type: "line", "circle", "grid"
         """
-        if not self.current_document:
+        if not self.canvas:
             return
             
         element_ids = data.get("element_ids", [])
         
         if len(element_ids) < 2:
+            # Keine Element-IDs übergeben, nutze Selektion
+            if hasattr(self.canvas, 'selected_ids'):
+                element_ids = list(self.canvas.selected_ids)
+        
+        if len(element_ids) < 2:
             return
             
-        elements = [self.current_document.get_element(eid) for eid in element_ids]
+        elements = [self.canvas.elements.get(eid) for eid in element_ids]
         elements = [e for e in elements if e is not None]
         
         if len(elements) < 2:
@@ -369,6 +568,9 @@ class LayoutController:
                 elem.x = x_start + col * x_spacing
                 elem.y = y_start + row * y_spacing
         
+        # Canvas neu zeichnen
+        self.canvas.redraw_all()
+        
         # Publish Event
         self.event_bus.publish("layout:applied", {
             "layout_type": f"formation_{formation_type}",
@@ -390,8 +592,8 @@ class LayoutController:
         Args:
             data: {"document": DocumentModel}
         """
-        document = data.get("document")
-        self.current_document = document
+        # Nicht mehr benötigt, da wir direkt mit Canvas arbeiten
+        pass
         
     def _on_document_closed(self, data: Dict[str, Any]) -> None:
         """
@@ -400,18 +602,20 @@ class LayoutController:
         Args:
             data: Event-Daten (leer)
         """
-        self.current_document = None
+        # Nicht mehr benötigt, da wir direkt mit Canvas arbeiten
+        pass
         
     # ===== Public API =====
     
-    def set_document(self, document: Optional[DocumentModel]) -> None:
+    def set_document(self, document: Optional[Any]) -> None:
         """
-        Setzt das aktuelle Dokument.
+        Setzt das aktuelle Dokument (Legacy-Kompatibilität).
         
         Args:
-            document: DocumentModel oder None
+            document: DocumentModel oder None (nicht mehr verwendet)
         """
-        self.current_document = document
+        # Nicht mehr benötigt, da wir direkt mit Canvas arbeiten
+        pass
         
     def apply_auto_layout(self, algorithm: str = "hierarchical") -> None:
         """
@@ -434,6 +638,6 @@ class LayoutController:
         
     def __repr__(self) -> str:
         """String-Repräsentation."""
-        doc_status = "with document" if self.current_document else "no document"
-        elem_count = len(self.current_document.get_all_elements()) if self.current_document else 0
-        return f"<LayoutController({doc_status}, elements={elem_count})>"
+        canvas_status = "with canvas" if self.canvas else "no canvas"
+        elem_count = len(self.canvas.elements) if self.canvas else 0
+        return f"<LayoutController({canvas_status}, elements={elem_count})>"
