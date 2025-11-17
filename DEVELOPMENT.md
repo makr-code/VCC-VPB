@@ -1,7 +1,9 @@
 # VPB Process Designer - Entwickler-Dokumentation
 
-**Version:** 1.0.0 "UDS3 Complete"  
-**Last Updated:** 2025-10-18
+**Version:** 1.1.0 "Real Backend Integration"  
+**Last Updated:** 2025-11-17
+
+> **Note:** This project uses semantic versioning. See `VERSION` file for canonical version number.
 
 ---
 
