@@ -1,6 +1,8 @@
-# VPB Visual Process Designer — Dokumentation (DE primär, EN sekundär)
+# VPB Visual Process Designer
 
-Version: 1.1.0 "Real Backend Integration" (Stand: 2025-10-18)
+**Version:** 1.1.0 "Real Backend Integration"  
+**Status:** 🚀 Production Ready  
+**Last Updated:** 2025-11-17
 
 Kurzbeschreibung (DE):
 - VPB ist ein visueller Prozess-Designer für Verwaltungsprozesse mit Unterstützung für SPS-Elemente (COUNTER, CONDITION, ERROR_HANDLER, STATE, INTERLOCK) und einer UDS3-kompatiblen Backend-Integration (PostgreSQL, Neo4j, ChromaDB).
@@ -40,12 +42,26 @@ Quickstart (EN):
      uvicorn api.uds3_vpb_fastapi:app --reload
      OpenAPI: http://localhost:8000/api/docs
 
-Wichtige Links im Repo:
-- docs/DOCUMENTATION_SUMMARY.md — Konsolidierte Projektdokumentation (DE/EN)
-- docs/CHANGELOG_SUMMARY.md — Kurzfassung des Changelogs (DE/EN)
-- processes/ — Beispiele & Showcases
-- palettes/README.md — Paletten-Format
-- CONTRIBUTING.md — Beitragshinweise
-- tests/ — Test-Suites
+## 📚 Documentation
 
-Wenn gewünscht, kann ich weitere Dateien hinzufügen oder diese README anpassen.
+### Quick Links
+- **[API Reference](docs/api/UDS3_API_REFERENCE.md)** — REST API documentation (10 endpoints)
+- **[Development Guide](DEVELOPMENT.md)** — Developer setup and workflow
+- **[Documentation Summary](docs/DOCUMENTATION_SUMMARY.md)** — Consolidated project documentation
+- **[Changelog](CHANGELOG.md)** — Complete change history
+- **[Contributing](CONTRIBUTING.md)** — Contribution guidelines
+
+### Project Documentation
+- **[Gap Analysis](DOCUMENTATION_GAP_ANALYSIS.md)** — Documentation status and gaps
+- **[Project Guide](DOCUMENTATION_PROJECT_GUIDE.md)** — Navigation guide for all documentation
+- **[SPS Elements Status](SPS_IMPLEMENTATION_STATUS.md)** — SPS elements verification
+
+### Examples & Tests
+- `processes/` — Example processes and showcases
+- `palettes/README.md` — Palette format documentation
+- `tests/` — Comprehensive test suites
+
+---
+
+**Version:** 1.1.0  
+**Single Source of Truth:** See `VERSION` file in repository root
