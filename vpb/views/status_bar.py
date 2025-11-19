@@ -14,6 +14,10 @@ Autor: GitHub Copilot (Phase 4: Views Layer)
 import tkinter as tk
 from tkinter import ttk
 from typing import Optional
+from vpb.ui.theme import get_theme_manager
+from vpb.ui.icons import get_icon_manager
+from vpb.ui.fonts import get_font_manager
+from vpb.ui.spacing import get_spacing_manager
 
 
 class StatusBarView:
@@ -40,52 +44,68 @@ class StatusBarView:
     def __init__(
         self,
         parent: tk.Widget,
-        background_color: str = "#eeeeee"
+        background_color: Optional[str] = None
     ):
         """
         Initialisiert die StatusBar View.
         
         Args:
             parent: Parent Tk-Widget (normalerweise Hauptfenster)
-            background_color: Hintergrundfarbe (default: "#eeeeee")
+            background_color: Hintergrundfarbe (optional, nutzt Theme)
         """
         self.parent = parent
+        
+        # UI Managers
+        self.theme = get_theme_manager()
+        self.icons = get_icon_manager()
+        self.fonts = get_font_manager()
+        self.spacing = get_spacing_manager()
+        
+        # Theme-Farben
+        if background_color is None:
+            background_color = self.theme.get_color("bg_secondary")
         self.background_color = background_color
+        text_color = self.theme.get_color("text_secondary")
+        statusbar_font = self.fonts.get("statusbar")
         
         # StatusBar Frame erstellen
-        self.statusbar = tk.Frame(parent, bg=background_color, height=24)
+        statusbar_height = self.spacing.get_spacing("lg")  # 24px
+        self.statusbar = tk.Frame(parent, bg=background_color, height=statusbar_height)
         self.statusbar.pack(side=tk.BOTTOM, fill=tk.X)
         
         # StringVars für Labels
-        self._left_var = tk.StringVar(value="Bereit")
+        self._left_var = tk.StringVar(value=f"{self.icons.get('success')} Bereit")
         self._center_var = tk.StringVar(value="")
         self._right_var = tk.StringVar(value="")
         
         # Labels erstellen
         self.left_label = tk.Label(
-            self.statusbar, 
-            textvariable=self._left_var, 
-            anchor="w", 
+            self.statusbar,
+            textvariable=self._left_var,
+            anchor="w",
             bg=background_color,
-            font=("Segoe UI", 9)
+            fg=text_color,
+            font=statusbar_font
         )
         self.left_label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(8, 4))
         
         self.center_label = tk.Label(
-            self.statusbar, 
-            textvariable=self._center_var, 
-            anchor="center", 
+            self.statusbar,
+            textvariable=self._center_var,
+            anchor="center",
             bg=background_color,
-            font=("Segoe UI", 9)
+            fg=text_color,
+            font=statusbar_font
         )
         self.center_label.pack(side=tk.LEFT, padx=4)
         
         self.right_label = tk.Label(
-            self.statusbar, 
-            textvariable=self._right_var, 
-            anchor="e", 
+            self.statusbar,
+            textvariable=self._right_var,
+            anchor="e",
             bg=background_color,
-            font=("Segoe UI", 9)
+            fg=text_color,
+            font=statusbar_font
         )
         self.right_label.pack(side=tk.RIGHT, padx=(4, 8))
     
