@@ -788,9 +788,9 @@ class PropertiesPanel(tk.Frame):
             self.ent_state_entry_action,
             self.ent_state_exit_action,
             self.lst_state_transitions,
-            self.btn_trans_add,
-            self.btn_trans_edit,
-            self.btn_trans_remove,
+            self.btn_add_transition,
+            self.btn_edit_transition,
+            self.btn_remove_transition,
             self.ent_state_timeout,
             self.ent_state_timeout_target,
             # INTERLOCK
@@ -1282,9 +1282,9 @@ class PropertiesPanel(tk.Frame):
             self.ent_state_entry_action.configure(state="normal")
             self.ent_state_exit_action.configure(state="normal")
             self.lst_state_transitions.configure(state="normal")
-            self.btn_trans_add.configure(state="normal")
-            self.btn_trans_edit.configure(state="normal")
-            self.btn_trans_remove.configure(state="normal")
+            self.btn_add_transition.configure(state="normal")
+            self.btn_edit_transition.configure(state="normal")
+            self.btn_remove_transition.configure(state="normal")
             self.ent_state_timeout.configure(state="normal")
             self.ent_state_timeout_target.configure(state="normal")
         else:
@@ -1297,9 +1297,9 @@ class PropertiesPanel(tk.Frame):
             self.ent_state_entry_action.configure(state="disabled")
             self.ent_state_exit_action.configure(state="disabled")
             self.lst_state_transitions.configure(state="disabled")
-            self.btn_trans_add.configure(state="disabled")
-            self.btn_trans_edit.configure(state="disabled")
-            self.btn_trans_remove.configure(state="disabled")
+            self.btn_add_transition.configure(state="disabled")
+            self.btn_edit_transition.configure(state="disabled")
+            self.btn_remove_transition.configure(state="disabled")
             self.ent_state_timeout.configure(state="disabled")
             self.ent_state_timeout_target.configure(state="disabled")
         
