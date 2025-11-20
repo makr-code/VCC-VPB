@@ -22,6 +22,9 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Optional, TYPE_CHECKING
 from vpb.infrastructure.event_bus import get_global_event_bus
+from vpb.ui.theme import get_theme_manager
+from vpb.ui.icons import get_icon_manager
+from vpb.ui.fonts import get_font_manager
 
 if TYPE_CHECKING:
     from vpb.infrastructure.event_bus import EventBus
@@ -69,6 +72,11 @@ class MenuBarView:
         self.parent = parent
         self.event_bus = event_bus or get_global_event_bus()
         
+        # UI Managers
+        self.theme = get_theme_manager()
+        self.icons = get_icon_manager()
+        self.fonts = get_font_manager()
+        
         # Tkinter-Variablen für Checkbuttons & Radiobuttons
         self._snap_to_grid_var = tk.BooleanVar(value=False)
         self._show_grid_var = tk.BooleanVar(value=True)
@@ -98,38 +106,41 @@ class MenuBarView:
         self._create_help_menu()
     
     def _create_file_menu(self) -> None:
-        """Erstellt das Datei-Menü."""
+        """Erstellt das Datei-Menü mit Icons."""
         file_menu = tk.Menu(self.menubar, tearoff=0)
         
         file_menu.add_command(
-            label="Neu (Strg+N)",
+            label=f"{self.icons.get('new')} Neu (Strg+N)",
             command=lambda: self._publish_action("file.new")
         )
         file_menu.add_command(
-            label="Öffnen… (Strg+O)",
+            label=f"{self.icons.get('open')} Öffnen… (Strg+O)",
             command=lambda: self._publish_action("file.open")
         )
         
         # Recent Files Untermenü
         self.recent_files_menu = tk.Menu(file_menu, tearoff=0)
-        file_menu.add_cascade(label="Zuletzt geöffnet", menu=self.recent_files_menu)
+        file_menu.add_cascade(
+            label=f"{self.icons.get('recent')} Zuletzt geöffnet",
+            menu=self.recent_files_menu
+        )
         self._update_recent_files_menu([])  # Initial leer
         
         file_menu.add_command(
-            label="AI-Ingestion Wizard…",
+            label=f"{self.icons.get('ai')} AI-Ingestion Wizard…",
             command=lambda: self._publish_action("file.ingestion_wizard")
         )
         file_menu.add_separator()
         file_menu.add_command(
-            label="Speichern (Strg+S)",
+            label=f"{self.icons.get('save')} Speichern (Strg+S)",
             command=lambda: self._publish_action("file.save")
         )
         file_menu.add_command(
-            label="Speichern unter…",
+            label=f"{self.icons.get('save_as')} Speichern unter…",
             command=lambda: self._publish_action("file.save_as")
         )
         file_menu.add_command(
-            label="Metadaten bearbeiten…",
+            label=f"{self.icons.get('settings')} Metadaten bearbeiten…",
             command=lambda: self._publish_action("file.edit_metadata")
         )
         file_menu.add_separator()
@@ -137,63 +148,66 @@ class MenuBarView:
         # Export-Untermenü
         export_menu = tk.Menu(file_menu, tearoff=0)
         export_menu.add_command(
-            label="Als PNG…",
+            label=f"{self.icons.get('export')} Als PNG…",
             command=lambda: self._publish_action("file.export", {"format": "png"})
         )
         export_menu.add_command(
-            label="Als PDF…",
+            label=f"{self.icons.get('export')} Als PDF…",
             command=lambda: self._publish_action("file.export", {"format": "pdf"})
         )
         export_menu.add_command(
-            label="Als SVG…",
+            label=f"{self.icons.get('export')} Als SVG…",
             command=lambda: self._publish_action("file.export", {"format": "svg"})
         )
         export_menu.add_command(
-            label="Als PostScript…",
+            label=f"{self.icons.get('export')} Als PostScript…",
             command=lambda: self._publish_action("file.export", {"format": "ps"})
         )
-        file_menu.add_cascade(label="Exportieren", menu=export_menu)
+        file_menu.add_cascade(
+            label=f"{self.icons.get('export')} Exportieren",
+            menu=export_menu
+        )
         
         file_menu.add_separator()
         file_menu.add_command(
-            label="Beenden",
+            label=f"{self.icons.get('close')} Beenden",
             command=lambda: self._publish_action("file.quit")
         )
         
         self.menubar.add_cascade(label="Datei", menu=file_menu)
     
     def _create_edit_menu(self) -> None:
-        """Erstellt das Bearbeiten-Menü."""
+        """Erstellt das Bearbeiten-Menü mit Icons."""
         edit_menu = tk.Menu(self.menubar, tearoff=0)
         
         edit_menu.add_command(
-            label="Element hinzufügen… (E)",
+            label=f"{self.icons.get('add_element')} Element hinzufügen… (E)",
             command=lambda: self._publish_action("edit.add_element")
         )
         edit_menu.add_command(
-            label="Verbindung hinzufügen (C)",
+            label=f"{self.icons.get('add_connection')} Verbindung hinzufügen (C)",
             command=lambda: self._publish_action("edit.add_connection")
         )
         edit_menu.add_separator()
         edit_menu.add_command(
-            label="Löschen (Entf)",
+            label=f"{self.icons.get('delete')} Löschen (Entf)",
             command=lambda: self._publish_action("edit.delete")
         )
         edit_menu.add_command(
-            label="Duplizieren (Strg+D)",
+            label=f"{self.icons.get('duplicate')} Duplizieren (Strg+D)",
             command=lambda: self._publish_action("edit.duplicate")
         )
         edit_menu.add_separator()
         
         # Snap-to-Grid als Checkbutton
         edit_menu.add_checkbutton(
-            label="Snap-to-Grid",
+            label=f"{self.icons.get('grid')} Snap-to-Grid",
             variable=self._snap_to_grid_var,
             command=lambda: self._on_snap_to_grid_changed()
         )
         
         edit_menu.add_command(
-            label="Link-Modus umschalten (L)",
+            label=f"{self.icons.get('add_connection')} Link-Modus umschalten (L)",
             command=lambda: self._publish_action("edit.toggle_link_mode")
         )
         edit_menu.add_separator()
@@ -519,15 +533,15 @@ class MenuBarView:
         self.menubar.add_cascade(label="AI", menu=ai_menu)
     
     def _create_help_menu(self) -> None:
-        """Erstellt das Hilfe-Menü."""
+        """Erstellt das Hilfe-Menü mit Icons."""
         help_menu = tk.Menu(self.menubar, tearoff=0)
         
         help_menu.add_command(
-            label="Tastaturkürzel (F1)",
+            label=f"{self.icons.get('help')} Tastaturkürzel (F1)",
             command=lambda: self._publish_action("help.shortcuts")
         )
         help_menu.add_command(
-            label="Über",
+            label=f"{self.icons.get('info')} Über",
             command=lambda: self._publish_action("help.about")
         )
         
