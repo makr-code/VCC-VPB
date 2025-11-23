@@ -44,6 +44,12 @@ Quickstart (EN):
 
 ## 📚 Documentation
 
+### Strategic Planning
+- **[Weiterentwicklungsstrategie](WEITERENTWICKLUNGSSTRATEGIE.md)** — 2025-2027 evolution strategy for VCC-VPB
+- **[Roadmap](ROADMAP.md)** — Product roadmap and release planning
+- **[System Integration](System-Integration.md)** — VCC ecosystem integration (Covina, VERITAS, Clara, Themis)
+- **[Architecture](Architecture.md)** — System architecture and design patterns
+
 ### Quick Links
 - **[API Reference](docs/api/UDS3_API_REFERENCE.md)** — REST API documentation (10 endpoints)
 - **[Development Guide](DEVELOPMENT.md)** — Developer setup and workflow
