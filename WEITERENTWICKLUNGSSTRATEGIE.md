@@ -1,7 +1,8 @@
 # VCC-VPB Weiterentwicklungsstrategie
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Stand:** 2025-11-23  
+**Aktualisierung:** .NET C# Desktop-Migration integriert  
 **Status:** 📋 Strategiedokument  
 **Gültigkeit:** 2025-2027
 
@@ -13,6 +14,7 @@ Die VCC-VPB (Visual Process Builder für Verwaltungscloud Compliance) Weiterentw
 
 **Strategische Ziele:**
 - Integration in das VCC-Gesamtökosystem (Covina, VERITAS, Clara, Themis)
+- **Migration zu .NET C# für Desktop-Anwendung (Windows/Linux)**
 - Evolutionäre Architektur mit polyglotter Persistenz (UDS3)
 - KI-gestützte Prozessoptimierung und Compliance-Prüfung
 - Cloud-native Deployment mit Kubernetes
@@ -20,6 +22,9 @@ Die VCC-VPB (Visual Process Builder für Verwaltungscloud Compliance) Weiterentw
 - Open Government Data Standards
 
 **Zeithorizont:** 2025-2027 (3 Phasen mit 8 Quartalen)
+
+**Wichtige Technologie-Entscheidung:**  
+Mittelfristige Migration der Desktop-Anwendung von Python/PyQt6 zu .NET C#/Avalonia UI für bessere Performance, Cross-Platform-Support und Code-Sharing mit mobilen Plattformen (.NET MAUI).
 
 ---
 
@@ -348,32 +353,98 @@ Benefits:
 
 ### 3.2 Frontend Evolution
 
-**Phase 1: Desktop-Anwendung Modernisierung (2025 Q1-Q2)**
+**Strategische Technologie-Entscheidung: .NET C# Migration**
+
+```yaml
+Mittelfristiges Ziel: Migration zu .NET C# für Windows/Linux Desktop-Anwendung
+
+Rationale:
+  - Cross-Platform: Windows und Linux native Unterstützung
+  - Performance: Native Compilation, bessere Performance
+  - Ecosystem: Umfangreiches .NET Ökosystem und Tooling
+  - Enterprise-Support: Microsoft LTS und kommerzielle Unterstützung
+  - UI-Frameworks: WPF (Windows), Avalonia (Cross-Platform), MAUI
+  - Integration: Nahtlose Integration mit Azure und Enterprise-Systemen
+
+Timeline:
+  - Phase 1 (2025 Q1-Q2): Python/PyQt6 Stabilisierung
+  - Phase 1.5 (2025 Q3): .NET C# Proof-of-Concept und Architektur
+  - Phase 2 (2025 Q4-2026 Q1): Schrittweise Migration zu .NET
+  - Phase 2.5 (2026 Q2): Vollständige .NET Desktop-Anwendung
+```
+
+**Phase 1: Desktop-Anwendung Stabilisierung (2025 Q1-Q2)**
 
 ```yaml
 Current: PyQt6 Desktop Application
-Target: Modernisierte Desktop-App mit Web-Features
+Target: Produktionsreife Python-Anwendung (vor Migration)
 
 Improvements:
-  - Embedded Web Components (QtWebEngine)
-  - Modern UI Framework (Qt Quick/QML)
-  - Responsive Layouts
-  - Dark Mode Support
-  - Accessibility (WCAG 2.1 AA)
-  - Plugin System für Custom Elements
+  - Code-Qualität und Dokumentation
+  - Vollständige Test-Abdeckung
+  - Plugin-Architektur (für Migration)
+  - API-Abstraktion (Backend-unabhängig)
+  - Daten-Migration-Tools
 
-Technology Stack:
-  - PyQt6 (Core)
-  - QML (UI Deklaration)
-  - JavaScript (Web Components)
-  - Tailwind CSS (Styling)
+Technology Stack (Übergang):
+  - PyQt6 (Core - wird migriert)
+  - Python 3.13 (Backend bleibt)
+  - FastAPI (Backend - bleibt)
+  - REST API (Migrations-Interface)
+
+Ziel: Saubere Codebasis für .NET Migration
+```
+
+**Phase 1.5: .NET C# Proof-of-Concept (2025 Q3)**
+
+```yaml
+Status: Planung
+Priority: Critical
+Timeline: Q3 2025
+
+Ziele:
+  - .NET 8/9 Cross-Platform Desktop PoC
+  - UI-Framework Evaluation (Avalonia vs. MAUI vs. WPF+Avalonia Hybrid)
+  - API-Integration mit FastAPI Backend
+  - Performance-Benchmarks
+  - Migration-Strategie finalisieren
+
+Technology Stack Evaluation:
+  Option A - Avalonia UI:
+    - Cross-Platform (Windows, Linux, macOS)
+    - XAML-basiert (WPF-ähnlich)
+    - Modern, GPU-accelerated
+    - Open Source (MIT License)
+    - Community-Support gut
+  
+  Option B - .NET MAUI:
+    - Microsoft-offiziell
+    - Cross-Platform (Windows, Linux, macOS, Mobile)
+    - Xamarin-Nachfolger
+    - Native Controls
+    - Kommerzielle Unterstützung
+  
+  Option C - WPF + Avalonia Hybrid:
+    - WPF für Windows (beste Performance)
+    - Avalonia für Linux
+    - Shared XAML-Code
+    - Best-of-both-worlds
+
+Empfehlung: Avalonia UI (Cross-Platform Priorität)
+
+PoC-Deliverables:
+  - Funktionaler Prototyp mit Canvas-Rendering
+  - API-Integration Demo
+  - Performance-Vergleich zu PyQt6
+  - Migrations-Architektur-Dokument
+  - Aufwandsschätzung für vollständige Migration
 ```
 
 **Phase 2: Web-Anwendung (2025 Q3-Q4)**
 
 ```yaml
 Status: Konzeption
-Priority: High
+Priority: High (parallel zu .NET PoC)
 Timeline: Q3-Q4 2025
 
 Technology Stack:
@@ -397,6 +468,95 @@ Technology Stack:
     - Micro-Frontends (für Skalierung)
     - Lazy Loading (Code Splitting)
     - SSR (Server-Side Rendering) mit Next.js
+
+Note: Web-App läuft parallel zur Desktop-Migration
+```
+
+**Phase 2.5: .NET C# Desktop-Migration (2025 Q4 - 2026 Q1)**
+
+```yaml
+Status: Planung (nach PoC-Evaluation)
+Priority: Critical
+Timeline: Q4 2025 - Q1 2026
+
+Migrations-Strategie:
+  Approach: Schrittweise Komponenten-Migration (Strangler Pattern)
+  
+  Phase A - Core UI (Q4 2025):
+    - Canvas Rendering Engine (.NET)
+    - Element Palette (.NET)
+    - Properties Panel (.NET)
+    - Main Window Shell (.NET Avalonia)
+  
+  Phase B - Advanced Features (Q1 2026):
+    - Export Engine (PDF, PNG, SVG)
+    - Validation Framework
+    - Plugin System
+    - Settings Management
+  
+  Phase C - Integration (Q1 2026):
+    - API Client (.NET HttpClient)
+    - WebSocket Real-Time
+    - Auto-Save Service
+    - Telemetry
+
+Technology Stack (.NET):
+  Core:
+    - .NET 8/9 (LTS)
+    - C# 12/13
+    - Avalonia UI 11+ (Cross-Platform)
+    - ReactiveUI (MVVM Pattern)
+  
+  API Integration:
+    - Refit (REST Client)
+    - SignalR (.NET Client für WebSockets)
+    - System.Text.Json (Serialization)
+  
+  UI Components:
+    - AvaloniaEdit (Code/Text Editor)
+    - LiveCharts2 (Visualisierung)
+    - Material.Avalonia (Material Design)
+  
+  Testing:
+    - xUnit (Unit Tests)
+    - FluentAssertions
+    - Moq (Mocking)
+  
+  Build & Deployment:
+    - .NET CLI (dotnet build/publish)
+    - Single-File Executable
+    - Self-Contained Deployment
+    - Native AOT (optional, für Performance)
+
+Migration Benefits:
+  - 30-50% bessere Performance (native Compilation)
+  - Kleinere Memory-Footprint
+  - Bessere Windows-Integration (WPF-Hybrid möglich)
+  - Native Linux Support (via Avalonia)
+  - Modernes Tooling (Visual Studio, Rider)
+  - Async/Await First-Class Support
+  - LINQ für Datenmanipulation
+  - Source Generators (Code Generation)
+
+Migration Risks & Mitigation:
+  Risk 1: UI-Rendering-Unterschiede
+    Mitigation: Extensive UI Tests, Pixel-Perfect Comparison
+  
+  Risk 2: Python-API-Integration
+    Mitigation: RESTful API bleibt Python/FastAPI, .NET nur Client
+  
+  Risk 3: Plugin-Kompatibilität
+    Mitigation: Plugin API über REST/gRPC, language-agnostic
+  
+  Risk 4: Team-Know-How
+    Mitigation: .NET Training, Pair-Programming, Community Support
+
+Deliverables:
+  - VPB.Desktop.NET (Cross-Platform Desktop App)
+  - Migration Guide (Python → .NET)
+  - API Client Library (C#)
+  - Unit Tests (xUnit)
+  - Deployment Packages (Windows, Linux)
 ```
 
 **Phase 3: Mobile Apps (2026 Q1-Q2)**
@@ -406,25 +566,61 @@ Status: Planung
 Priority: Medium
 Timeline: Q1-Q2 2026
 
-Approach: Progressive Web App (PWA) + Native Wrapper
+Approach Option A: Progressive Web App (PWA)
+  Advantages:
+    - Single Codebase (React)
+    - Schnelle Entwicklung
+    - Plattform-unabhängig
+  
+  PWA Features:
+    - Add to Home Screen
+    - Push Notifications
+    - Offline Mode
+    - Camera Access (QR-Code Scanner)
 
-PWA Features:
-  - Add to Home Screen
-  - Push Notifications
-  - Offline Mode
-  - Camera Access (QR-Code Scanner)
+Approach Option B: .NET MAUI (Empfehlung bei .NET Desktop-Migration)
+  Advantages:
+    - Code-Sharing mit .NET Desktop (bis zu 95%)
+    - Native Performance
+    - Native UI Controls
+    - Xamarin-Erfahrung nutzbar
+    - Microsoft-Support
+  
+  Technology Stack:
+    - .NET MAUI 8/9
+    - C# Shared Code
+    - XAML UI (plattform-spezifische Anpassungen)
+    - API Client Sharing (.NET Desktop wiederverwendbar)
+  
+  Platforms:
+    - iOS (App Store)
+    - Android (Google Play)
+    - Windows (Microsoft Store - optional)
+    - macOS (App Store - optional)
 
-Native Features (React Native):
-  - iOS App (App Store)
-  - Android App (Google Play)
-  - Native Performance
-  - Platform-spezifische UX
+Approach Option C: Hybrid (PWA + .NET MAUI)
+  - PWA für Breite Zugänglichkeit
+  - .NET MAUI für Power-User mit Offline-Features
+  
+  Decision Criteria:
+    - .NET Desktop Migration erfolgreich → Option B (.NET MAUI)
+    - Zeit/Ressourcen begrenzt → Option A (PWA)
+    - Maximale Reichweite → Option C (Hybrid)
+
+Empfehlung nach .NET Desktop-Migration: Option B (.NET MAUI)
+  Benefits:
+    - 95% Code-Sharing zwischen Desktop und Mobile
+    - Shared Business Logic, Models, API Clients
+    - Konsistente User Experience
+    - Single Technologie-Stack (.NET)
+    - Einfacheres Hiring (.NET Entwickler)
 
 Use Cases:
   - Prozesse unterwegs ansehen
-  - Approval Workflows
-  - Notifications empfangen
+  - Approval Workflows (Push Notifications)
   - Schnellzugriff auf häufige Prozesse
+  - Mobile Process Monitoring
+  - QR-Code Scanner für Prozess-Verknüpfungen
 ```
 
 ### 3.3 KI und Machine Learning
@@ -1512,24 +1708,35 @@ Deliverables:
 
 ### 8.2 Phase 2: Scale (2025 Q3-Q4)
 
-**Ziel:** Cloud-Native & Web-App
+**Ziel:** Cloud-Native & Web-App & .NET Desktop Migration
 
 **Q3 2025 (Jul-Sep):**
 
 ```yaml
-Woche 1-6: Web Application
-  - [ ] React Frontend Setup (Vite + TypeScript)
-  - [ ] React Flow Integration (Canvas)
-  - [ ] TanStack Query (Data Fetching)
-  - [ ] Zustand (State Management)
-  - [ ] Responsive Design (Tailwind CSS)
-  - [ ] PWA Features (Service Worker)
+Woche 1-6: Web Application & .NET PoC (Parallel)
+  Web App:
+    - [ ] React Frontend Setup (Vite + TypeScript)
+    - [ ] React Flow Integration (Canvas)
+    - [ ] TanStack Query (Data Fetching)
+    - [ ] Zustand (State Management)
+    - [ ] Responsive Design (Tailwind CSS)
+    - [ ] PWA Features (Service Worker)
+  
+  .NET PoC (Parallel):
+    - [ ] .NET 8 Project Setup (Avalonia UI)
+    - [ ] UI Framework Evaluation (Avalonia vs. MAUI vs. WPF)
+    - [ ] Canvas Rendering Prototyp
+    - [ ] API Integration Demo (FastAPI ↔ .NET)
+    - [ ] Performance Benchmarks (vs. PyQt6)
+    - [ ] Migrations-Architektur finalisieren
 
-Woche 7-10: Real-Time Features
+Woche 7-10: Real-Time Features & .NET Evaluation
   - [ ] WebSocket Server (Socket.IO)
-  - [ ] Real-Time Collaboration
+  - [ ] Real-Time Collaboration (Web)
   - [ ] Live Cursor Tracking
   - [ ] Conflict Resolution
+  - [ ] .NET PoC Evaluation Report
+  - [ ] Go/No-Go Decision für .NET Migration
 
 Woche 11-13: Kubernetes Deployment
   - [ ] Helm Charts erstellen
@@ -1543,6 +1750,7 @@ Deliverables:
   ✅ Real-Time Collaboration
   ✅ K8s Deployment
   ✅ Observability Stack
+  ✅ .NET PoC & Migrations-Plan
 ```
 
 **Q4 2025 (Oct-Dec):**
@@ -1554,26 +1762,30 @@ Woche 1-4: AI Features
   - [ ] Best-Practice Recommendations
   - [ ] Clara Integration (conversational)
 
-Woche 5-8: Advanced Backend
-  - [ ] Event Store (EventStoreDB)
-  - [ ] CQRS Pattern
-  - [ ] Redis Caching Layer
-  - [ ] Message Queue (RabbitMQ)
+Woche 5-8: .NET Desktop Migration - Core UI
+  - [ ] Avalonia Main Window & Shell
+  - [ ] Canvas Rendering Engine (.NET)
+  - [ ] Element Palette (.NET)
+  - [ ] Properties Panel (.NET)
+  - [ ] Basic Drawing & Connections
 
-Woche 9-12: FIM/OZG Integration
-  - [ ] FIM-XML Import
-  - [ ] XProzess Export
-  - [ ] OZG-Reifegrad-Bewertung
+Woche 9-12: .NET Desktop Migration - Features
+  - [ ] Export Engine (PDF, PNG, SVG in .NET)
+  - [ ] Validation Framework (.NET)
+  - [ ] Settings Management
+  - [ ] API Client Library (C# Refit)
 
-Woche 13: Year-End Release
-  - [ ] Version 1.5.0 Release
+Woche 13: Dual-Release Strategy
+  - [ ] Version 1.5.0 Release (Python PyQt6)
+  - [ ] Version 1.5.0-beta.NET (Early Access .NET Desktop)
+  - [ ] Migration Guide (Python → .NET)
   - [ ] Performance Report
-  - [ ] Community Review
+  - [ ] Community Feedback Collection
 
 Deliverables:
   ✅ KI-gestützte Prozessgenerierung
-  ✅ Event Sourcing
-  ✅ FIM/OZG-Konformität
+  ✅ .NET Desktop Beta (Windows/Linux)
+  ✅ Parallel Python & .NET Releases
   ✅ Version 1.5.0 Release
 ```
 
@@ -1584,35 +1796,47 @@ Deliverables:
 **Q1 2026 (Jan-Mar):**
 
 ```yaml
-Woche 1-6: Microservices
-  - [ ] Service Decomposition
-  - [ ] API Gateway (Kong)
-  - [ ] Service Mesh (Istio)
-  - [ ] gRPC Communication
+Woche 1-4: .NET Desktop Migration - Finalisierung
+  - [ ] Plugin System (.NET)
+  - [ ] WebSocket Integration (SignalR Client)
+  - [ ] Auto-Save Service (.NET)
+  - [ ] Telemetry & Monitoring
+  - [ ] Installer Packages (Windows MSI, Linux DEB/RPM)
 
-Woche 7-10: Advanced Analytics
-  - [ ] Process Mining (Celonis-ähnlich)
-  - [ ] Predictive Analytics (ML)
-  - [ ] BI Integration (Power BI Connector)
-  - [ ] Custom Dashboards
+Woche 5-8: .NET Desktop - Production Ready
+  - [ ] Unit Tests (xUnit, >80% coverage)
+  - [ ] Integration Tests mit API Backend
+  - [ ] Performance Optimization (Native AOT)
+  - [ ] Accessibility (Screen Reader Support)
+  - [ ] Dokumentation (.NET API, Migration Guide)
 
-Woche 11-13: Mobile Apps
-  - [ ] PWA Optimization
-  - [ ] React Native Wrapper
-  - [ ] Push Notifications
-  - [ ] Offline Mode
+Woche 9-12: Mobile Apps (.NET MAUI)
+  - [ ] .NET MAUI Project Setup
+  - [ ] Code-Sharing mit Desktop (95%+)
+  - [ ] iOS Build & Test
+  - [ ] Android Build & Test
+  - [ ] App Store Submission Vorbereitung
+
+Woche 13: .NET Ecosystem Release
+  - [ ] Version 2.0.0-NET Release
+  - [ ] VPB.Desktop.NET (Windows/Linux Production)
+  - [ ] VPB.Mobile.NET (iOS/Android Beta)
+  - [ ] Python → .NET Migration Complete
+  - [ ] Python Legacy Support (6 Monate)
 
 Deliverables:
-  ✅ Microservices Architecture
-  ✅ Advanced Analytics
-  ✅ Mobile Apps (iOS/Android)
+  ✅ .NET Desktop Production Release
+  ✅ .NET MAUI Mobile Apps (Beta)
+  ✅ 95% Code-Sharing Desktop/Mobile
+  ✅ Python Legacy Support Plan
 ```
 
 **Q2 2026 (Apr-Jun):**
 
 ```yaml
-Woche 1-4: Themis Integration
-  - [ ] Legal Reference Database
+Woche 1-4: Themis Integration (.NET Client)
+  - [ ] Legal Reference Database Integration
+  - [ ] .NET API Client für Themis
   - [ ] Citation Validation
   - [ ] Change Notifications
   - [ ] Compliance Assistant
@@ -1622,23 +1846,28 @@ Woche 5-8: Advanced Security
   - [ ] mTLS Service-to-Service
   - [ ] HashiCorp Vault Integration
   - [ ] SOC 2 Type II Audit Prep
+  - [ ] .NET Security Best Practices
 
-Woche 9-12: Performance Optimization
+Woche 9-12: Performance Optimization & Microservices
+  - [ ] .NET Microservices (.NET Minimal APIs / gRPC)
   - [ ] Database Query Optimization
-  - [ ] Caching Strategy (multi-level)
+  - [ ] Caching Strategy (Redis, multi-level)
   - [ ] CDN Integration
   - [ ] Global Distribution (Multi-Region)
 
 Woche 13: Version 2.0.0 Release
-  - [ ] Major Release
-  - [ ] Migration Guide
+  - [ ] Major Release (.NET Ecosystem)
+  - [ ] Python Legacy Deprecation Notice
+  - [ ] Migration Guide (Python → .NET finalized)
+  - [ ] Performance Report (.NET vs. Python)
   - [ ] Breaking Changes Documentation
 
 Deliverables:
-  ✅ Themis Integration
+  ✅ Themis Integration (.NET)
   ✅ Zero Trust Security
+  ✅ .NET Microservices (Optional)
   ✅ Global Distribution
-  ✅ Version 2.0.0 Release
+  ✅ Version 2.0.0 Release (.NET Primary)
 ```
 
 ---

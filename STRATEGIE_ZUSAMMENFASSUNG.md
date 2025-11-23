@@ -1,8 +1,30 @@
 # VCC-VPB Weiterentwicklungsstrategie - Executive Summary
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Stand:** 2025-11-23  
+**Aktualisierung:** .NET C# Migration integriert  
 **Vollständiges Dokument:** [WEITERENTWICKLUNGSSTRATEGIE.md](WEITERENTWICKLUNGSSTRATEGIE.md)
+
+---
+
+## ⚡ Wichtige Strategische Entscheidung: .NET C# Migration
+
+**Mittelfristiges Ziel:** Migration der Desktop-Anwendung zu .NET C# für Windows/Linux
+
+**Rationale:**
+- Cross-Platform native Unterstützung (Windows, Linux)
+- Bessere Performance durch native Compilation
+- Umfangreiches .NET Ökosystem und Microsoft LTS-Support
+- Code-Sharing zwischen Desktop und Mobile (bis zu 95% mit .NET MAUI)
+- Moderne UI-Frameworks (Avalonia UI für Cross-Platform)
+
+**Timeline:**
+- **Q3 2025:** .NET PoC (Avalonia UI) + Migrations-Architektur
+- **Q4 2025:** .NET Desktop Beta + Dual-Release (Python + .NET)
+- **Q1 2026:** .NET Desktop Production + .NET MAUI Mobile Apps
+- **Q2 2026:** Python → .NET Migration Complete
+
+**Backend:** Bleibt Python/FastAPI (klare API-Trennung)
 
 ---
 
@@ -118,59 +140,63 @@ VCC-VPB wird die **führende Open-Source-Plattform** für intelligentes Verwaltu
 ---
 
 ### Phase 2: Scale (2025 Q3-Q4)
-**Ziel:** Cloud-Native & Web-App
+**Ziel:** Cloud-Native & Web-App & .NET Migration
 
 **Q3 2025:**
 - ⚙️ React Web Application
 - ⚙️ Real-Time Collaboration
 - ⚙️ Kubernetes Deployment
 - ⚙️ Monitoring Stack (Prometheus, Grafana, Loki)
+- ⚙️ **.NET C# PoC** (Avalonia UI Desktop)
+- ⚙️ **Migrations-Architektur** (Python → .NET)
 
 **Q4 2025:**
 - ⚙️ KI-Prozessgenerierung (LLM)
-- ⚙️ Event Store & CQRS
-- ⚙️ Redis Caching
-- ⚙️ FIM/OZG Integration
-- 🚀 **Version 1.5.0 Release**
+- ⚙️ **.NET Desktop Migration** (Core UI Components)
+- ⚙️ **Dual-Release** (Python 1.5.0 + .NET 1.5.0-beta)
+- 🚀 **Version 1.5.0 Release** (Python & .NET Beta)
 
 **Deliverables:**
 - Web-App Beta
 - Real-Time Features
 - K8s Deployment
 - KI Features
+- **.NET Desktop Beta** (Windows/Linux)
 - Version 1.5.0
 
 ---
 
 ### Phase 3: Enterprise (2026 Q1-Q2)
-**Ziel:** Enterprise-Grade Platform
+**Ziel:** Enterprise-Grade Platform mit .NET Ecosystem
 
 **Q1 2026:**
-- 📋 Microservices Architecture
-- 📋 Advanced Analytics
-- 📋 Mobile Apps (iOS/Android)
+- 📋 **.NET Desktop Production** (komplette Migration)
+- 📋 **.NET MAUI Mobile Apps** (iOS/Android)
+- 📋 **95% Code-Sharing** (Desktop/Mobile)
+- 📋 **Python Legacy Support** (6 Monate)
 
 **Q2 2026:**
-- 📋 Themis Integration
+- 📋 Themis Integration (.NET Client)
 - 📋 Zero Trust Security
+- 📋 .NET Microservices (Optional)
 - 📋 Global Distribution (Multi-Region)
-- 🚀 **Version 2.0.0 Release**
+- 🚀 **Version 2.0.0 Release** (.NET Primary)
 
 **Deliverables:**
-- Microservices
-- Advanced Analytics
-- Mobile Apps
+- .NET Desktop Production
+- .NET MAUI Mobile Apps
 - Themis Integration
+- Zero Trust Security
+- **Python → .NET Migration Complete**
 - Version 2.0.0
 
 ---
 
 ## Technologie-Stack Evolution
 
-### Backend
+### Backend (bleibt Python)
 **Aktuell:**
 - Python 3.13
-- PyQt6 (Desktop)
 - FastAPI (API)
 - SQLite (Mock)
 
@@ -187,25 +213,27 @@ VCC-VPB wird die **führende Open-Source-Plattform** für intelligentes Verwaltu
 - Helm Charts
 
 **Phase 3:**
-- Microservices (gRPC)
+- Microservices (gRPC) - **kann .NET sein**
 - Service Mesh (Istio)
 - API Gateway (Kong)
 - Multi-Region
 
-### Frontend
+### Frontend (Migration zu .NET)
 **Aktuell:**
 - PyQt6 Desktop
 
-**Phase 2:**
+**Phase 2 (Q3 2025):**
 - React 18+ (Web)
-- TypeScript
-- React Flow (Canvas)
-- Tailwind CSS
-- PWA
+- **.NET 8/9 PoC** (Avalonia UI)
 
-**Phase 3:**
-- React Native (Mobile)
-- iOS/Android Apps
+**Phase 2 (Q4 2025):**
+- **.NET Desktop Beta** (Avalonia UI)
+- **Dual-Release** (Python + .NET)
+
+**Phase 3 (2026):**
+- **.NET Desktop Production** (Avalonia UI - Windows/Linux)
+- **.NET MAUI Mobile** (iOS/Android)
+- **React Web App** (Progressive)
 
 ### KI/ML
 **Phase 1:**
