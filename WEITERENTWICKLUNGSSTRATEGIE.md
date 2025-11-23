@@ -1,8 +1,8 @@
 # VCC-VPB Weiterentwicklungsstrategie
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Stand:** 2025-11-23  
-**Aktualisierung:** .NET C# Desktop-Migration integriert  
+**Aktualisierung:** .NET C# Migration + On-Premise First Strategie  
 **Status:** 📋 Strategiedokument  
 **Gültigkeit:** 2025-2027
 
@@ -12,19 +12,27 @@
 
 Die VCC-VPB (Visual Process Builder für Verwaltungscloud Compliance) Weiterentwicklungsstrategie definiert den Weg von der aktuellen prozessorientierten Designlösung zu einer vollintegrierten Enterprise-Plattform für Prozess- und Compliance-Management in der öffentlichen Verwaltung.
 
+**Strategische Grundsätze:**
+- **On-Premise First:** Vollständige Kontrolle über Daten und Infrastruktur
+- **Keine Vendor-Abhängigkeit:** Keine obligatorischen Vendor-Logins oder Cloud-Services
+- **Datensouveränität:** Alle Daten bleiben in der eigenen Infrastruktur
+- **Open Source:** Offene Standards und Open-Source-Komponenten bevorzugt
+
 **Strategische Ziele:**
 - Integration in das VCC-Gesamtökosystem (Covina, VERITAS, Clara, Themis)
 - **Migration zu .NET C# für Desktop-Anwendung (Windows/Linux)**
 - Evolutionäre Architektur mit polyglotter Persistenz (UDS3)
-- KI-gestützte Prozessoptimierung und Compliance-Prüfung
-- Cloud-native Deployment mit Kubernetes
+- KI-gestützte Prozessoptimierung und Compliance-Prüfung (lokal/on-premise)
+- **On-Premise Kubernetes Deployment** (keine Cloud-Vendor-Abhängigkeit)
 - Zero-Trust Security Architecture
 - Open Government Data Standards
 
 **Zeithorizont:** 2025-2027 (3 Phasen mit 8 Quartalen)
 
-**Wichtige Technologie-Entscheidung:**  
-Mittelfristige Migration der Desktop-Anwendung von Python/PyQt6 zu .NET C#/Avalonia UI für bessere Performance, Cross-Platform-Support und Code-Sharing mit mobilen Plattformen (.NET MAUI).
+**Wichtige Technologie-Entscheidungen:**  
+1. **On-Premise First:** Alle Komponenten können vollständig on-premise betrieben werden
+2. **.NET C# Migration:** Desktop-Anwendung von Python/PyQt6 zu .NET C#/Avalonia UI
+3. **Keine Vendor-Lock-ins:** Open-Source-Lösungen und standardisierte Schnittstellen
 
 ---
 
@@ -135,26 +143,28 @@ Verwaltungsprozesse transparent, effizient und rechtskonform gestalten durch:
 - Themis Legal Reference Integration
 - FIM/OZG-Standardkonformität
 
-**Ziel 2: Enterprise-Readiness**
+**Ziel 2: Enterprise-Readiness & Datensouveränität**
 - Production-Grade UDS3 Backend (PostgreSQL, Neo4j, ChromaDB)
 - Hochverfügbarkeit (99.9% SLA)
 - Horizontale Skalierung (1.000+ gleichzeitige Nutzer)
-- Cloud-native Deployment (Kubernetes, Helm)
+- **On-Premise Kubernetes Deployment** (kein Cloud-Vendor-Lock-in)
 - Multi-Tenancy-Fähigkeit
+- **Datensouveränität:** Alle Daten bleiben on-premise
 
-**Ziel 3: KI-First Approach**
-- Semantische Prozesssuche (Natural Language)
-- Automatische Prozessgenerierung aus Textbeschreibungen
+**Ziel 3: KI-First Approach (On-Premise)**
+- Semantische Prozesssuche (Natural Language, lokal)
+- Automatische Prozessgenerierung (lokale LLM-Modelle via Ollama)
 - Intelligente Gap-Detection und Auto-Fix
 - Predictive Analytics für Prozesslaufzeiten
-- LLM-basierte Compliance-Prüfung
+- **LLM-basierte Compliance-Prüfung (on-premise, keine Cloud-APIs)**
 
-**Ziel 4: Developer Experience**
+**Ziel 4: Developer Experience (Vendor-neutral)**
 - GraphQL API zusätzlich zu REST
-- SDK für Python, JavaScript, Java
+- SDK für Python, JavaScript, Java, C#
 - Plugin-Architektur für Erweiterungen
 - Developer Portal mit Tutorials
 - Open Source Community Building
+- **Keine obligatorischen Vendor-Logins**
 
 **Ziel 5: Sicherheit und Compliance**
 - Zero-Trust Architecture
@@ -162,6 +172,15 @@ Verwaltungsprozesse transparent, effizient und rechtskonform gestalten durch:
 - DSGVO/GDPR-Konformität
 - BSI IT-Grundschutz Compliance
 - Penetration Testing und Security Audits
+- **On-Premise Identity Management** (keine Cloud-IDPs erforderlich)
+
+**Ziel 6: Datensouveränität & On-Premise First (NEU)**
+- Alle Komponenten on-premise betreibbar
+- Keine obligatorischen Cloud-Services
+- Keine Vendor-Logins (Google, Microsoft, etc.)
+- Open-Source-Komponenten bevorzugt
+- Self-hosted Identity Provider (Keycloak on-premise)
+- Lokale KI-Modelle (Ollama, keine OpenAI/Azure APIs)
 
 ### 2.2 Architekturprinzipien
 
@@ -201,7 +220,16 @@ Verwaltungsprozesse transparent, effizient und rechtskonform gestalten durch:
 - Distributed Tracing (OpenTelemetry)
 - Metrics (Prometheus)
 - Dashboards (Grafana)
-- Alerting (PagerDuty/Slack)
+- Alerting (selbst-gehostet, z.B. Alertmanager)
+
+**AP7: On-Premise First & Datensouveränität (NEU)**
+- Alle Komponenten on-premise betreibbar
+- Keine obligatorischen Cloud-Services oder Vendor-Logins
+- Open-Source-Präferenz (kein Vendor-Lock-in)
+- Self-hosted Identity & Access Management
+- Lokale KI-Modelle (keine Cloud-APIs)
+- Deployment-Flexibilität: On-Premise, Private Cloud, Air-Gapped
+- Keine Telemetrie an externe Dienste ohne explizite Zustimmung
 
 ---
 
@@ -681,19 +709,28 @@ Features:
   - Best-Practice-Vorschläge
     Analysiert ähnliche Prozesse → schlägt Optimierungen vor
 
-Technology:
-  - LLM: GPT-4, Claude 3, oder Llama 3 (lokal via Ollama)
-  - Fine-Tuning: LoRA auf Verwaltungsprozess-Daten
+Technology (On-Premise, keine Cloud-APIs):
+  - LLM: Llama 3 (70B oder 13B lokal via Ollama)
+  - Alternative: Mistral, Gemma, deutsche LLMs (lokal)
+  - Keine Cloud-APIs: Kein GPT-4, Claude 3, Gemini
+  - Fine-Tuning: LoRA auf Verwaltungsprozess-Daten (lokal)
   - Prompt Engineering: Chain-of-Thought, Few-Shot Learning
   - Output Validation: Pydantic Models für VPB-JSON
+  - Deployment: Ollama on-premise (GPU-Server)
 
 Workflow:
-  1. User Prompt → LLM
+  1. User Prompt → Lokaler LLM (Ollama)
   2. LLM → VPB-JSON (structured output)
   3. Validation → Schema Check
   4. Auto-Fix → Korrigiere Fehler
   5. Preview → User Review
   6. Save → UDS3 Backend
+
+Hardware-Empfehlung:
+  - GPU: NVIDIA A100/H100 oder RTX 4090 (für 70B Modelle)
+  - CPU: AMD EPYC oder Intel Xeon (für kleinere Modelle)
+  - RAM: 64GB+ (70B Modelle), 32GB (13B Modelle)
+  - Quantization: 4-bit/8-bit für kleinere Hardware
 ```
 
 **Phase 3: Predictive Analytics (2026 Q1-Q2)**
@@ -849,11 +886,13 @@ Clara (KI-Assistent):
     - Documentation Generation
       "Clara, erstelle eine Prozessbeschreibung"
 
-  Technology:
-    - LLM Backend: GPT-4 API oder lokales Llama 3
+  Technology (On-Premise):
+    - LLM Backend: Lokales Llama 3 (via Ollama on-premise)
+    - Keine Cloud-APIs (kein GPT-4, Claude, Gemini)
     - RAG (Retrieval-Augmented Generation)
-    - ChromaDB für Kontext-Retrieval
+    - ChromaDB für Kontext-Retrieval (on-premise)
     - Streaming Responses (Server-Sent Events)
+    - Self-hosted, datensouverän
 
 Themis (Rechtsdatenbank):
   Status: Planung
@@ -884,11 +923,28 @@ Themis (Rechtsdatenbank):
 
 ## 4. Deployment & Betrieb
 
-### 4.1 Cloud-Native Deployment
+### 4.1 On-Premise Kubernetes Deployment
 
-**Kubernetes Architektur (Target 2026 Q1):**
+**Deployment-Philosophie:**
+- **On-Premise First:** Primär für eigene Rechenzentren konzipiert
+- **Vendor-neutral:** Läuft auf jeder Kubernetes-Distribution
+- **Keine Cloud-Abhängigkeit:** Kein AWS/Azure/GCP erforderlich
+- **Air-Gap-fähig:** Deployment ohne Internet-Zugang möglich
+
+**Unterstützte Kubernetes-Distributionen:**
+- **Rancher/RKE2** (Empfohlen für On-Premise)
+- **K3s** (Lightweight für kleinere Installationen)
+- **Vanilla Kubernetes** (kubeadm)
+- **OpenShift** (Red Hat Enterprise)
+- **MicroK8s** (Canonical)
+- **Talos Linux** (Immutable Kubernetes OS)
+
+**On-Premise Kubernetes Architektur (Target 2026 Q1):**
 
 ```yaml
+Deployment-Modell: On-Premise (eigenes Rechenzentrum)
+Keine Cloud-Vendor-Abhängigkeit: Ja
+
 Namespaces:
   - vpb-prod (Production)
   - vpb-staging (Pre-Production)
@@ -909,7 +965,7 @@ Deployments:
     resources:
       requests: {cpu: 1000m, memory: 2Gi}
       limits: {cpu: 4000m, memory: 8Gi}
-    gpu: true (für Embedding-Generation)
+    gpu: optional (für lokale Embedding-Generation)
   
   vpb-web:
     replicas: 3
@@ -919,7 +975,7 @@ Deployments:
 
 StatefulSets:
   postgres:
-    replicas: 3 (HA Cluster)
+    replicas: 3 (HA Cluster on-premise)
     storage: 500Gi (SSD)
   
   neo4j:
@@ -1216,11 +1272,14 @@ Network Security:
     - Rate Limiting
     - IP Whitelisting
 
-Identity & Access:
-  - OAuth2/OIDC (Keycloak)
-    - Single Sign-On (SSO)
+Identity & Access (On-Premise, keine Vendor-Logins):
+  - Self-Hosted Keycloak (Open Source OIDC/OAuth2)
+    - On-Premise Installation (kein Cloud-Service)
+    - Single Sign-On (SSO) intern
     - Multi-Factor Authentication (MFA)
     - Session Management
+    - LDAP/Active Directory Integration
+    - Keine Google/Microsoft/Auth0 Logins erforderlich
   
   - Role-Based Access Control (RBAC)
     Roles:
@@ -1234,12 +1293,14 @@ Identity & Access:
     - Org-unit based access
     - Dynamic policies
 
-Secrets Management:
-  - HashiCorp Vault
+Secrets Management (On-Premise):
+  - HashiCorp Vault (self-hosted, Open Source)
+    - On-Premise Installation
     - Dynamic database credentials
     - Encryption keys
     - API keys
     - Certificate rotation
+    - Keine Cloud-KMS-Abhängigkeit
   
   - Kubernetes Secrets (encrypted at rest)
   - External Secrets Operator (sync from Vault)
@@ -1257,6 +1318,12 @@ Data Encryption:
     - PII field-level encryption
     - Tokenization for sensitive data
 ```
+
+**On-Premise Identity Provider:**
+- **Keycloak** (empfohlen): Open-Source, OIDC/SAML, self-hosted
+- **Authentik**: Moderne Open-Source Alternative
+- **LDAP/Active Directory**: Traditionelle Enterprise-Integration
+- **Keine Vendor-IDPs:** Kein Okta, Auth0, Azure AD obligatorisch
 
 ### 5.2 DSGVO/GDPR Compliance
 

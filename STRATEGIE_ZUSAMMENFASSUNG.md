@@ -1,9 +1,25 @@
 # VCC-VPB Weiterentwicklungsstrategie - Executive Summary
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Stand:** 2025-11-23  
-**Aktualisierung:** .NET C# Migration integriert  
+**Aktualisierung:** .NET C# Migration + On-Premise First  
 **Vollständiges Dokument:** [WEITERENTWICKLUNGSSTRATEGIE.md](WEITERENTWICKLUNGSSTRATEGIE.md)
+
+---
+
+## 🔒 Strategische Grundsätze
+
+**On-Premise First:**
+- Alle Komponenten vollständig on-premise betreibbar
+- Keine obligatorischen Cloud-Services
+- Deployment in eigenen Rechenzentren
+- Air-Gap-fähig (ohne Internet-Zugang)
+
+**Datensouveränität:**
+- Keine Vendor-Logins (kein Google, Microsoft, etc.)
+- Lokale KI-Modelle (kein OpenAI, Claude, Gemini)
+- Self-hosted Identity Provider (Keycloak on-premise)
+- Alle Daten bleiben in eigener Infrastruktur
 
 ---
 
@@ -30,7 +46,7 @@
 
 ## Vision 2027
 
-VCC-VPB wird die **führende Open-Source-Plattform** für intelligentes Verwaltungsprozess-Management mit nahtloser Integration in die deutsche Verwaltungscloud-Infrastruktur.
+VCC-VPB wird die **führende Open-Source-Plattform** für intelligentes Verwaltungsprozess-Management mit nahtloser Integration in die deutsche Verwaltungscloud-Infrastruktur - **vollständig on-premise und datensouverän**.
 
 ---
 
@@ -39,34 +55,39 @@ VCC-VPB wird die **führende Open-Source-Plattform** für intelligentes Verwaltu
 ### 🎯 1. VCC-Ökosystem-Integration
 - Vollständige Integration mit **Covina** (Unified Process Schema)
 - **VERITAS** Compliance-Framework
-- **Clara** KI-Assistent
+- **Clara** KI-Assistent (on-premise)
 - **Themis** Legal References
 - **FIM/OZG**-Standardkonformität
 
-### 🎯 2. Enterprise-Readiness
+### 🎯 2. Enterprise-Readiness & Datensouveränität
 - Production UDS3 Backend (PostgreSQL, Neo4j, ChromaDB)
 - 99.9% Verfügbarkeit
 - 1.000+ gleichzeitige Nutzer
-- Cloud-native Kubernetes Deployment
+- **On-Premise Kubernetes Deployment** (kein Cloud-Vendor)
 - Multi-Tenancy
 
-### 🎯 3. KI-First
-- Semantische Prozesssuche (Natural Language)
-- Automatische Prozessgenerierung
+### 🎯 3. KI-First (On-Premise)
+- Semantische Prozesssuche (Natural Language, lokal)
+- Automatische Prozessgenerierung (lokale LLMs via Ollama)
 - Intelligente Gap-Detection
 - Predictive Analytics
-- LLM-basierte Compliance-Prüfung
+- **LLM-basierte Compliance-Prüfung (on-premise, keine Cloud-APIs)**
 
-### 🎯 4. Developer Experience
+### 🎯 4. Developer Experience (Vendor-neutral)
 - GraphQL + REST APIs
-- SDKs (Python, JavaScript, Java)
+- SDKs (Python, JavaScript, Java, C#)
 - Plugin-Architektur
 - Developer Portal
 - Open Source Community
+- **Keine obligatorischen Vendor-Logins**
 
-### 🎯 5. Sicherheit
+### 🎯 5. Sicherheit & Datensouveränität
 - Zero-Trust Architecture
 - Ende-zu-Ende-Verschlüsselung
+- DSGVO/GDPR-Konformität
+- BSI IT-Grundschutz
+- **On-Premise Identity Management** (Keycloak self-hosted)
+- **Keine Vendor-Abhängigkeiten**
 - DSGVO/GDPR-Konformität
 - BSI IT-Grundschutz
 - SOC 2 Type II
@@ -124,9 +145,9 @@ VCC-VPB wird die **führende Open-Source-Plattform** für intelligentes Verwaltu
 - ✅ Security Features
 
 **Q2 2025:**
-- ✅ ChromaDB Integration
+- ✅ ChromaDB Integration (on-premise)
 - ✅ Covina Integration (MVP)
-- ✅ OAuth2/OIDC (Keycloak)
+- ✅ Keycloak (self-hosted, on-premise)
 - ✅ DSGVO Features
 - 🚀 **Version 1.0.0 Release**
 
