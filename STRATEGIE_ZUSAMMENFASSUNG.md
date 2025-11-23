@@ -15,7 +15,7 @@
 - Cross-Platform native Unterstützung (Windows, Linux)
 - Bessere Performance durch native Compilation
 - Umfangreiches .NET Ökosystem und Microsoft LTS-Support
-- Code-Sharing zwischen Desktop und Mobile (bis zu 95% mit .NET MAUI)
+- Code-Sharing zwischen Desktop und Mobile (Ziel: 70-95% mit .NET MAUI)
 - Moderne UI-Frameworks (Avalonia UI für Cross-Platform)
 
 **Timeline:**
@@ -172,7 +172,7 @@ VCC-VPB wird die **führende Open-Source-Plattform** für intelligentes Verwaltu
 **Q1 2026:**
 - 📋 **.NET Desktop Production** (komplette Migration)
 - 📋 **.NET MAUI Mobile Apps** (iOS/Android)
-- 📋 **95% Code-Sharing** (Desktop/Mobile)
+- 📋 **Hohe Code-Sharing Rate** (Ziel: 70-95% Desktop/Mobile)
 - 📋 **Python Legacy Support** (6 Monate)
 
 **Q2 2026:**

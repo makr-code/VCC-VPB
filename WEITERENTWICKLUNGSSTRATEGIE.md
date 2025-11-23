@@ -502,8 +502,8 @@ Migrations-Strategie:
 
 Technology Stack (.NET):
   Core:
-    - .NET 8/9 (LTS)
-    - C# 12/13
+    - .NET 8 LTS (Primary Target, C# 12)
+    - .NET 9+ (Future Consideration, C# 13+)
     - Avalonia UI 11+ (Cross-Platform)
     - ReactiveUI (MVVM Pattern)
   
@@ -528,15 +528,17 @@ Technology Stack (.NET):
     - Self-Contained Deployment
     - Native AOT (optional, für Performance)
 
-Migration Benefits:
-  - 30-50% bessere Performance (native Compilation)
-  - Kleinere Memory-Footprint
+Migration Benefits (Estimated, pending PoC validation):
+  - 30-50% bessere Performance (native Compilation, basierend auf .NET Benchmarks)
+  - Kleinere Memory-Footprint (ca. 20-30% weniger RAM)
   - Bessere Windows-Integration (WPF-Hybrid möglich)
   - Native Linux Support (via Avalonia)
   - Modernes Tooling (Visual Studio, Rider)
   - Async/Await First-Class Support
   - LINQ für Datenmanipulation
   - Source Generators (Code Generation)
+  
+  Note: Performance-Zahlen werden im Q3 2025 PoC validiert
 
 Migration Risks & Mitigation:
   Risk 1: UI-Rendering-Unterschiede
@@ -580,7 +582,7 @@ Approach Option A: Progressive Web App (PWA)
 
 Approach Option B: .NET MAUI (Empfehlung bei .NET Desktop-Migration)
   Advantages:
-    - Code-Sharing mit .NET Desktop (bis zu 95%)
+    - Code-Sharing mit .NET Desktop (Ziel: 70-95%)
     - Native Performance
     - Native UI Controls
     - Xamarin-Erfahrung nutzbar
@@ -609,11 +611,21 @@ Approach Option C: Hybrid (PWA + .NET MAUI)
 
 Empfehlung nach .NET Desktop-Migration: Option B (.NET MAUI)
   Benefits:
-    - 95% Code-Sharing zwischen Desktop und Mobile
-    - Shared Business Logic, Models, API Clients
+    - Hohe Code-Sharing Rate (Ziel: 70-95%, je nach UI-Komplexität)
+    - Shared Business Logic, Models, API Clients (nahezu 100%)
+    - Shared Services Layer (100%)
+    - Platform-spezifische UI-Anpassungen (5-30% des Codes)
     - Konsistente User Experience
     - Single Technologie-Stack (.NET)
     - Einfacheres Hiring (.NET Entwickler)
+  
+  Code-Sharing Breakdown (Estimated):
+    - Business Logic: 100% shared
+    - API Clients: 100% shared
+    - Models & ViewModels: 95% shared
+    - Services: 100% shared
+    - UI Layer: 60-80% shared (XAML, platform-specific angepasst)
+    - Overall Target: 70-95% (abhängig von UI-Komplexität)
 
 Use Cases:
   - Prozesse unterwegs ansehen
@@ -1812,7 +1824,7 @@ Woche 5-8: .NET Desktop - Production Ready
 
 Woche 9-12: Mobile Apps (.NET MAUI)
   - [ ] .NET MAUI Project Setup
-  - [ ] Code-Sharing mit Desktop (95%+)
+  - [ ] Code-Sharing mit Desktop (Ziel: 70-95%)
   - [ ] iOS Build & Test
   - [ ] Android Build & Test
   - [ ] App Store Submission Vorbereitung
@@ -1827,7 +1839,7 @@ Woche 13: .NET Ecosystem Release
 Deliverables:
   ✅ .NET Desktop Production Release
   ✅ .NET MAUI Mobile Apps (Beta)
-  ✅ 95% Code-Sharing Desktop/Mobile
+  ✅ Hohe Code-Sharing Rate (70-95% Desktop/Mobile)
   ✅ Python Legacy Support Plan
 ```
 
