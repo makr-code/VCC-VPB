@@ -4,6 +4,8 @@
 
 Comprehensive Visual Process Designer mit UDS3 Polyglot Persistence Backend - Enterprise-ready process automation platform.
 
+**Strategic Alignment:** This roadmap aligns with the comprehensive [VCC-VPB Weiterentwicklungsstrategie](WEITERENTWICKLUNGSSTRATEGIE.md) (2025-2027).
+
 ---
 
 ## ✅ COMPLETED - Phase 1 (v0.1.0 - v0.3.0)
@@ -596,14 +598,36 @@ Feature-Anfragen bitte als Issue erstellen mit dem Label `enhancement`.
 
 ---
 
-**VPB Roadmap v1.0.0**  
-*Letzte Aktualisierung: 2025-10-18*  
-*Nächster Milestone: v1.0.1 Hotfix (VectorDB API Fix)*
+---
+
+## 📋 Strategic Documentation
+
+**Related Documents:**
+- **[Weiterentwicklungsstrategie](WEITERENTWICKLUNGSSTRATEGIE.md)** - Comprehensive 2025-2027 evolution strategy
+- **[Architecture](Architecture.md)** - System architecture and design patterns
+- **[System-Integration](System-Integration.md)** - VCC ecosystem integration
+- **[UDS3-Backend](UDS3-Backend.md)** - Polyglot persistence details
+- **[strategieVBP-Covina](strategieVBP-Covina.md)** - Covina integration strategy
+
+---
+
+**VPB Roadmap**  
+*Version: v1.1.0*  
+*Letzte Aktualisierung: 2025-11-23*  
+*Nächster Milestone: v1.1.0 Production Backend (2025-Q1)*
 
 **Status Summary:**
 - ✅ Phase 1 & 2: 100% Complete
-- 🔄 Phase 3: In Planning (v1.1.0)
-- 📋 Phase 4: Planned (v1.2.0)
-- 🚀 Phase 5: Future (v2.0.0)
+- 🔄 Phase 3: In Planning (v1.1.0) - **See Weiterentwicklungsstrategie Phase 1**
+- 📋 Phase 4: Planned (v1.2.0) - **See Weiterentwicklungsstrategie Phase 2**
+- 🚀 Phase 5: Future (v2.0.0) - **See Weiterentwicklungsstrategie Phase 3**
 
-**Current Version:** 1.0.0 "UDS3 Complete" (Production Ready)
+**Current Version:** 0.5.0 (Development) - Target 1.0.0 in Q2 2025
+
+**Strategic Alignment:**  
+This roadmap is now aligned with the comprehensive [VCC-VPB Weiterentwicklungsstrategie](WEITERENTWICKLUNGSSTRATEGIE.md) which defines:
+- 3-year vision (2025-2027)
+- VCC ecosystem integration
+- Cloud-native deployment strategy
+- KI-first approach
+- Security and compliance framework
