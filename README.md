@@ -50,10 +50,13 @@ Quickstart (EN):
 - **[System Integration](System-Integration.md)** — VCC ecosystem integration (Covina, VERITAS, Clara, Themis)
 - **[Architecture](Architecture.md)** — System architecture and design patterns
 
-### Quick Links
+### Features & Guides
+- **[Mermaid Diagram Export](docs/MERMAID_EXPORT.md)** — Export processes to Mermaid format for documentation
 - **[API Reference](docs/api/UDS3_API_REFERENCE.md)** — REST API documentation (10 endpoints)
 - **[Development Guide](DEVELOPMENT.md)** — Developer setup and workflow
 - **[Documentation Summary](docs/DOCUMENTATION_SUMMARY.md)** — Consolidated project documentation
+
+### Quick Links
 - **[Changelog](CHANGELOG.md)** — Complete change history
 - **[Contributing](CONTRIBUTING.md)** — Contribution guidelines
 
