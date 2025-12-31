@@ -272,11 +272,11 @@ class DocumentModel:
         if connection.connection_id in self._connections:
             raise ValueError(f"Connection with ID '{connection.connection_id}' already exists")
         
-        # Validate that source and target exist (check by element_id, not object)
-        if connection.source_element.element_id not in self._elements:
-            raise ValueError(f"Source element '{connection.source_element.element_id}' not found")
-        if connection.target_element.element_id not in self._elements:
-            raise ValueError(f"Target element '{connection.target_element.element_id}' not found")
+        # Validate that source and target exist (check by element_id string)
+        if connection.source_element not in self._elements:
+            raise ValueError(f"Source element '{connection.source_element}' not found")
+        if connection.target_element not in self._elements:
+            raise ValueError(f"Target element '{connection.target_element}' not found")
         
         self._connections[connection.connection_id] = connection
         self._set_modified()

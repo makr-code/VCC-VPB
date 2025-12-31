@@ -7,9 +7,11 @@ Handles exporting process diagrams to various formats:
 - SVG: Scalable vector graphics for web display
 - PNG: Raster images for presentations
 - BPMN 2.0: Standard XML format for interoperability
+- Mermaid: Text-based diagrams for documentation and wikis
 
 Author: VPB Development Team
 Date: 2025-10-14
+Updated: 2025-12-31 (Added Mermaid export)
 """
 
 from dataclasses import dataclass
@@ -54,6 +56,11 @@ class BPMNExportError(ExportServiceError):
     pass
 
 
+class MermaidExportError(ExportServiceError):
+    """Error during Mermaid export."""
+    pass
+
+
 # ============================================================================
 # Export Configuration
 # ============================================================================
@@ -82,6 +89,12 @@ class ExportConfig:
     bpmn_include_di: bool = True  # Include diagram interchange
     bpmn_namespace: str = 'http://www.omg.org/spec/BPMN/20100524/MODEL'
     
+    # Mermaid settings
+    mermaid_diagram_type: str = 'flowchart'  # flowchart, graph
+    mermaid_direction: str = 'TB'  # TB (top-bottom), LR (left-right), BT, RL
+    mermaid_include_metadata: bool = True
+    mermaid_style_elements: bool = True  # Add styling to elements
+    
     # General
     include_metadata: bool = True
     include_timestamp: bool = True
@@ -100,11 +113,13 @@ class ExportService:
     - SVG export with XML generation
     - PNG export using PIL/Pillow
     - BPMN 2.0 XML export for interoperability
+    - Mermaid diagram export for documentation
     
     Example:
         >>> service = ExportService()
         >>> service.export_to_pdf(document, "output.pdf")
         >>> service.export_to_svg(document, "output.svg")
+        >>> service.export_to_mermaid(document, "output.md")
     """
     
     def __init__(self, config: Optional[ExportConfig] = None):
@@ -780,6 +795,193 @@ class ExportService:
         right_x = end_x - arrow_length * math.cos(angle + 0.5)
         right_y = end_y - arrow_length * math.sin(angle + 0.5)
         draw.polygon([(end_x, end_y), (left_x, left_y), (right_x, right_y)], fill='#000000')
+    
+    # ========================================================================
+    # Mermaid Export
+    # ========================================================================
+    
+    def export_to_mermaid(
+        self,
+        document: DocumentModel,
+        output_path: str,
+        diagram_type: Optional[str] = None,
+        direction: Optional[str] = None
+    ) -> Path:
+        """
+        Export process diagram to Mermaid format.
+        
+        Mermaid is a JavaScript-based diagramming tool that uses text-based
+        syntax to create diagrams. This export creates Mermaid flowchart syntax
+        that can be rendered in documentation, wikis, or using mermaid-cli.
+        
+        Args:
+            document: The document to export
+            output_path: Path to save Mermaid file (.md or .mmd)
+            diagram_type: Type of diagram (flowchart, graph), None=use config
+            direction: Flow direction (TB, LR, BT, RL), None=use config
+            
+        Returns:
+            Path to the created Mermaid file
+            
+        Raises:
+            MermaidExportError: If Mermaid export fails
+            
+        Example:
+            >>> service.export_to_mermaid(doc, "process.md", "flowchart", "LR")
+        """
+        try:
+            # Publish start event
+            self.event_bus.publish('export:mermaid:started', {
+                'document_id': getattr(document, "document_id", str(id(document))),
+                'output_path': output_path
+            })
+            
+            output_file = Path(output_path)
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Determine diagram type and direction
+            diagram_type = diagram_type or self.config.mermaid_diagram_type
+            direction = direction or self.config.mermaid_direction
+            
+            # Generate Mermaid content
+            mermaid_content = self._generate_mermaid_diagram(
+                document, diagram_type, direction
+            )
+            
+            # Write to file
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(mermaid_content)
+            
+            # Publish success event
+            self.event_bus.publish('export:mermaid:completed', {
+                'document_id': getattr(document, "document_id", str(id(document))),
+                'output_path': str(output_file)
+            })
+            
+            return output_file
+            
+        except Exception as e:
+            # Publish error event
+            self.event_bus.publish('export:mermaid:failed', {
+                'document_id': getattr(document, "document_id", str(id(document))),
+                'error': str(e)
+            })
+            raise MermaidExportError(f"Failed to export Mermaid: {e}") from e
+    
+    def _generate_mermaid_diagram(
+        self,
+        document: DocumentModel,
+        diagram_type: str,
+        direction: str
+    ) -> str:
+        """
+        Generate Mermaid diagram syntax from document.
+        
+        Args:
+            document: Document to convert
+            diagram_type: Type of Mermaid diagram
+            direction: Flow direction
+            
+        Returns:
+            Mermaid diagram as string
+        """
+        lines = []
+        
+        # Add metadata as comments if enabled
+        if self.config.mermaid_include_metadata:
+            lines.append("---")
+            lines.append(f"title: {document.metadata.title or 'VPB Process Diagram'}")
+            if document.metadata.description:
+                lines.append(f"description: {document.metadata.description}")
+            if document.metadata.author:
+                lines.append(f"author: {document.metadata.author}")
+            if self.config.include_timestamp:
+                lines.append(f"created: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            lines.append("---")
+            lines.append("")
+        
+        # Start diagram definition
+        lines.append(f"{diagram_type} {direction}")
+        lines.append("")
+        
+        # Map element IDs to Mermaid-compatible IDs
+        element_map = {}
+        for i, element in enumerate(document.get_all_elements()):
+            # Create safe ID (alphanumeric only)
+            safe_id = f"node{i}"
+            element_map[element.element_id] = safe_id
+            
+            # Determine node shape based on element type
+            shape = self._get_mermaid_shape(element.element_type)
+            label = element.name or element.element_type
+            
+            # Add node definition with shape
+            lines.append(f"    {safe_id}{shape[0]}\"{label}\"{shape[1]}")
+        
+        lines.append("")
+        
+        # Add connections
+        for connection in document.get_all_connections():
+            source_id = element_map.get(connection.source_element)
+            target_id = element_map.get(connection.target_element)
+            
+            if source_id and target_id:
+                # Determine arrow style
+                arrow = self._get_mermaid_arrow(connection.connection_type)
+                
+                # Add label if available
+                if hasattr(connection, 'label') and connection.label:
+                    lines.append(f"    {source_id} {arrow}|\"{connection.label}\"| {target_id}")
+                else:
+                    lines.append(f"    {source_id} {arrow} {target_id}")
+        
+        # Add styling if enabled
+        if self.config.mermaid_style_elements:
+            lines.append("")
+            lines.append("    %% Styling")
+            for i, element in enumerate(document.get_all_elements()):
+                safe_id = f"node{i}"
+                style = self._get_mermaid_style(element.element_type)
+                if style:
+                    lines.append(f"    style {safe_id} {style}")
+        
+        return "\n".join(lines)
+    
+    def _get_mermaid_shape(self, element_type: str) -> Tuple[str, str]:
+        """
+        Get Mermaid shape brackets for element type.
+        
+        Returns tuple of (opening, closing) brackets.
+        """
+        shape_map = {
+            'Ereignis': ('[', ']'),  # Rectangle (event)
+            'Prozess': ('[', ']'),  # Rectangle (process)
+            'VorProzess': ('[', ']'),  # Rectangle
+            'NachProzess': ('[', ']'),  # Rectangle
+            'Entscheidung': ('{', '}'),  # Diamond (decision)
+            'XOR': ('{', '}'),  # Diamond
+            'OR': ('{', '}'),  # Diamond
+            'AND': ('{', '}'),  # Diamond
+            'Container': ('[[', ']]'),  # Subprocess
+            'START': ('([', '])'),  # Stadium (rounded)
+            'END': ('([', '])'),  # Stadium (rounded)
+        }
+        return shape_map.get(element_type, ('[', ']'))  # Default rectangle
+    
+    def _get_mermaid_arrow(self, connection_type: str) -> str:
+        """Get Mermaid arrow style for connection type."""
+        arrow_map = {
+            'sequence': '-->',  # Solid arrow
+            'conditional': '-.->',  # Dotted arrow
+            'default': '-->',
+        }
+        return arrow_map.get(connection_type, '-->')
+    
+    def _get_mermaid_style(self, element_type: str) -> str:
+        """Get Mermaid CSS style for element type."""
+        color = self._get_element_color_hex(element_type)
+        # Convert hex to fill and stroke styles
+        return f"fill:{color},stroke:#333,stroke-width:2px"
     
     # ========================================================================
     # BPMN 2.0 XML Export

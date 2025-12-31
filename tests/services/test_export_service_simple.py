@@ -22,6 +22,7 @@ from vpb.services.export_service import (
     SVGExportError,
     PNGExportError,
     BPMNExportError,
+    MermaidExportError,
 )
 from vpb.models.document import DocumentModel
 from vpb.models.element import VPBElement, ELEMENT_TYPES
@@ -50,9 +51,9 @@ def export_service():
 def simple_document():
     """Create a simple VPB document."""
     doc = DocumentModel()
-    doc.title = "Simple Process"
-    doc.description = "Test process"
-    doc.author = "Test User"
+    doc.metadata.title = "Simple Process"
+    doc.metadata.description = "Test process"
+    doc.metadata.author = "Test User"
     
     # Add elements with VPB types (no width/height needed - service provides defaults)
     ereignis = VPBElement(
@@ -161,3 +162,47 @@ class TestBPMNExport:
         tree = ET.parse(result)
         root = tree.getroot()
         assert 'definitions' in root.tag
+
+
+class TestMermaidExport:
+    """Test Mermaid export."""
+    
+    def test_export_simple_mermaid(self, export_service, simple_document, temp_dir):
+        """Test basic Mermaid export."""
+        output_path = temp_dir / "test.md"
+        
+        result = export_service.export_to_mermaid(simple_document, str(output_path))
+        
+        assert result.exists()
+        assert result.suffix == '.md'
+        
+        # Verify Mermaid content
+        content = result.read_text(encoding='utf-8')
+        assert 'flowchart' in content
+        assert 'node0' in content
+        assert 'node1' in content
+        assert '-->' in content
+    
+    def test_mermaid_with_different_direction(self, export_service, simple_document, temp_dir):
+        """Test Mermaid export with left-to-right direction."""
+        output_path = temp_dir / "test_lr.md"
+        
+        result = export_service.export_to_mermaid(
+            simple_document, 
+            str(output_path),
+            direction="LR"
+        )
+        
+        content = result.read_text(encoding='utf-8')
+        assert 'flowchart LR' in content
+    
+    def test_mermaid_includes_metadata(self, export_service, simple_document, temp_dir):
+        """Test that Mermaid export includes metadata."""
+        output_path = temp_dir / "test_meta.md"
+        
+        result = export_service.export_to_mermaid(simple_document, str(output_path))
+        
+        content = result.read_text(encoding='utf-8')
+        assert 'title: Simple Process' in content
+        assert 'author: Test User' in content
+
