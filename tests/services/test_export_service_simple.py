@@ -206,3 +206,100 @@ class TestMermaidExport:
         assert 'title: Simple Process' in content
         assert 'author: Test User' in content
 
+
+class TestMermaidERDExport:
+    """Test Mermaid ERD export."""
+    
+    def test_export_erd_basic(self, export_service, temp_dir):
+        """Test basic ERD export."""
+        from vpb.models.document import DocumentModel
+        from vpb.models.element import VPBElement
+        from vpb.models.connection import VPBConnection
+        
+        # Create a database schema document
+        doc = DocumentModel()
+        doc.metadata.title = "Database Schema"
+        doc.metadata.description = "Example database schema"
+        
+        # Create entities (tables)
+        user = VPBElement(
+            element_id='user',
+            element_type='Prozess',
+            name='User',
+            x=0, y=0,
+            description='id int PK\nname string\nemail string'
+        )
+        
+        post = VPBElement(
+            element_id='post',
+            element_type='Prozess',
+            name='Post',
+            x=100, y=0,
+            description='id int PK\ntitle string\ncontent text\nuser_id int FK'
+        )
+        
+        doc.add_element(user)
+        doc.add_element(post)
+        
+        # Add relationship
+        rel = VPBConnection(
+            connection_id='user_posts',
+            source_element='user',
+            target_element='post',
+            description='1:N'
+        )
+        doc.add_connection(rel)
+        
+        # Export as ERD
+        output_path = temp_dir / "schema.md"
+        result = export_service.export_to_mermaid(
+            doc,
+            str(output_path),
+            diagram_type='erDiagram'
+        )
+        
+        assert result.exists()
+        content = result.read_text(encoding='utf-8')
+        assert 'erDiagram' in content
+        assert 'User' in content
+        assert 'Post' in content
+        assert '||--o{' in content or '}o--' in content  # Relationship syntax
+    
+    def test_export_erd_relationships(self, export_service, temp_dir):
+        """Test ERD with different relationship types."""
+        from vpb.models.document import DocumentModel
+        from vpb.models.element import VPBElement
+        from vpb.models.connection import VPBConnection
+        
+        doc = DocumentModel()
+        doc.metadata.title = "Relationship Test"
+        
+        # Create entities
+        e1 = VPBElement(element_id='e1', element_type='Prozess', name='Entity1', x=0, y=0)
+        e2 = VPBElement(element_id='e2', element_type='Prozess', name='Entity2', x=100, y=0)
+        
+        doc.add_element(e1)
+        doc.add_element(e2)
+        
+        # Test one-to-many relationship
+        rel = VPBConnection(
+            connection_id='rel1',
+            source_element='e1',
+            target_element='e2',
+            description='one-to-many'
+        )
+        doc.add_connection(rel)
+        
+        output_path = temp_dir / "relationships.md"
+        result = export_service.export_to_mermaid(
+            doc,
+            str(output_path),
+            diagram_type='erDiagram'
+        )
+        
+        content = result.read_text(encoding='utf-8')
+        assert 'erDiagram' in content
+        assert 'Entity1' in content
+        assert 'Entity2' in content
+
+
