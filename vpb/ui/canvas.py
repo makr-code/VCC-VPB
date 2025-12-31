@@ -1696,12 +1696,10 @@ class VPBCanvas(tk.Canvas):
         smooth = resolved_mode == 'curved'
         
         # Improved smoothing for curved connections (Mermaid-inspired)
+        splinesteps = None
         if smooth:
-            smooth = True
             # Use higher splinesteps for smoother curves
             splinesteps = 12
-        else:
-            splinesteps = None
         
         # Pfeilstil bestimmen
         astyle = (getattr(conn, 'arrow_style', 'single') or 'single').lower()
@@ -1721,7 +1719,11 @@ class VPBCanvas(tk.Canvas):
         # Draw subtle shadow for depth (Blender-inspired)
         if resolved_mode == 'curved' and not highlight_color:
             shadow_offset = 2
-            shadow_pts = [p + shadow_offset if i % 2 == 0 else p + shadow_offset for i, p in enumerate(pts)]
+            # Create shadow points with offset (x+offset, y+offset)
+            shadow_pts = []
+            for i in range(len(pts)):
+                shadow_pts.append(pts[i] + shadow_offset)
+            
             shadow_item = self.create_line(
                 *shadow_pts,
                 arrow=arrow_opt,
