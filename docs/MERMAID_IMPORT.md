@@ -86,7 +86,7 @@ flowchart LR
 ```
 ```
 
-The import service recognizes this metadata (currently parsed but not fully integrated into DocumentMetadata).
+The import service recognizes YAML metadata in frontmatter. **Note**: The metadata is currently parsed but not fully integrated into the VPB DocumentMetadata. This is a known limitation that may be enhanced in a future release. For now, use the `title` parameter in `import_from_mermaid()` to set the document title.
 
 ## Usage
 

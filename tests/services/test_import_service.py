@@ -237,12 +237,14 @@ flowchart TB
         doc = import_service.import_from_mermaid(str(file_path))
         elements = doc.get_all_elements()
         
-        # In TB layout, Y coordinates should increase
+        # In TB layout, Y coordinates should increase for connected nodes
         a = next(e for e in elements if e.element_id == 'A')
         b = next(e for e in elements if e.element_id == 'B')
         c = next(e for e in elements if e.element_id == 'C')
         
-        assert a.y < b.y < c.y or a.y == b.y  # Y increases down
+        # Check that Y coordinates follow the top-to-bottom flow
+        # Allow equal Y if nodes are in the same layer
+        assert a.y <= b.y <= c.y, f"Expected Y coordinates to increase: A.y={a.y}, B.y={b.y}, C.y={c.y}"
     
     def test_import_lr_direction(self, import_service, temp_dir):
         """Test importing flowchart with LR (left-right) direction."""
@@ -257,12 +259,14 @@ flowchart LR
         doc = import_service.import_from_mermaid(str(file_path))
         elements = doc.get_all_elements()
         
-        # In LR layout, X coordinates should increase
+        # In LR layout, X coordinates should increase for connected nodes
         a = next(e for e in elements if e.element_id == 'A')
         b = next(e for e in elements if e.element_id == 'B')
         c = next(e for e in elements if e.element_id == 'C')
         
-        assert a.x < b.x < c.x or a.x == b.x  # X increases right
+        # Check that X coordinates follow the left-to-right flow
+        # Allow equal X if nodes are in the same layer
+        assert a.x <= b.x <= c.x, f"Expected X coordinates to increase: A.x={a.x}, B.x={b.x}, C.x={c.x}"
     
     def test_import_graph_syntax(self, import_service, temp_dir):
         """Test importing using 'graph' syntax (older Mermaid syntax)."""

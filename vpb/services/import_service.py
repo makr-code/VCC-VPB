@@ -320,7 +320,7 @@ class ImportService:
             }
         
         # Parse connections - handle chained connections like A --> B --> C
-        # Split by arrow types to get segments
+        # Find all arrow positions and their types in the line
         arrow_types = ['-->', '---', '-.->']
         
         # Find all arrow positions and types
@@ -334,16 +334,16 @@ class ImportService:
                 arrows.append((idx, arrow_type))
                 pos = idx + len(arrow_type)
         
-        # Sort arrows by position
+        # Sort arrows by position to process them in order
         arrows.sort(key=lambda x: x[0])
         
         if not arrows:
             return
         
-        # Extract connections
+        # Extract connections between consecutive arrows
         prev_end = 0
         for i, (arrow_pos, arrow_type) in enumerate(arrows):
-            # Get source node (everything before arrow)
+            # Get source node (text before arrow, after previous arrow)
             source_part = line[prev_end:arrow_pos].strip()
             
             # Determine connection type
@@ -407,15 +407,15 @@ class ImportService:
         """Determine VPB element shape from Mermaid brackets."""
         bracket_pair = open_bracket + close_bracket
         
-        # Mermaid shape mapping
+        # Mermaid shape mapping to VPB element types
         shape_map = {
-            '[]': 'rectangle',          # Standard rectangle
-            '()': 'stadium',             # Rounded ends (start/end events)
-            '[()]': 'stadium',           # Alternative stadium syntax
-            '([])': 'stadium',           # Alternative stadium syntax
-            '{}': 'diamond',             # Decision/gateway
-            '[[]]': 'subprocess',        # Subprocess/container
-            '>]': 'rectangle',           # Asymmetric shape (treat as rectangle)
+            '[]': 'rectangle',          # Standard rectangle [text]
+            '()': 'stadium',             # Rounded ends (text) - for start/end events
+            '[()]': 'stadium',           # Alternative stadium syntax [(text)]
+            '([])': 'stadium',           # Alternative stadium syntax ([text])
+            '{}': 'diamond',             # Decision/gateway {text}
+            '[[]]': 'subprocess',        # Subprocess/container [[text]]
+            '>]': 'rectangle',           # Asymmetric shape >text] - treat as rectangle
         }
         
         return shape_map.get(bracket_pair, 'rectangle')
@@ -511,15 +511,17 @@ class ImportService:
         """
         layout = {}
         
-        # Build adjacency list
+        # Build adjacency list and reverse adjacency list (for optimized predecessor checking)
         adjacency = {node_id: [] for node_id in nodes}
+        reverse_adjacency = {node_id: [] for node_id in nodes}
         in_degree = {node_id: 0 for node_id in nodes}
         
         for conn in connections:
             adjacency[conn['from']].append(conn['to'])
+            reverse_adjacency[conn['to']].append(conn['from'])
             in_degree[conn['to']] += 1
         
-        # Topological sort (Kahn's algorithm)
+        # Topological sort (Kahn's algorithm) - O(V + E) complexity
         layers = []
         current_layer = [node_id for node_id, degree in in_degree.items() if degree == 0]
         
@@ -536,12 +538,10 @@ class ImportService:
                 visited.add(node_id)
                 for neighbor in adjacency.get(node_id, []):
                     if neighbor not in visited and neighbor not in next_layer:
-                        # Check if all predecessors are visited
-                        predecessors_visited = True
-                        for pred_id in nodes:
-                            if neighbor in adjacency.get(pred_id, []) and pred_id not in visited:
-                                predecessors_visited = False
-                                break
+                        # Check if all predecessors are visited using reverse adjacency
+                        # This is O(number of predecessors) instead of O(all nodes)
+                        predecessors = reverse_adjacency.get(neighbor, [])
+                        predecessors_visited = all(pred in visited for pred in predecessors)
                         
                         if predecessors_visited:
                             next_layer.append(neighbor)
