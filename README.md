@@ -51,6 +51,7 @@ Quickstart (EN):
 - **[Architecture](Architecture.md)** — System architecture and design patterns
 
 ### Features & Guides
+- **[Mermaid Diagram Import](docs/MERMAID_IMPORT.md)** — Import Mermaid flowcharts and convert to VPB processes
 - **[Mermaid Diagram Export](docs/MERMAID_EXPORT.md)** — Export processes to Mermaid format for documentation
 - **[Mermaid ERD Export](docs/MERMAID_ERD_EXPORT.md)** — Entity-Relationship diagrams for database schemas
 - **[Canvas Visual Improvements](docs/CANVAS_VISUAL_IMPROVEMENTS.md)** — Mermaid/Blender-inspired visual enhancements
