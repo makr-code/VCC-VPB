@@ -272,11 +272,11 @@ class DocumentModel:
         if connection.connection_id in self._connections:
             raise ValueError(f"Connection with ID '{connection.connection_id}' already exists")
         
-        # Validate that source and target exist (check by element_id, not object)
-        if connection.source_element.element_id not in self._elements:
-            raise ValueError(f"Source element '{connection.source_element.element_id}' not found")
-        if connection.target_element.element_id not in self._elements:
-            raise ValueError(f"Target element '{connection.target_element.element_id}' not found")
+        # Validate that source and target exist (check by element_id string)
+        if connection.source_element not in self._elements:
+            raise ValueError(f"Source element '{connection.source_element}' not found")
+        if connection.target_element not in self._elements:
+            raise ValueError(f"Target element '{connection.target_element}' not found")
         
         self._connections[connection.connection_id] = connection
         self._set_modified()
@@ -338,21 +338,21 @@ class DocumentModel:
         """Get connections from an element."""
         return [
             conn for conn in self._connections.values()
-            if conn.source_element.element_id == element_id
+            if conn.source_element == element_id
         ]
     
     def get_incoming_connections(self, element_id: str) -> List[VPBConnection]:
         """Get connections to an element."""
         return [
             conn for conn in self._connections.values()
-            if conn.target_element.element_id == element_id
+            if conn.target_element == element_id
         ]
     
     def _remove_connections_for_element(self, element_id: str) -> List[VPBConnection]:
         """Remove all connections to/from an element."""
         to_remove = [
             conn_id for conn_id, conn in self._connections.items()
-            if conn.source_element.element_id == element_id or conn.target_element.element_id == element_id
+            if conn.source_element == element_id or conn.target_element == element_id
         ]
         
         removed = []
@@ -416,17 +416,17 @@ class DocumentModel:
         """
         errors = []
         
-        # Check for orphaned connections (check by element_id, not object)
+        # Check for orphaned connections (check by element_id string)
         for conn in self._connections.values():
-            if conn.source_element.element_id not in self._elements:
+            if conn.source_element not in self._elements:
                 errors.append(
                     f"Connection '{conn.connection_id}' references "
-                    f"non-existent source '{conn.source_element.element_id}'"
+                    f"non-existent source '{conn.source_element}'"
                 )
-            if conn.target_element.element_id not in self._elements:
+            if conn.target_element not in self._elements:
                 errors.append(
                     f"Connection '{conn.connection_id}' references "
-                    f"non-existent target '{conn.target_element.element_id}'"
+                    f"non-existent target '{conn.target_element}'"
                 )
         
         # Check for duplicate IDs (shouldn't happen but verify)

@@ -1313,7 +1313,22 @@ class VPBCanvas(tk.Canvas):
             return
 
         shape = style.get("shape")
+        
+        # Shadow offset for depth effect (Blender-inspired)
+        shadow_offset = 3
+        shadow_color = "#D0D0D0"
+        
         if shape in ("rect", "rectangle"):
+            # Draw shadow first (behind element)
+            shadow = self.create_rectangle(
+                cx - w // 2 + shadow_offset, cy - h // 2 + shadow_offset,
+                cx + w // 2 + shadow_offset, cy + h // 2 + shadow_offset,
+                fill=shadow_color, outline="", width=0
+            )
+            items.append(shadow)
+            self.tag_lower(shadow)
+            
+            # Draw main element
             item = self.create_rectangle(
                 cx - w // 2, cy - h // 2, cx + w // 2, cy + h // 2,
                 fill=style.get("fill"), outline=style.get("outline"), width=2,
@@ -1323,6 +1338,17 @@ class VPBCanvas(tk.Canvas):
         elif shape in ("oval", "circle"):
             # Kreis: min(w,h)
             r = min(w, h) // 2
+            
+            # Draw shadow
+            shadow = self.create_oval(
+                cx - r + shadow_offset, cy - r + shadow_offset,
+                cx + r + shadow_offset, cy + r + shadow_offset,
+                fill=shadow_color, outline="", width=0
+            )
+            items.append(shadow)
+            self.tag_lower(shadow)
+            
+            # Draw main element
             item = self.create_oval(
                 cx - r, cy - r, cx + r, cy + r,
                 fill=style.get("fill"), outline=style.get("outline"), width=2,
@@ -1331,6 +1357,16 @@ class VPBCanvas(tk.Canvas):
             items.append(item)
         elif shape == "diamond":
             pts = _diamond_points(cx, cy, w, h)
+            
+            # Draw shadow for diamond
+            shadow_pts = [p + shadow_offset for p in pts]
+            shadow = self.create_polygon(
+                shadow_pts, fill=shadow_color, outline="", width=0
+            )
+            items.append(shadow)
+            self.tag_lower(shadow)
+            
+            # Draw main element
             item = self.create_polygon(pts, fill=style.get("fill"), outline=style.get("outline"), width=2, dash=style.get("dash"))
             items.append(item)
             
@@ -1658,6 +1694,13 @@ class VPBCanvas(tk.Canvas):
         pts, resolved_mode = self._get_route_points(src, tgt, conn)
         style = CONNECTION_STYLES.get(conn.connection_type, {"fill": "#000", "width": 2, "dash": None})
         smooth = resolved_mode == 'curved'
+        
+        # Improved smoothing for curved connections (Mermaid-inspired)
+        splinesteps = None
+        if smooth:
+            # Use higher splinesteps for smoother curves
+            splinesteps = 12
+        
         # Pfeilstil bestimmen
         astyle = (getattr(conn, 'arrow_style', 'single') or 'single').lower()
         if astyle == 'none':
@@ -1672,7 +1715,37 @@ class VPBCanvas(tk.Canvas):
         if highlight_color:
             line_color = highlight_color
             line_width = max(line_width + 1, line_width)
-        conn.canvas_item = self.create_line(*pts, arrow=arrow_opt, fill=line_color, width=line_width, dash=style.get("dash"), smooth=smooth)
+        
+        # Draw subtle shadow for depth (Blender-inspired)
+        if resolved_mode == 'curved' and not highlight_color:
+            shadow_offset = 2
+            # Create shadow points with offset (x+offset, y+offset)
+            shadow_pts = []
+            for i in range(len(pts)):
+                shadow_pts.append(pts[i] + shadow_offset)
+            
+            shadow_item = self.create_line(
+                *shadow_pts,
+                arrow=arrow_opt,
+                fill="#CCCCCC",
+                width=line_width,
+                smooth=smooth,
+                splinesteps=splinesteps if smooth else None,
+                dash=style.get("dash")
+            )
+            self.tag_lower(shadow_item)
+            self._id_to_connection[shadow_item] = conn.connection_id
+        
+        # Main connection line
+        conn.canvas_item = self.create_line(
+            *pts,
+            arrow=arrow_opt,
+            fill=line_color,
+            width=line_width,
+            dash=style.get("dash"),
+            smooth=smooth,
+            splinesteps=splinesteps if smooth and splinesteps else None
+        )
         self._connection_points_cache[conn.connection_id] = pts
         self._id_to_connection[conn.canvas_item] = conn.connection_id
         # Highlight bei Auswahl
@@ -1891,11 +1964,25 @@ class VPBCanvas(tk.Canvas):
             return [sx, sy, tx, ty]
 
         def _curved_points() -> List[int]:
-            mx = (sx + tx) // 2
-            my = (sy + ty) // 2
-            offx = int((tx - sx) * 0.1)
-            offy = int((ty - sy) * 0.1)
-            return [sx, sy, mx - offx, my - offy, tx, ty]
+            # Improved Bezier curve with better control points (Mermaid-inspired)
+            distance = max(abs(tx - sx), abs(ty - sy))
+            curve_strength = min(distance * 0.4, 100)  # Adaptive curve strength
+            
+            if horizontal:
+                # Horizontal flow: control points offset horizontally
+                cp1_x = int(sx + curve_strength)
+                cp1_y = sy
+                cp2_x = int(tx - curve_strength)
+                cp2_y = ty
+            else:
+                # Vertical flow: control points offset vertically
+                cp1_x = sx
+                cp1_y = int(sy + curve_strength)
+                cp2_x = tx
+                cp2_y = int(ty - curve_strength)
+            
+            # Return cubic Bezier control points for smoother curves
+            return [sx, sy, cp1_x, cp1_y, cp2_x, cp2_y, tx, ty]
 
         def _orthogonal_points() -> List[int]:
             if horizontal:
@@ -3349,6 +3436,7 @@ class VPBCanvas(tk.Canvas):
 
     # ----- Verbindung: Label/Typ/Löschen -----
     def _draw_connection_label(self, conn: VPBConnection):
+        """Zeichnet ein Label auf der Verbindung (Mermaid-inspired with background)."""
         pts = self._connection_points_cache.get(conn.connection_id)
         if pts is None:
             resolved_endpoints = self._resolve_connection_render(conn)
@@ -3368,8 +3456,31 @@ class VPBCanvas(tk.Canvas):
             mx, my = pts[0], pts[1]
         desc = (conn.description or "").strip()
         txt = desc if desc else (conn.connection_type or "SEQUENCE")
-        label = self.create_text(mx, my - 10, text=txt, fill="#222", font=("Segoe UI", 9))
+        
+        # Create background rectangle for label (Mermaid-style)
+        font_size = 9
+        font = ("Segoe UI", font_size)
+        
+        # Estimate text dimensions
+        text_width = len(txt) * font_size * 0.6
+        text_height = font_size * 1.4
+        padding = 4
+        
+        # Draw background
+        bg = self.create_rectangle(
+            mx - text_width/2 - padding, my - 10 - text_height/2 - padding,
+            mx + text_width/2 + padding, my - 10 + text_height/2 + padding,
+            fill="#FFFFFF", outline="#CCCCCC", width=1
+        )
+        self._id_to_connection[bg] = conn.connection_id
+        
+        # Draw label text
+        label = self.create_text(mx, my - 10, text=txt, fill="#222", font=font)
         self._id_to_connection[label] = conn.connection_id
+        
+        # Ensure label is on top
+        self.tag_raise(bg)
+        self.tag_raise(label)
 
     def highlight_merge_results(
         self,

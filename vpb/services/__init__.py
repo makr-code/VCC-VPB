@@ -7,7 +7,8 @@ Business logic and operations for VPB Process Designer.
 This package contains:
 - DocumentService: Document load/save operations, recent files management
 - ValidationService: Process validation (flow, naming, completeness)
-- ExportService: Export to PDF/SVG/PNG/BPMN formats
+- ExportService: Export to PDF/SVG/PNG/BPMN/Mermaid formats
+- ImportService: Import from Mermaid diagrams
 - LayoutService: Auto-layout algorithms, element alignment, arrangement
 - AIService: AI-powered process generation, suggestions, diagnostics
 """
@@ -32,6 +33,13 @@ from .export_service import (
     SVGExportError,
     PNGExportError,
     BPMNExportError,
+)
+from .import_service import (
+    ImportService,
+    ImportConfig,
+    ImportServiceError,
+    MermaidImportError,
+    UnsupportedDiagramError,
 )
 from .layout_service import (
     LayoutService,
@@ -68,6 +76,12 @@ __all__ = [
     'SVGExportError',
     'PNGExportError',
     'BPMNExportError',
+    # Import Service
+    'ImportService',
+    'ImportConfig',
+    'ImportServiceError',
+    'MermaidImportError',
+    'UnsupportedDiagramError',
     # Layout Service
     'LayoutService',
     'LayoutConfig',
