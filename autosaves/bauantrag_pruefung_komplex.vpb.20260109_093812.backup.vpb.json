@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "name": "Bauantrag – Komplexe Prüfung",
+    "description": "Mehrstufiger Verwaltungsprozess mit Parallelprüfungen, Hierarchien und Verzweigungen"
+  },
+  "elements": [
+    {"element_id": "S_START", "element_type": "START_EVENT", "name": "Antrag eingereicht", "x": 80, "y": 120, "description": "Antragsteller übermittelt Unterlagen digital", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Antragsteller"},
+    {"element_id": "F_EINREICHEN", "element_type": "FUNCTION", "name": "Unterlagen übernehmen", "x": 240, "y": 120, "description": "Eingehende Unterlagen prüfen und registrieren", "responsible_authority": "Servicecenter Bauen", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Antragsteller"},
+    {"element_id": "F_VOLLSTAENDIG", "element_type": "FUNCTION", "name": "Vollständigkeit prüfen", "x": 420, "y": 120, "description": "Checkliste gegen eingereichte Unterlagen", "responsible_authority": "Servicecenter Bauen", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Servicecenter"},
+    {"element_id": "GW_VOLLSTAENDIG", "element_type": "XOR_CONNECTOR", "name": "Alles vollständig?", "x": 600, "y": 120, "hierarchy": "Servicecenter"},
+    {"element_id": "F_NACHFORDERUNG", "element_type": "FUNCTION", "name": "Nachforderung senden", "x": 600, "y": 260, "description": "Fehlende Unterlagen anfordern", "responsible_authority": "Servicecenter Bauen", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Servicecenter"},
+    {"element_id": "DEADL_NACH", "element_type": "DEADLINE", "name": "Frist Nachreichung", "x": 600, "y": 360, "description": "Zeitraum für Nachreichung der Unterlagen", "responsible_authority": "Servicecenter Bauen", "legal_basis": "", "deadline_days": 14, "geo_reference": "", "hierarchy": "Servicecenter"},
+    {"element_id": "F_FORMAL", "element_type": "FUNCTION", "name": "Formale Prüfung abschließen", "x": 780, "y": 120, "description": "Formelle Kriterien dokumentieren", "responsible_authority": "Servicecenter Bauen", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Servicecenter"},
+    {"element_id": "AND_PARALLEL", "element_type": "AND_CONNECTOR", "name": "Parallelprüfungen starten", "x": 960, "y": 120, "hierarchy": "Servicecenter"},
+    {"element_id": "F_BAUPRUEFUNG", "element_type": "FUNCTION", "name": "Bauordnung prüfen", "x": 1140, "y": 20, "description": "Technische Prüfung gemäß BauO", "responsible_authority": "Fachbereich Bau", "legal_basis": "BauO", "deadline_days": 0, "geo_reference": "", "hierarchy": "Fachprüfung Bau"},
+    {"element_id": "F_BRANDSCHUTZ", "element_type": "FUNCTION", "name": "Brandschutz prüfen", "x": 1140, "y": 120, "description": "Baulicher Brandschutz", "responsible_authority": "Brandschutzdienststelle", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Fachprüfung Brandschutz"},
+    {"element_id": "SP_UMWELT", "element_type": "SUBPROCESS", "name": "Umweltprüfung durchführen", "x": 1140, "y": 220, "description": "Ausgelagerter Umweltteilprozess", "responsible_authority": "Umweltamt", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Umweltprüfung", "ref_file": "processes/bauantrag_umweltpruefung.vpb.json"},
+    {"element_id": "AND_ZUSAMMEN", "element_type": "AND_CONNECTOR", "name": "Prüfungen gesammelt", "x": 1320, "y": 120, "hierarchy": "Servicecenter"},
+    {"element_id": "LC_RECHT", "element_type": "LEGAL_CHECKPOINT", "name": "Rechtsprüfung", "x": 1500, "y": 80, "description": "Abgleich mit rechtlichen Vorgaben", "responsible_authority": "Rechtsamt", "legal_basis": "BauGB", "deadline_days": 0, "geo_reference": "", "hierarchy": "Rechtsaufsicht"},
+    {"element_id": "CC_ABSTIMMUNG", "element_type": "COMPETENCY_CHECK", "name": "Abstimmung mit Leitung", "x": 1660, "y": 80, "description": "Entscheidungsvorlage prüfen", "responsible_authority": "Amtsleitung", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Leitung"},
+    {"element_id": "GW_ENTSCHEID", "element_type": "XOR_CONNECTOR", "name": "Genehmigen?", "x": 1820, "y": 80, "hierarchy": "Leitung"},
+    {"element_id": "F_GENEHMIGUNG", "element_type": "FUNCTION", "name": "Genehmigung erteilen", "x": 2000, "y": 20, "description": "Bescheid vorbereiten", "responsible_authority": "Servicecenter Bauen", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Servicecenter"},
+    {"element_id": "IO_BESCHEID", "element_type": "INFORMATION_OBJECT", "name": "Baugenehmigungsbescheid", "x": 2180, "y": 20, "description": "Bescheid mit Auflagen", "responsible_authority": "Servicecenter Bauen", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Servicecenter"},
+    {"element_id": "E_GENEHMIGT", "element_type": "END_EVENT", "name": "Genehmigung erteilt", "x": 2360, "y": 20, "description": "Verfahren positiv abgeschlossen", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Antragsteller"},
+    {"element_id": "F_ABLEHNUNG", "element_type": "FUNCTION", "name": "Ablehnungsbescheid erstellen", "x": 2000, "y": 160, "description": "Ablehnungsgründe dokumentieren", "responsible_authority": "Servicecenter Bauen", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Servicecenter"},
+    {"element_id": "E_ABGELEHNT", "element_type": "END_EVENT", "name": "Antrag abgelehnt", "x": 2180, "y": 160, "description": "Verfahren negativ abgeschlossen", "responsible_authority": "", "legal_basis": "", "deadline_days": 0, "geo_reference": "", "hierarchy": "Antragsteller"},
+    {"element_id": "G_PRUEFPHASE", "element_type": "GROUP", "name": "Prüf- und Abstimmungsphase", "x": 1290, "y": 120, "description": "Gebündelte Prüf- und Entscheidungsaktivitäten", "members": ["F_VOLLSTAENDIG", "GW_VOLLSTAENDIG", "F_NACHFORDERUNG", "DEADL_NACH", "F_FORMAL", "AND_PARALLEL", "F_BAUPRUEFUNG", "F_BRANDSCHUTZ", "SP_UMWELT", "AND_ZUSAMMEN", "LC_RECHT", "CC_ABSTIMMUNG"], "collapsed": false, "hierarchy": "Servicecenter"}
+  ],
+  "connections": [
+    {"connection_id": "C1", "source_element": "S_START", "target_element": "F_EINREICHEN", "connection_type": "SEQUENCE", "description": "Antragseingang"},
+    {"connection_id": "C2", "source_element": "F_EINREICHEN", "target_element": "F_VOLLSTAENDIG", "connection_type": "SEQUENCE", "description": "Unterlagen übertragen"},
+    {"connection_id": "C3", "source_element": "F_VOLLSTAENDIG", "target_element": "GW_VOLLSTAENDIG", "connection_type": "SEQUENCE", "description": "Checkliste abgeschlossen"},
+    {"connection_id": "C4", "source_element": "GW_VOLLSTAENDIG", "target_element": "F_FORMAL", "connection_type": "SEQUENCE", "description": "Unterlagen vollständig"},
+    {"connection_id": "C5", "source_element": "GW_VOLLSTAENDIG", "target_element": "F_NACHFORDERUNG", "connection_type": "SEQUENCE", "description": "Unterlagen fehlen"},
+    {"connection_id": "C6", "source_element": "F_NACHFORDERUNG", "target_element": "DEADL_NACH", "connection_type": "SEQUENCE", "description": "Frist setzen"},
+    {"connection_id": "C7", "source_element": "DEADL_NACH", "target_element": "F_EINREICHEN", "connection_type": "SEQUENCE", "description": "Nachreichung eingegangen"},
+    {"connection_id": "C8", "source_element": "F_FORMAL", "target_element": "AND_PARALLEL", "connection_type": "SEQUENCE", "description": "Formale Prüfung erfolgreich"},
+    {"connection_id": "C9", "source_element": "AND_PARALLEL", "target_element": "F_BAUPRUEFUNG", "connection_type": "SEQUENCE", "description": "Technische Prüfung"},
+    {"connection_id": "C10", "source_element": "AND_PARALLEL", "target_element": "F_BRANDSCHUTZ", "connection_type": "SEQUENCE", "description": "Brandschutzprüfung"},
+    {"connection_id": "C11", "source_element": "AND_PARALLEL", "target_element": "SP_UMWELT", "connection_type": "SEQUENCE", "description": "Umweltprüfung"},
+    {"connection_id": "C12", "source_element": "F_BAUPRUEFUNG", "target_element": "AND_ZUSAMMEN", "connection_type": "SEQUENCE", "description": "Ergebnis Bauprüfung"},
+    {"connection_id": "C13", "source_element": "F_BRANDSCHUTZ", "target_element": "AND_ZUSAMMEN", "connection_type": "SEQUENCE", "description": "Ergebnis Brandschutz"},
+    {"connection_id": "C14", "source_element": "SP_UMWELT", "target_element": "AND_ZUSAMMEN", "connection_type": "SEQUENCE", "description": "Umweltprüfung abgeschlossen"},
+    {"connection_id": "C15", "source_element": "AND_ZUSAMMEN", "target_element": "LC_RECHT", "connection_type": "SEQUENCE", "description": "Alle Prüfergebnisse vorliegend"},
+    {"connection_id": "C16", "source_element": "LC_RECHT", "target_element": "CC_ABSTIMMUNG", "connection_type": "SEQUENCE", "description": "Rechtliche Prüfung i.O."},
+    {"connection_id": "C17", "source_element": "CC_ABSTIMMUNG", "target_element": "GW_ENTSCHEID", "connection_type": "SEQUENCE", "description": "Entscheidung vorbereitet"},
+    {"connection_id": "C18", "source_element": "GW_ENTSCHEID", "target_element": "F_GENEHMIGUNG", "connection_type": "SEQUENCE", "description": "Genehmigung möglich"},
+    {"connection_id": "C19", "source_element": "GW_ENTSCHEID", "target_element": "F_ABLEHNUNG", "connection_type": "SEQUENCE", "description": "Ablehnung erforderlich"},
+    {"connection_id": "C20", "source_element": "F_GENEHMIGUNG", "target_element": "IO_BESCHEID", "connection_type": "SEQUENCE", "description": "Bescheid erstellen"},
+    {"connection_id": "C21", "source_element": "IO_BESCHEID", "target_element": "E_GENEHMIGT", "connection_type": "SEQUENCE", "description": "Genehmigung versenden"},
+    {"connection_id": "C22", "source_element": "F_ABLEHNUNG", "target_element": "E_ABGELEHNT", "connection_type": "SEQUENCE", "description": "Ablehnungsbescheid versenden"}
+  ]
+}
